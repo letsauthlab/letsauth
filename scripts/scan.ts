@@ -3,7 +3,8 @@
  *
  *   pnpm scan <url>                       report for any MCP server URL, nothing written
  *   pnpm scan <server-id>                 report for a listed server
- *   pnpm scan --all                       every listed OAuth server with an HTTP transport
+ *   pnpm scan --all                       every listed server with an HTTP transport whose auth
+ *                                         class is OAuth or unknown (009)
  *   --write                               append the observations the nightly rule would
  *   --summary <file>                      write the run summary (Markdown) to a file
  *   --json                                print the report(s) as JSON instead of text
@@ -15,12 +16,13 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { currentRevision } from "../src/lib/atlas";
+import { hasNoOAuth } from "../src/lib/classes";
 import { DATA_ROOT, type Dataset, getDataset } from "../src/lib/data";
 import { nodeFetcher } from "../src/scanner/fetch";
-import { claimsNoOAuth } from "../src/scanner/grade";
 import { guardUrl } from "../src/scanner/guard";
 import {
   appendObservations,
+  authNote,
   heldCells,
   type RunResult,
   summarise,
@@ -29,6 +31,7 @@ import {
 import type { AsCacheEntry } from "../src/scanner/probe";
 import { type Report, scan, stamp } from "../src/scanner/report";
 import { SCANNER_ID } from "../src/scanner/version";
+import type { Server } from "../src/schema";
 
 interface Args {
   targets: string[];
@@ -98,21 +101,23 @@ async function main(): Promise<number> {
   const fetcher = nodeFetcher({ timeoutMs: args.timeoutMs, guard: guardUrl });
   const asCache = new Map<string, AsCacheEntry>();
 
-  const targets: { id?: string; name: string; url: string }[] = [];
+  const targets: { id?: string; name: string; url: string; server?: Server }[] = [];
   if (args.all) {
     for (const s of data.servers) {
       if (s.withdrawn || s.transport === "stdio-only") continue;
-      // open and API-key servers have no OAuth to judge; a scan would only record 404s as failures
-      if (claimsNoOAuth(s.authClaimed)) continue;
-      targets.push({ id: s.id, name: s.name, url: s.url });
+      // API-key and unauthenticated servers have no OAuth to judge; a scan would only record
+      // 404s as failures. An unknown class is scanned so the summary can say what the endpoint
+      // suggests (009).
+      if (hasNoOAuth(s)) continue;
+      targets.push({ id: s.id, name: s.name, url: s.url, server: s });
     }
   }
   for (const t of args.targets) {
     const server = data.servers.find((s) => s.id === t);
-    if (server && claimsNoOAuth(server.authClaimed)) {
+    if (server && hasNoOAuth(server)) {
       // still report on the URL, but write nothing over the listing's not-applicable cells
-      targets.push({ name: server.name, url: server.url });
-    } else if (server) targets.push({ id: server.id, name: server.name, url: server.url });
+      targets.push({ name: server.name, url: server.url, server });
+    } else if (server) targets.push({ id: server.id, name: server.name, url: server.url, server });
     else targets.push({ name: t, url: t });
   }
 
@@ -139,6 +144,7 @@ async function main(): Promise<number> {
         });
         result.report = report;
         reports.push(report);
+        if (target.server) result.authNote = authNote(report, target.server);
         if (target.id) {
           result.appended = toAppend(report, data);
           result.held = heldCells(report, data);
@@ -155,6 +161,7 @@ async function main(): Promise<number> {
             console.log(
               `${args.write ? "appended" : "would append"} ${result.appended.length} observation(s) to data/observations/${target.id}.yaml`,
             );
+            if (result.authNote) console.log(result.authNote);
             for (const h of result.held ?? []) {
               console.log(
                 `held by hand: ${h.feature} stays ${h.status} (${h.method}, ${h.observedBy}); the scan saw ${h.scanStatus}`,

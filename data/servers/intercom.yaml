@@ -5,4 +5,15 @@ homepage: https://intercom.com
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.intercom.com/docs/guides/mcp — Available to US- and EU-hosted workspaces (not AU); custom clients with non-localhost redirect URIs need an allowlist entry, but listed clients and localhost work directly."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developers.intercom.com/docs/guides/mcp — OAuth with consent page and dynamic client registration is recommended; an Intercom API token as bearer is also accepted."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

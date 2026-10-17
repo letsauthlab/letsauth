@@ -5,4 +5,15 @@ homepage: https://linear.app
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://linear.app/docs/mcp — Any Linear workspace member connects via the interactive OAuth flow; no plan requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://linear.app/docs/mcp — OAuth 2.1 with dynamic client registration; a Linear API key or OAuth access token may instead be passed directly as a bearer header."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

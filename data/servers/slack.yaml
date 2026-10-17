@@ -5,4 +5,15 @@ homepage: https://slack.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
+access:
+  class: closed
+  method: manual
+  evidence: "https://docs.slack.dev/ai/slack-mcp-server/connect-to-harnesses/ — Requires a registered Slack app with a fixed client ID and a workspace whose admin has approved the MCP integration; unlisted apps cannot use MCP."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.slack.dev/ai/slack-mcp-server — Confidential OAuth with the app's client ID and secret and user consent; no dynamic client registration."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

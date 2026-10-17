@@ -5,4 +5,15 @@ homepage: https://airtable.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://airtable.com/developers/agents/mcp/getting-started — Any Airtable account connects by OAuth or a personal access token; enterprise admins can optionally block MCP or allowlist client IDs."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://airtable.com/developers/agents/mcp/getting-started — OAuth with dynamic client registration is the recommended path; a personal access token sent as a bearer header is also accepted."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

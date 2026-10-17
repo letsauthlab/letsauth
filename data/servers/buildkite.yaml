@@ -5,4 +5,15 @@ homepage: https://buildkite.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://buildkite.com/docs/apis/mcp-server — The remote server is described as available for all users; only a Buildkite user account is needed."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://buildkite.com/docs/apis/mcp-server — Short-lived OAuth access tokens issued by Buildkite; a separate /direct endpoint accepts an API access token as bearer for headless agents."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

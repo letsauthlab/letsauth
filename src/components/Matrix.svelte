@@ -10,7 +10,7 @@ let dialog: HTMLDialogElement;
 let detailHost: HTMLDivElement;
 let opener: HTMLElement | null = null;
 
-const PARAMS = ["level", "category", "party", "q"] as const;
+const PARAMS = ["level", "category", "party", "q", "access", "auth", "group"] as const;
 type Param = (typeof PARAMS)[number];
 
 onMount(() => {
@@ -24,6 +24,9 @@ onMount(() => {
     category: form.querySelector("#f-category"),
     party: form.querySelector("#f-party"),
     q: form.querySelector("#f-q"),
+    access: form.querySelector("#f-access"),
+    auth: form.querySelector("#f-auth"),
+    group: form.querySelector("#f-group"),
   };
   const heads = Array.from(table.querySelectorAll<HTMLTableCellElement>("thead th[data-feature]"));
   const groupHeads = Array.from(
@@ -31,13 +34,59 @@ onMount(() => {
   );
   const rows = Array.from(table.querySelectorAll<HTMLTableRowElement>("tbody tr[data-server]"));
   const total = rows.length;
+  const tbody = table.querySelector("tbody");
+  // the server-rendered order is alphabetical; grouping keeps it inside each group
+  const alphabetical = [...rows];
+  // group labels and order, read from the filter options so the island carries no copy of them
+  const groupMeta = (key: "access" | "auth") =>
+    Array.from(controls[key]?.querySelectorAll("option") ?? [])
+      .filter((o) => o.value)
+      .map((o) => ({
+        value: o.value,
+        label: o.textContent?.replace(/\s*\(\d+\)$/, "") ?? o.value,
+      }));
 
   const state = (): Record<Param, string> => ({
     level: controls.level?.value ?? "",
     category: controls.category?.value ?? "",
     party: controls.party?.value ?? "",
     q: (controls.q?.value ?? "").trim().toLowerCase(),
+    access: controls.access?.value ?? "",
+    auth: controls.auth?.value ?? "",
+    group: controls.group?.value ?? "",
   });
+
+  /** Re-orders the rows by a class and inserts one header row per non-empty group (009). */
+  function regroup(by: string, columns: number) {
+    if (!tbody) return;
+    for (const tr of tbody.querySelectorAll("tr.group")) tr.remove();
+    if (by !== "access" && by !== "auth") {
+      for (const tr of alphabetical) tbody.appendChild(tr);
+      return;
+    }
+    for (const g of groupMeta(by)) {
+      const members = alphabetical.filter((tr) => tr.dataset[by] === g.value && !tr.hidden);
+      if (members.length === 0) continue;
+      const head = document.createElement("tr");
+      head.className = "group";
+      head.dataset.group = g.value;
+      const th = document.createElement("th");
+      th.scope = "colgroup";
+      th.textContent = `${by === "access" ? "Access" : "Auth"}: ${g.label}`;
+      const n = document.createElement("span");
+      n.className = "n";
+      n.textContent = String(members.length);
+      th.appendChild(n);
+      head.appendChild(th);
+      const td = document.createElement("td");
+      td.colSpan = Math.max(columns, 1);
+      head.appendChild(td);
+      tbody.appendChild(head);
+      for (const tr of members) tbody.appendChild(tr);
+    }
+    // hidden rows keep their place at the end so a later filter change finds them
+    for (const tr of alphabetical) if (tr.hidden) tbody.appendChild(tr);
+  }
 
   function apply(pushUrl = true) {
     const s = state();
@@ -63,13 +112,17 @@ onMount(() => {
     }
     let shown = 0;
     for (const tr of rows) {
-      const match = !s.q || (tr.dataset.name ?? "").includes(s.q);
+      const match =
+        (!s.q || (tr.dataset.name ?? "").includes(s.q)) &&
+        (!s.access || tr.dataset.access === s.access) &&
+        (!s.auth || tr.dataset.auth === s.auth);
       tr.hidden = !match;
       if (match) shown += 1;
       for (const td of tr.querySelectorAll<HTMLTableCellElement>("td[data-feature]")) {
         td.hidden = !visibleFeatures.has(td.dataset.feature ?? "");
       }
     }
+    regroup(s.group, visibleFeatures.size);
     if (count) {
       count.textContent = `${shown} of ${total} servers, ${visibleFeatures.size} of ${heads.length} features`;
     }
@@ -97,7 +150,7 @@ onMount(() => {
     clearTimeout(timer);
     timer = setTimeout(() => apply(), 150);
   });
-  for (const key of ["level", "category", "party"] as const) {
+  for (const key of ["level", "category", "party", "access", "auth", "group"] as const) {
     controls[key]?.addEventListener("change", () => apply());
   }
   form.addEventListener("submit", (e) => {

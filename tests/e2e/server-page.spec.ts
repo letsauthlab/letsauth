@@ -23,6 +23,8 @@ for (const server of data.servers) {
 }
 const withdrawn = data.servers.find((s) => s.withdrawn);
 const listed = data.servers.find((s) => !s.withdrawn && s.source);
+const classified = data.servers.find((s) => !s.withdrawn && s.access && s.auth);
+const unclassified = data.servers.find((s) => !s.withdrawn && !s.auth);
 
 test.describe("server page (US2)", () => {
   test("shows the newest observation as current and older ones under history (FR-004)", async ({
@@ -52,6 +54,30 @@ test.describe("server page (US2)", () => {
     await expect(page.locator(`a[href="${listed?.source}"]`).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Contribute a correction" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Withdraw this server" })).toBeVisible();
+  });
+
+  test("states access and auth with method, date and evidence (009 FR-004)", async ({ page }) => {
+    test.skip(!classified, "no classified server in the data");
+    if (!classified?.access || !classified.auth) return;
+    await page.goto(`/atlas/mcp/servers/${classified.id}/`);
+    const access = page.locator("dd[data-class='access']");
+    await expect(access).toHaveAttribute("data-value", classified.access.class);
+    await expect(access).toHaveAttribute("data-derived", "false");
+    await expect(access).toContainText(classified.access.observedAt.slice(0, 10));
+    await expect(access).toContainText(classified.access.observedBy);
+    const url = classified.access.evidence.match(/^(https:\/\/\S+)/)?.[1];
+    if (url) await expect(access.locator(`a[href="${url}"]`)).toBeVisible();
+    const auth = page.locator("dd[data-class='auth']");
+    await expect(auth).toHaveAttribute("data-value", classified.auth.class);
+  });
+
+  test("a server nobody classified reads as a derived unknown (009 FR-002)", async ({ page }) => {
+    test.skip(!unclassified, "every server carries a class statement");
+    await page.goto(`/atlas/mcp/servers/${unclassified?.id}/`);
+    const auth = page.locator("dd[data-class='auth']");
+    await expect(auth).toHaveAttribute("data-value", "unknown");
+    await expect(auth).toHaveAttribute("data-derived", "true");
+    await expect(auth).toContainText("nobody has stated this yet");
   });
 
   test("a withdrawn server shows the notice and has no matrix row", async ({ page }) => {

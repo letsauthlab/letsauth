@@ -5,4 +5,15 @@ homepage: https://hubspot.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: api-key
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/integrate-with-the-remote-hubspot-mcp-server — Any HubSpot account creates an MCP connector self-service under Development > MCP Connectors; the account admin must connect first before other users in the account can."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: unknown
+  method: manual
+  evidence: "https://developers.hubspot.com/docs/build-with-ai/remote-mcp-server — Current vendor docs document only https://mcp.hubspot.com with OAuth 2.1 + PKCE; the listed app.hubspot.com/mcp/v1/http endpoint appears on no HubSpot page found (third-party catalogs call it API-key), so its auth is unsettled."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

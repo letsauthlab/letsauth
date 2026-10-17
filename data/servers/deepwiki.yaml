@@ -6,4 +6,15 @@ homepage: https://devin.ai/
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: open
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.devin.ai/work-with-devin/deepwiki-mcp — Described as a free, remote, no-authentication-required service for public repositories."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: none
+  method: manual
+  evidence: "https://docs.devin.ai/work-with-devin/deepwiki-mcp — No authentication; private repositories use the separate mcp.devin.ai server with a Devin API key."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

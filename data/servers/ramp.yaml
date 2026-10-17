@@ -5,4 +5,15 @@ homepage: https://ramp.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: unknown
+  method: manual
+  evidence: "https://docs.ramp.com/developer-api/v1/guides/ramp-mcp-remote — Off-the-shelf clients work out of the box for Ramp users and a demo endpoint serves sample data, but the page does not say whether a Ramp business account is available by self-service; custom clients need their redirect URI allowlisted."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.ramp.com/developer-api/v1/guides/ramp-mcp-remote — Browser OAuth session per business; note the docs now give https://mcp.ramp.com/mcp rather than the listed ramp-mcp-remote.ramp.com URL."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

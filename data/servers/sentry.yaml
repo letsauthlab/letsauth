@@ -5,4 +5,15 @@ homepage: https://sentry.io
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.sentry.io/product/sentry-mcp/ — Any MCP-compatible client can connect with a Sentry account; no plan or admin requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.sentry.io/product/sentry-mcp/ — All connections use OAuth; a personal access token can instead be sent as a Sentry-Bearer header per the help center."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

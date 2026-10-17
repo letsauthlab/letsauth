@@ -5,6 +5,10 @@ homepage: https://stripe.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
 notes: >
   The directory lists both OAuth2.1 & API Key for this server; the atlas records the OAuth claim.
+auth:
+  class: oauth
+  method: manual
+  observedAt: 2026-10-17T00:00:00Z
+  observedBy: tester

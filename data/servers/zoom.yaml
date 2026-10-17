@@ -5,4 +5,15 @@ homepage: https://zoom.us
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: closed
+  method: manual
+  evidence: "https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — Needs a Zoom account with admin or developer authorizations, a manually created Marketplace app, product licenses, and a ZoomMate license for this server."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — OAuth 2.0 authorization code with PKCE using a pre-registered app's client ID and secret; no DCR or CIMD."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

@@ -66,14 +66,38 @@ describe("latestScan (FR-007)", () => {
     expect(v.checks.every((c) => c.status === "unknown" && c.observedAt === undefined)).toBe(true);
   });
 
-  it("does not grade a server listed as open or API-key, even with scanner observations", () => {
-    const open = { ...server, authClaimed: "open" as const };
-    const v = latestScan(
-      withObservations(checks.map((c) => obs(c.feature.id, "unsupported"))),
-      open,
-    );
-    expect(v.grade.letter).toBeNull();
-    expect(v.grade.label).toBe("No OAuth");
+  it("does not grade a server whose auth class is api-key or none, even with scanner observations (009 FR-005)", () => {
+    const statement = {
+      method: "manual" as const,
+      evidence: "https://example.com/docs — a pasted key",
+      observedAt: "2026-10-17T00:00:00Z",
+      observedBy: "tester",
+    };
+    const all = withObservations(checks.map((c) => obs(c.feature.id, "unsupported")));
+    const keyed = latestScan(all, { ...server, auth: { ...statement, class: "api-key" as const } });
+    expect(keyed.grade.letter).toBeNull();
+    expect(keyed.grade.label).toBe("No OAuth");
+    expect(keyed.grade.reasons[0]).toContain("API key");
+    const open = latestScan(all, { ...server, auth: { ...statement, class: "none" as const } });
+    expect(open.grade.label).toBe("No OAuth");
+    expect(open.grade.reasons[0]).toContain("no authentication");
+  });
+
+  it("grades a missing or unknown class like OAuth (009 SC-003)", () => {
+    const all = withObservations(checks.map((c) => obs(c.feature.id, "unsupported")));
+    const missing = latestScan(all, { ...server, auth: undefined });
+    expect(missing.grade.letter).toBe("F");
+    const unknown = latestScan(all, {
+      ...server,
+      auth: {
+        class: "unknown" as const,
+        method: "manual" as const,
+        evidence: "https://example.com — page says nothing",
+        observedAt: "2026-10-17T00:00:00Z",
+        observedBy: "tester",
+      },
+    });
+    expect(unknown.grade.letter).toBe("F");
   });
 
   it("ignores manual and documentation observations", () => {

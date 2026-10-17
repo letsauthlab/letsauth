@@ -5,4 +5,15 @@ homepage: https://zapier.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: api-key
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.zapier.com/mcp/get-started/quickstart — Prerequisites are a Zapier account and a Streamable HTTP client; tool calls consume tasks from the account's plan."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.zapier.com/mcp/overview/how-connections-work — OAuth sign-in for listed clients; other clients use a per-server connection token as bearer or query parameter. The current endpoint is /api/v1/connect, not the listed /api/mcp/mcp."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

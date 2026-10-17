@@ -1,0 +1,11 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/mcp": {
+      "status": 200,
+      "headers": {
+        "content-type": "text/event-stream"
+      }
+    }
+  }
+}

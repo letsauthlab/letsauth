@@ -5,7 +5,18 @@ homepage: https://plaid.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
+access:
+  class: closed
+  method: manual
+  evidence: "https://plaid.com/docs/resources/mcp/ — Works with Production data only; the team must be approved for Production access with at least one Plaid product before using the server."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://plaid.com/docs/resources/mcp/ — OAuth client_credentials token with scope mcp:dashboard from /oauth/token, sent as a bearer header and refreshed every 15 minutes."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
 notes: >
   The vendor's MCP page documents an OAuth 2.0 client_credentials grant with the team's client ID
   and production secret (scope mcp:dashboard); there is no user consent flow for MCP clients.

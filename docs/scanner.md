@@ -79,6 +79,14 @@ the Notes column: the listed URL is probably stale (servers that retired an `/ss
 answer at `/mcp`). The fix is to the server file, by pull request; nothing is written to the
 observations for it.
 
+The report also carries an `authSuggestion` (009): `oauth` when a 401 challenge named a
+`resource_metadata` pointer or a protected resource metadata document was found by either route,
+`none` when a step of the ladder was accepted with 200, otherwise null (a bare 401 settles
+nothing: a bearer challenge may guard an API key as well as an OAuth token). When the suggestion
+differs from the server's stated `auth` class, or the class is not stated, the run summary's Notes
+column says so. Like the stale-URL note, it is a hint for the maintainer, fixed in the server
+file; the scanner never writes a class.
+
 ## Running it
 
 ```sh
@@ -106,8 +114,9 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 
 1. shallow-clones `main` with the job's GitHub token and installs dependencies;
 2. runs `pnpm scan --all --write --summary scan-summary.md` over every listed server that is not
-   withdrawn, has an HTTP transport and is not listed as open or API-key (a server that fails is
-   recorded as `unknown`);
+   withdrawn, has an HTTP transport and whose `auth` class is not `api-key` or `none` (a server
+   that fails is recorded as `unknown`; one whose class is not yet stated is scanned, and the
+   summary says what its endpoint's answer suggests);
 3. runs `pnpm validate:data` and `pnpm check:append-only`; a failure aborts the run and nothing
    is pushed;
 4. when nothing under `data/observations/` changed, logs "nothing to append" and stops;
@@ -222,7 +231,9 @@ well-known location or announced in the `WWW-Authenticate` challenge; the scanne
 a server that offers only the challenge is graded, one where the challenge could not be judged
 and the well-known document is missing is withheld, and only a server that offers neither fails
 on discovery. MAY-level and deprecated requirements are listed and never change
-the grade. Servers listed as open or API-key are neither scanned nor graded ("No OAuth").
+the grade. Servers whose `auth` class (`docs/data-model.md` › Server, roadmap 009) is `api-key`
+or `none` are neither scanned nor graded ("No OAuth"); the class is an evidenced statement on the
+server file.
 
 ## What there is not
 

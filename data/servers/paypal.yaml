@@ -5,7 +5,18 @@ homepage: https://paypal.com
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developer.paypal.com/ai-tools/mcp-server — Connects with a PayPal account login (sandbox for developer accounts, production for business accounts); no sales or approval step is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developer.paypal.com/ai-tools/mcp-server — Browser login and consent on first connection, or an OAuth client-credentials access token from the developer dashboard passed as bearer."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
 notes: >
   The vendor's MCP page documents connecting with the account's own REST client ID and secret sent
   as a bearer token through mcp-remote; it does not describe an OAuth 2.1 user authorization flow

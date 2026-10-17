@@ -10,6 +10,14 @@ import {
   matrixColumns,
   revisionsNewestFirst,
 } from "@/lib/atlas";
+import {
+  ACCESS_DESCRIPTION,
+  ACCESS_LABEL,
+  AUTH_DESCRIPTION,
+  AUTH_LABEL,
+  accessOf,
+  authOf,
+} from "@/lib/classes";
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, METHOD_LABEL, PARTY_LABEL } from "@/lib/labels";
 import { latestScan } from "@/lib/scanner";
@@ -43,6 +51,26 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
 const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applicable"] as const;
 const pct = (n: number) => Math.round((n / columns.length) * 1000) / 10;
 const scanView = latestScan(data, server);
+const access = accessOf(server);
+const auth = authOf(server);
+const classes = [
+  {
+    key: "access",
+    label: "Access",
+    view: access,
+    name: ACCESS_LABEL[access.value],
+    description: ACCESS_DESCRIPTION[access.value],
+    statement: server.access,
+  },
+  {
+    key: "auth",
+    label: "Auth",
+    view: auth,
+    name: AUTH_LABEL[auth.value],
+    description: AUTH_DESCRIPTION[auth.value],
+    statement: server.auth,
+  },
+];
 ---
 
 <Base
@@ -86,15 +114,38 @@ const scanView = latestScan(data, server);
                 </dd>
                 <dt>Transport</dt>
                 <dd>{TRANSPORT_LABEL[server.transport]}</dd>
-                {server.authClaimed && (
+                {classes.map((c) => (
                   <>
-                    <dt>Authentication as listed</dt>
-                    <dd>
-                      <code>{server.authClaimed}</code>
-                      <span class="muted"> (the source's own label, not an observation)</span>
+                    <dt>{c.label}</dt>
+                    <dd data-class={c.key} data-value={c.view.value} data-derived={c.view.derived ? "true" : "false"}>
+                      <span class:list={["pill", { accent: !c.view.derived && c.view.value !== "unknown" }]}>{c.name}</span>
+                      {c.statement ? (
+                        <span class="class-statement">
+                          {" "}
+                          {c.description}{" "}
+                          <span class="muted">
+                            {METHOD_LABEL[c.statement.method]} · {c.statement.observedBy} ·{" "}
+                            <time datetime={c.statement.observedAt}>{c.statement.observedAt.slice(0, 10)}</time> ·{" "}
+                            {evidenceUrl(c.statement.evidence) ? (
+                              <>
+                                <a href={evidenceUrl(c.statement.evidence)} rel="noopener">
+                                  evidence
+                                </a>
+                                {c.statement.evidence.replace(/^https:\/\/\S+\s*/, "").replace(/^—\s*/, "") && (
+                                  <> · {c.statement.evidence.replace(/^https:\/\/\S+\s*/, "").replace(/^—\s*/, "")}</>
+                                )}
+                              </>
+                            ) : (
+                              c.statement.evidence
+                            )}
+                          </span>
+                        </span>
+                      ) : (
+                        <span class="muted"> nobody has stated this yet</span>
+                      )}
                     </dd>
                   </>
-                )}
+                ))}
                 <dt>Why it is listed</dt>
                 <dd>
                   {LISTED_LABEL[server.listed]}{" "}
@@ -322,6 +373,16 @@ const scanView = latestScan(data, server);
   }
   .muted {
     color: var(--ink-muted);
+  }
+  .class-statement {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .class-statement .muted {
+    display: block;
+    font-size: var(--text-xs);
+    margin-top: 0.15rem;
   }
   .bar {
     display: flex;

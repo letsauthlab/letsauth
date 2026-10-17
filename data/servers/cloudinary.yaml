@@ -5,4 +5,15 @@ homepage: https://cloudinary.com
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://cloudinary.com/documentation/cloudinary_llm_mcp — Any Cloudinary account connects by logging in and selecting a product environment; no plan or admin requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://asset-management.mcp.cloudinary.com/ — OAuth 2.0 is the default when no headers are sent; API key, secret and cloud name can be passed in a cloudinary-url header instead."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

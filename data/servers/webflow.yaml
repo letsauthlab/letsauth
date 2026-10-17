@@ -5,4 +5,15 @@ homepage: https://webflow.com
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.webflow.com/mcp/faqs.md — Site owners and admins of any Webflow workspace can authorize the server; no plan requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://help.webflow.com/hc/en-us/articles/52536616701971-Connect-your-AI-tools-to-the-Webflow-MCP-server — OAuth login page authorizing selected sites and workspaces; the listed /sse endpoint was replaced by /mcp in November 2025."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

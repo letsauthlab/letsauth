@@ -5,4 +5,15 @@ homepage: https://miro.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.miro.com/docs/mcp-intro — Any Miro user connects and selects a team; on Enterprise plans the server is disabled by default until an admin enables it."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developers.miro.com/docs/miro-mcp — OAuth 2.1 with dynamic client registration; no API-key alternative is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

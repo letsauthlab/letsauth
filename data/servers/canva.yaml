@@ -5,4 +5,15 @@ homepage: https://canva.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://www.canva.dev/docs/apps/mcp/access/ — Each user signs in with their own Canva account; developers register an app in the Developer Portal with no waitlist (the waitlist applies only to CIMD-only clients wanting redirect URIs allowlisted)."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://www.canva.dev/docs/mcp/ — OAuth per user, with Client ID Metadata Documents recommended, dynamic client registration still available and manual client registration possible."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

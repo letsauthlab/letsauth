@@ -6,4 +6,15 @@ homepage: https://github.com/mondaycom/mcp
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developer.monday.com/api-reference/docs/integrate-with-monday-mcp — Available on all plans; a personal API token path needs no admin approval, pre-approved clients use the hosted MCP permission, and other DCR clients need an account admin to approve the connection."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developer.monday.com/api-reference/docs/integrate-with-monday-mcp — OAuth 2.0 authorization code (own app or dynamic client registration); a personal API token as bearer is also accepted. Note the listed /sse endpoint is deprecated in favour of /mcp."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

@@ -6,4 +6,15 @@ homepage: https://stackoverflow.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://mcp.stackoverflow.com/ — Any Stack Overflow account can authenticate, limited to 100 calls per day per user (contact sales for more)."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://mcp.stackoverflow.com/ — Browser login to Stack Exchange and a consent step authorizing the client; the page describes the flow without naming OAuth."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

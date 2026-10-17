@@ -1,4 +1,4 @@
-import { claimsNoOAuth, type Grade, grade, NO_OAUTH, NOT_SCANNED } from "../scanner/grade";
+import { type Grade, grade, NOT_SCANNED, noOAuth } from "../scanner/grade";
 import { type CheckResult, passiveFeatures, REPORT_VERSION, type Report } from "../scanner/report";
 import { SCANNER_ID } from "../scanner/version";
 import type { Feature, FeatureRevision, Observation, Server } from "../schema";
@@ -9,6 +9,7 @@ import {
   getSpec,
   observationsFor,
 } from "./atlas";
+import { authOf, hasNoOAuth } from "./classes";
 import type { Dataset } from "./data";
 
 /**
@@ -92,7 +93,11 @@ export function latestScan(
     checks,
     scannedAt,
     scanned,
-    grade: claimsNoOAuth(server.authClaimed) ? NO_OAUTH : scanned ? grade(checks) : NOT_SCANNED,
+    grade: hasNoOAuth(server)
+      ? noOAuth(authOf(server).value as "api-key" | "none")
+      : scanned
+        ? grade(checks)
+        : NOT_SCANNED,
   };
 }
 

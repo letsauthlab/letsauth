@@ -5,4 +5,15 @@ homepage: https://netlify.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://github.com/netlify/netlify-mcp — Prerequisites are only a Netlify account and an MCP client; no plan or admin requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: unknown
+  method: manual
+  evidence: "https://docs.netlify.com/build/build-with-ai/agent-setup-guides/set-up-codex-for-netlify/ — Docs say to authorize Netlify if prompted after adding the remote server but never name the mechanism; the PAT instructions apply to the local npx server only."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

@@ -6,6 +6,17 @@ import {
   revisionDiff,
   revisionsNewestFirst,
 } from "@/lib/atlas";
+import {
+  ACCESS_DESCRIPTION,
+  ACCESS_LABEL,
+  ACCESS_ORDER,
+  AUTH_DESCRIPTION,
+  AUTH_LABEL,
+  AUTH_ORDER,
+  accessOf,
+  authOf,
+  countBy,
+} from "@/lib/classes";
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, PARTY_LABEL, STATUS_ORDER } from "@/lib/labels";
 import { latestScan, passiveChecks } from "@/lib/scanner";
@@ -41,6 +52,15 @@ const scannerChecks = passiveChecks(data, revisionId).length;
 let observedCells = 0;
 for (const cell of matrix.cells.values()) if (cell.observation) observedCells += 1;
 const totalCells = matrix.rows.length * matrix.columns.length;
+
+// the access and auth classes of the listed servers (009), for the facts, the filters and the legend
+const accessCounts = countBy(matrix.rows, ACCESS_ORDER, accessOf);
+const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
+const classWords = (counts: { value: string; count: number }[], label: Record<string, string>) =>
+  counts
+    .filter((c) => c.count > 0)
+    .map((c) => `${c.count} ${label[c.value]?.toLowerCase()}`)
+    .join(", ");
 ---
 
 <div class="wrap">
@@ -66,6 +86,12 @@ const totalCells = matrix.rows.length * matrix.columns.length;
       <div>
         <dt>Cells observed</dt>
         <dd class="num">{observedCells}<span class="of"> / {totalCells}</span></dd>
+      </div>
+      <div class="atlas-head__classes">
+        <dt>Access</dt>
+        <dd class="words" data-classes="access">{classWords(accessCounts, ACCESS_LABEL)}</dd>
+        <dt>Auth</dt>
+        <dd class="words" data-classes="auth">{classWords(authCounts, AUTH_LABEL)}</dd>
       </div>
     </dl>
   </header>
@@ -123,6 +149,28 @@ const totalCells = matrix.rows.length * matrix.columns.length;
       </div>
     </div>
     <div class="field">
+      <label for="f-access">Access</label>
+      <select id="f-access" name="access">
+        <option value="">Any access</option>
+        {accessCounts.map((c) => <option value={c.value}>{ACCESS_LABEL[c.value]} ({c.count})</option>)}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-auth">Auth</label>
+      <select id="f-auth" name="auth">
+        <option value="">Any auth</option>
+        {authCounts.map((c) => <option value={c.value}>{AUTH_LABEL[c.value]} ({c.count})</option>)}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-group">Group rows</label>
+      <select id="f-group" name="group">
+        <option value="">A to Z</option>
+        <option value="access">By access</option>
+        <option value="auth">By auth</option>
+      </select>
+    </div>
+    <div class="field">
       <label for="f-level">Level</label>
       <select id="f-level" name="level">
         <option value="">All levels</option>
@@ -178,6 +226,34 @@ const totalCells = matrix.rows.length * matrix.columns.length;
       the {scannerChecks} requirements it can read from public metadata, by a published rule; it
       opens the server's report. Rows are alphabetical and nothing here ranks servers.
     </p>
+    <dl class="legend__classes" aria-label="Access and auth classes">
+      <div>
+        <dt>Access</dt>
+        <dd>
+          {ACCESS_ORDER.map((v, i) => (
+            <>
+              {i > 0 && " · "}
+              <dfn title={ACCESS_DESCRIPTION[v]}>{ACCESS_LABEL[v].toLowerCase()}</dfn>
+            </>
+          ))}
+          : who can connect, as the server page's evidence says.
+        </dd>
+      </div>
+      <div>
+        <dt>Auth</dt>
+        <dd>
+          {AUTH_ORDER.map((v, i) => (
+            <>
+              {i > 0 && " · "}
+              <dfn title={AUTH_DESCRIPTION[v]}>{AUTH_LABEL[v].toLowerCase()}</dfn>
+            </>
+          ))}
+          : how the endpoint authenticates clients. A dashed pill is a class nobody has stated
+          yet. Both are evidenced statements, not the directory's label; API-key and
+          unauthenticated servers are not graded.
+        </dd>
+      </div>
+    </dl>
   </section>
 
   <MatrixTable matrix={matrix} diff={diff} scans={scans} />
@@ -234,6 +310,19 @@ const totalCells = matrix.rows.length * matrix.columns.length;
     font-size: var(--text-xl);
     letter-spacing: var(--tracking-tight);
     line-height: 1.1;
+  }
+  .atlas-head__classes {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem var(--space-3);
+    align-items: baseline;
+  }
+  .atlas-head__facts .words {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: var(--text-xs);
+    letter-spacing: 0;
+    color: var(--ink-muted);
   }
   .atlas-head__facts .of {
     font-family: var(--font-mono);
@@ -369,6 +458,39 @@ const totalCells = matrix.rows.length * matrix.columns.length;
     font-size: var(--text-xs);
     line-height: 1.5;
   }
+  .legend__classes {
+    flex-basis: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+  .legend__classes > div {
+    display: contents;
+  }
+  .legend__classes dt {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    padding-top: 0.15em;
+  }
+  .legend__classes dd {
+    margin: 0;
+    max-width: 80ch;
+  }
+  .legend__classes dfn {
+    font-style: normal;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--ink);
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+    cursor: help;
+  }
 
   .page-foot {
     margin-top: var(--space-6);
@@ -387,11 +509,15 @@ const totalCells = matrix.rows.length * matrix.columns.length;
       align-items: start;
     }
     .atlas-head__facts {
+      flex-wrap: wrap;
       border-left: 0;
       padding-left: 0;
       padding-top: var(--space-4);
       border-top: 1px solid var(--line);
-      gap: var(--space-5);
+      gap: var(--space-4) var(--space-5);
+    }
+    .atlas-head__classes {
+      flex-basis: 100%;
     }
   }
   @media (max-width: 40rem) {

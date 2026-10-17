@@ -5,4 +5,15 @@ homepage: https://www.prisma.io/docs/postgres/integrations/mcp-server#remote-mcp
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://www.prisma.io/docs/postgres/integrations/mcp-server — Connects to the Prisma Console workspace you choose; no plan or admin requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://www.prisma.io/docs/postgres/integrations/mcp-server — The server authenticates with Prisma Console in the browser on first use with no token in the client config; the page does not use the word OAuth."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

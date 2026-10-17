@@ -5,4 +5,15 @@ homepage: https://figma.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/ — Any Figma account, on any plan including Starter, connects through a client listed in the Figma MCP catalog, with per-seat rate limits; a new client must join a waitlist, which restricts client authors, not the person connecting."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/ — Sign in with the Figma account and click Allow access on first connection; Okta XAA enterprise-managed authorization is available for Claude."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

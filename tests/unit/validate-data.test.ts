@@ -22,6 +22,10 @@ describe("scripts/validate-data.ts", () => {
     expect(result.stderr).toMatch(/observations\/stripe\.yaml\[1\]\.evidence: required/);
   });
 
+  it("names the field of a class statement without evidence (009 FR-001)", () => {
+    expect(result.stderr).toMatch(/servers\/stripe\.yaml\.auth\.evidence: /);
+  });
+
   it("names the feature field for an unknown feature id", () => {
     expect(result.stderr).toMatch(/observations\/stripe\.yaml\[2\]\.feature: .*mcp\.as\.nope/);
   });

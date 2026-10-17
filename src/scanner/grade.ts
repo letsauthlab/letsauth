@@ -31,7 +31,7 @@ export const GRADE_RULE: readonly string[] = [
   "A when every MUST-level and SHOULD-level check is supported.",
   "A MUST the server may meet in either of two ways is met when either way is supported, and counts as unknown, not unsupported, while the other way is unknown: protected resource metadata may be served at a well-known location or announced in the WWW-Authenticate challenge the endpoint returns to an unauthenticated request; the scanner reads both.",
   "MAY-level and deprecated requirements are listed and never change the grade.",
-  "Servers listed as open or API-key are not graded: there is no OAuth authorization to check.",
+  "Servers whose auth class is API key or no authentication are not graded: there is no OAuth authorization to check. The class is an evidenced statement on the server, not the directory's claim.",
 ];
 
 /**
@@ -106,14 +106,18 @@ export function grade(input: readonly Gradable[]): Grade {
 /** The grade shown for a server that has no scanner observation at all. */
 export const NOT_SCANNED: Grade = { letter: null, label: "Not scanned", reasons: [] };
 
-/** The grade shown for a server whose listing says it uses no OAuth; such servers are not scanned. */
-export const NO_OAUTH: Grade = {
-  letter: null,
-  label: "No OAuth",
-  reasons: ["Listed as open or API-key: there is no OAuth authorization to grade."],
-};
-
-/** True when the listing says the server uses no OAuth, so a scan has nothing to judge. */
-export function claimsNoOAuth(authClaimed: string | undefined): boolean {
-  return authClaimed === "open" || authClaimed === "api-key";
+/**
+ * The grade shown for a server whose auth class says it uses no OAuth (009); such servers are
+ * not scanned. `how` is the class as the server file states it, for the reason line.
+ */
+export function noOAuth(how: "api-key" | "none"): Grade {
+  return {
+    letter: null,
+    label: "No OAuth",
+    reasons: [
+      how === "api-key"
+        ? "Auth class API key: there is no OAuth authorization to grade."
+        : "Auth class no authentication: there is no OAuth authorization to grade.",
+    ],
+  };
 }

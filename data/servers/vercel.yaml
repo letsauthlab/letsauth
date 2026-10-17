@@ -5,4 +5,15 @@ homepage: https://vercel.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://vercel.com/docs/agent-resources/vercel-mcp — Any Vercel account connects through an AI client reviewed and approved by Vercel; a new client must submit a review form, which restricts client authors, not the person connecting."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://vercel.com/docs/agent-resources/vercel-mcp — Remote MCP with OAuth and a mandatory consent screen per the MCP Authorization spec."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

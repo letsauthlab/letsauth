@@ -5,4 +5,15 @@ homepage: https://notion.so
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.notion.com/guides/mcp/get-started-with-mcp — Notion MCP works on every plan for workspace members (guests cannot connect); MCP tokens and enterprise-managed auth are Business/Enterprise extras."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developers.notion.com/guides/mcp/build-mcp-client — OAuth 2.0 authorization code with PKCE and dynamic client registration; Business/Enterprise workspace owners can also create a static MCP token sent as bearer."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

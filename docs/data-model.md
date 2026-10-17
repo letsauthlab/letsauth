@@ -93,9 +93,20 @@ A public MCP server (or, later, another agent endpoint) that the MCP Atlas track
 | `transport` | enum | `streamable-http`, `sse`, `stdio-only` |
 | `listed` | enum | `opt-in`, `public-directory`, `maintainer-added` — why it is in the atlas |
 | `source` | url | Where the listing came from; required unless `opt-in` |
-| `authClaimed` | enum? | `oauth2.1`, `oauth2.1-no-dcr`, `api-key`, `open`, `unknown` — the directory's own claim, separate from observations |
+| `access` | Classification? | Who can connect: `public` (anyone; where an account is needed, anyone can create one by self-service), `closed` (an existing contract, a tenant an admin must enable, a sales process or a private beta stands in the way; a catalog of approved clients is not an obstacle to the person and stays in the evidence note), `unknown` |
+| `auth` | Classification? | How the endpoint authenticates clients: `oauth` (an OAuth 2.x authorization through the server's authorization server), `api-key` (a static credential the user pastes into the client), `none`, `unknown` |
 | `withdrawn` | object? | `{ at, reason }`; a withdrawn server is excluded from pages and exports |
 | `notes` | string? | |
+
+A **Classification** is a dated, evidenced statement about the server as a whole, where an
+observation is one about a feature: `{ class, method, evidence, observedAt, observedBy }`, with
+`method` and `evidence` as on an observation. It is written by a person or recorded from a vendor
+page and corrected in place by pull request; git keeps the history. A server without one is
+rendered as a *derived* `unknown`, like a cell without an observation, never as a verdict. The
+atlas filters and groups by both classes; the scanner scans a server unless its `auth` is
+`api-key` or `none`, grades none of those ("No OAuth"), and reports in its run summary when what
+an endpoint answered does not sit with the stated class. The scanner never writes a
+classification.
 
 ### Observation
 
@@ -218,6 +229,22 @@ description: >
   Clients identify themselves with a URL that serves their metadata instead of registering
   dynamically. Preferred over Dynamic Client Registration from this revision on.
 supersedes: mcp.dcr
+```
+
+```yaml
+# data/servers/example-mcp.yaml (the two classes)
+access:
+  class: public
+  method: manual
+  evidence: "https://example.com/docs/mcp — any account can connect; sign-up is self-service"
+  observedAt: 2026-10-17T00:00:00Z
+  observedBy: jbspeakr
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://example.com/docs/mcp — the client is sent through the OAuth sign-in"
+  observedAt: 2026-10-17T00:00:00Z
+  observedBy: jbspeakr
 ```
 
 ```yaml

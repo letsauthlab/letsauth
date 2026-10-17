@@ -5,4 +5,15 @@ homepage: https://huggingface.co
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: open
+access:
+  class: public
+  method: manual
+  evidence: "https://huggingface.co/blog/building-hf-mcp — Anonymous users get a standard tool set; logged-in users get their configured tools and Spaces."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: none
+  method: manual
+  evidence: "https://github.com/huggingface/hf-mcp-server — Token-less requests continue with the anonymous tool set; an HF token as bearer header or OAuth login via ?login are optional."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

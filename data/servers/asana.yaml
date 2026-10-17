@@ -5,4 +5,15 @@ homepage: https://asana.com
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.asana.com/docs/using-asanas-mcp-server — Any Asana user can connect; the v2 server needs an OAuth app pre-registered by self-service in the Asana developer console, and Enterprise+ admins may block clients via app management."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developers.asana.com/docs/integrating-with-asanas-mcp-server — OAuth 2.0 authorization code with PKCE; no dynamic client registration and no API-key/PAT alternative for the MCP server."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

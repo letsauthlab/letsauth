@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { currentCell, currentRevision, matrixFor } from "../../src/lib/atlas";
+import { ACCESS_ORDER, AUTH_ORDER, accessOf, authOf, countBy } from "../../src/lib/classes";
 import { getDataset } from "../../src/lib/data";
 import { latestScan } from "../../src/lib/scanner";
 import { expectNoSeriousA11yViolations } from "./helpers";
@@ -13,6 +14,14 @@ const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applica
 const withUnsupported = matrix.rows.find(
   (s) => matrix.cells.get(`${s.id}|mcp.as.dcr`)?.status === "unsupported",
 );
+// the most common access and auth classes, for the filter tests (009)
+const topAccess = [...countBy(matrix.rows, ACCESS_ORDER, accessOf)].sort(
+  (a, b) => b.count - a.count,
+)[0];
+const topAuth = [...countBy(matrix.rows, AUTH_ORDER, authOf)].sort((a, b) => b.count - a.count)[0];
+const bothCount = matrix.rows.filter(
+  (s) => accessOf(s).value === topAccess?.value && authOf(s).value === topAuth?.value,
+).length;
 // a server with nothing but unknown cells
 const allUnknown = matrix.rows.find((s) =>
   matrix.columns.every((f) => currentCell(data, s, f, revision.id).status === "unknown"),
@@ -85,6 +94,79 @@ test.describe("matrix page (US1)", () => {
     await expect(page.locator("#f-q")).toHaveValue("stripe");
   });
 
+  test("every row carries its access and auth class as pills (009 FR-002)", async ({ page }) => {
+    await page.goto("/atlas/mcp/");
+    for (const server of matrix.rows.slice(0, 5)) {
+      const row = page.locator(`#matrix tbody tr[data-server="${server.id}"]`);
+      const access = accessOf(server);
+      const auth = authOf(server);
+      await expect(row).toHaveAttribute("data-access", access.value);
+      await expect(row).toHaveAttribute("data-auth", auth.value);
+      const pills = row.locator(".classes .class");
+      await expect(pills).toHaveCount(2);
+      if (access.derived) await expect(pills.first()).toHaveClass(/derived/);
+      else await expect(pills.first()).not.toHaveClass(/derived/);
+    }
+  });
+
+  test("filters rows by access and auth class from the URL (009 FR-003)", async ({ page }) => {
+    await page.goto(`/atlas/mcp/?access=${topAccess?.value}&auth=${topAuth?.value}`);
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    const visible = page.locator("#matrix tbody tr[data-server]:not([hidden])");
+    await expect(visible).toHaveCount(bothCount);
+    await expect(page.locator("#matrix-count")).toHaveText(
+      new RegExp(`^${bothCount} of ${matrix.rows.length} servers`),
+    );
+    const classes = await visible.evaluateAll((els) =>
+      els.map((e) => `${(e as HTMLElement).dataset.access}|${(e as HTMLElement).dataset.auth}`),
+    );
+    expect(new Set(classes)).toEqual(new Set([`${topAccess?.value}|${topAuth?.value}`]));
+    await expect(page.locator("#f-access")).toHaveValue(topAccess?.value ?? "");
+    await expect(page.locator("#f-auth")).toHaveValue(topAuth?.value ?? "");
+  });
+
+  test("groups rows by a class with a header per group, alphabetical within (009 FR-003)", async ({
+    page,
+  }) => {
+    await page.goto("/atlas/mcp/?group=auth");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    const present = countBy(matrix.rows, AUTH_ORDER, authOf).filter((c) => c.count > 0);
+    const heads = page.locator("#matrix tbody tr.group");
+    await expect(heads).toHaveCount(present.length);
+    const groups = await heads.evaluateAll((els) =>
+      els.map((e) => (e as HTMLElement).dataset.group),
+    );
+    expect(groups).toEqual(present.map((c) => c.value));
+    // rows between two headers share the header's class and stay alphabetical
+    const order = await page.locator("#matrix tbody tr:not([hidden])").evaluateAll((els) =>
+      els.map((e) => {
+        const el = e as HTMLElement;
+        return el.classList.contains("group")
+          ? `#${el.dataset.group}`
+          : `${el.dataset.auth}|${el.dataset.name}`;
+      }),
+    );
+    let current = "";
+    let lastName = "";
+    for (const entry of order) {
+      if (entry.startsWith("#")) {
+        current = entry.slice(1);
+        lastName = "";
+        continue;
+      }
+      const [cls, name] = entry.split("|");
+      expect(cls).toBe(current);
+      expect((name ?? "").localeCompare(lastName)).toBeGreaterThanOrEqual(0);
+      lastName = name ?? "";
+    }
+    await page.selectOption("#f-group", "");
+    await expect(heads).toHaveCount(0);
+    const names = await page
+      .locator("#matrix tbody th[scope='row'] a.server-link")
+      .allTextContents();
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+  });
+
   test("rows are alphabetical and nothing sorts or scores servers (FR-014)", async ({ page }) => {
     await page.goto("/atlas/mcp/");
     const names = await page
@@ -129,6 +211,17 @@ test.describe("matrix page (US1)", () => {
     await expect(summary).toBeFocused();
   });
 
+  test("has no horizontal page scroll at phone width (constitution V)", async ({ page }) => {
+    await page.setViewportSize({ width: 412, height: 900 });
+    await page.goto("/atlas/mcp/?group=access");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    const [scroll, inner] = await page.evaluate(() => [
+      document.documentElement.scrollWidth,
+      window.innerWidth,
+    ]);
+    expect(scroll).toBeLessThanOrEqual(inner ?? 0);
+  });
+
   test("has no serious accessibility violations", async ({ page }) => {
     await page.goto("/atlas/mcp/");
     await expectNoSeriousA11yViolations(page);
@@ -160,5 +253,19 @@ test.describe("matrix page without JavaScript", () => {
     await expect(details).toHaveAttribute("open", "");
     const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
     await expect(details.locator("[data-detail]")).toContainText(winning?.method ?? "vendor-claim");
+  });
+
+  test("renders every row alphabetically with its class pills and no group rows (009 FR-003)", async ({
+    page,
+  }) => {
+    await page.goto("/atlas/mcp/?group=auth&access=public");
+    await expect(page.locator("#matrix tbody tr.group")).toHaveCount(0);
+    await expect(page.locator("#matrix tbody tr[data-server] .classes .class")).toHaveCount(
+      matrix.rows.length * 2,
+    );
+    const names = await page
+      .locator("#matrix tbody th[scope='row'] a.server-link")
+      .allTextContents();
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
 });

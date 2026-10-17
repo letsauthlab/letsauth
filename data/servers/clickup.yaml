@@ -5,4 +5,15 @@ homepage: https://clickup.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
+access:
+  class: public
+  method: manual
+  evidence: "https://help.clickup.com/hc/en-us/articles/33335772678423-What-is-ClickUp-MCP — ClickUp MCP is available on all plans including Free Forever, with per-plan daily rate limits."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developer.clickup.com/docs/connect-an-ai-assistant-to-clickups-mcp-server — OAuth 2.1 with PKCE only; the FAQ states API keys or own access tokens cannot be used."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

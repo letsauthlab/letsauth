@@ -5,4 +5,15 @@ homepage: https://atlassian.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
+access:
+  class: public
+  method: manual
+  evidence: "https://support.atlassian.com/atlassian-rovo-mcp-server/docs/setting-up-clients/ — Requires only an Atlassian Cloud site with Jira, Compass or Confluence and a browser for the OAuth flow."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developer.atlassian.com/cloud/rovo-mcp/guides/configuring-oauth-2-1/ — OAuth 2.1 authorization code with user consent is the recommended method; an API token is accepted only if the org admin has enabled it."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

@@ -6,4 +6,15 @@ homepage: https://cloudflare.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://developers.cloudflare.com/agents/model-context-protocol/cloudflare/servers-for-cloudflare/ — Cloudflare's managed MCP servers connect with a Cloudflare account via OAuth; no plan or admin gate is documented, but the Workers Bindings server is marked deprecated in favour of mcp.cloudflare.com."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://raw.githubusercontent.com/cloudflare/mcp-server-cloudflare/main/apps/workers-bindings/README.md — Built-in Cloudflare OAuth flow in the browser; the main Cloudflare API server also accepts an API token as bearer, which is not documented for the bindings server."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

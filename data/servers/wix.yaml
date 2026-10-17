@@ -5,4 +5,15 @@ homepage: https://wix.com
 transport: sse
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://www.wix.com/studio/developers/mcp-server — A Wix account is required and you are prompted to create one if needed; no plan requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://dev.wix.com/docs/overview/ai-the-wix-platform/the-wix-mcp — By default the agent authenticates through the Wix account; an API key plus wix-account-id header is also accepted. The listed /sse path is superseded by /mcp."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

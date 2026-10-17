@@ -100,8 +100,16 @@ builds on, profiles or replaces, in the row of its publishing body.
 
 - One file per server in `data/servers/<id>.yaml`. `listed` says why it is in the atlas and
   `source` is the public page that lists it (required unless `listed: opt-in`).
-- `authClaimed` is the source's own label (`oauth2.1`, `oauth2.1-no-dcr`, `api-key`, `open`),
-  shown on the server page as a claim, never as an observation.
+- `access` and `auth` are the server's two classes (`docs/data-model.md` › Server): who can
+  connect (`public`, `closed`, `unknown`) and how the endpoint authenticates clients (`oauth`,
+  `api-key`, `none`, `unknown`). Each is `{ class, method, evidence, observedAt, observedBy }`
+  with the vendor's documentation page as evidence; `method` is `manual` when you read the page,
+  `vendor-claim` when you only copied a directory's label. Correct a class in place with a newer
+  `observedAt` and the page that shows the change; git keeps the history. Leave the field out
+  rather than guess: a missing class renders as a dashed "unknown" and the server is still
+  scanned. `auth: api-key` or `auth: none` takes the server out of the nightly scan and gives it
+  the "No OAuth" grade; when a scan's run summary says the endpoint's answer suggests another
+  class, check the page and correct the file, not the observations.
 - `transport: stdio-only` makes every cell `not-applicable` without observations.
 - The seed list came from `jaw9c/awesome-remote-mcp-servers` (research R4). To re-seed from a
   newer copy of that list, regenerate only servers that do not yet have a file; never overwrite

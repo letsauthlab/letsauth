@@ -5,4 +5,15 @@ homepage: https://attio.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.attio.com/mcp/overview — Any Attio user adds the URL as a custom connector and logs in with their Attio account; no plan or admin step is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.attio.com/mcp/overview — OAuth login as the Attio user with dynamic client registration; the docs state no API keys are required."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

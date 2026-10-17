@@ -5,4 +5,15 @@ homepage: https://supabase.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
+access:
+  class: public
+  method: manual
+  evidence: "https://supabase.com/docs/guides/ai-tools/mcp — Log in to any Supabase account in the browser and grant the client access to an organization; no plan or admin requirement is documented."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://supabase.com/docs/guides/ai-tools/mcp — OAuth with dynamic client registration by default; a scoped personal access token as bearer header is also accepted for CI."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

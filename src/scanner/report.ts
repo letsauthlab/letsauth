@@ -60,6 +60,13 @@ export interface Discovered {
   } | null;
   /** A note for the maintainer when the listed URL looks stale (010); never an observation. */
   endpointNote: string | null;
+  /**
+   * What the endpoint's answer suggests about the server's auth class (009): `oauth` when a 401
+   * challenge or a protected resource metadata document was found, `none` when a step of the
+   * ladder was accepted with 200, null when the answer settles nothing. A hint for the
+   * maintainer, compared with the server file in the run summary; never written anywhere.
+   */
+  authSuggestion: AuthSuggestion | null;
   authorizationServer: {
     issuer: string;
     url: string;
@@ -90,6 +97,21 @@ export interface Report {
 }
 
 const PARTY_ORDER: FeatureParty[] = ["mcp-server", "authorization-server"];
+
+export type AuthSuggestion = "oauth" | "none";
+
+/**
+ * The auth class the probe's answers point at (009). A 401 challenge with a `resource_metadata`
+ * pointer, or a protected resource metadata document by either route, is OAuth as the MCP
+ * specification profiles it. A 200 to an unauthenticated step means the endpoint accepted the
+ * request without any credential. A bare 401 settles nothing: a bearer challenge may guard an
+ * API key as well as an OAuth token.
+ */
+export function suggestAuth(p: Probe): AuthSuggestion | undefined {
+  if (p.prm || p.challenge?.resourceMetadata) return "oauth";
+  if (p.endpointRequests.some((r) => r.status === 200 && !r.error)) return "none";
+  return undefined;
+}
 
 /** The features the scanner judges in a revision: passive, server party, defined in it; report order. */
 export function passiveFeatures(data: Dataset, revisionId: string): Feature[] {
@@ -149,6 +171,7 @@ function discoveredOf(p: Probe): Discovered {
         }
       : null,
     endpointNote: p.endpointNote ?? null,
+    authSuggestion: suggestAuth(p) ?? null,
     authorizationServer: p.as
       ? {
           issuer: p.as.issuer,

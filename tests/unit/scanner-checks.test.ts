@@ -448,6 +448,29 @@ describe("composable discovery strategies (010)", () => {
   });
 });
 
+describe("the auth suggestion (009 FR-006, SC-004)", () => {
+  async function suggestion(name: string) {
+    const f = fixture(name);
+    const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
+    return report.discovered?.authSuggestion;
+  }
+
+  it("is oauth when a metadata document or a challenge pointer was found", async () => {
+    expect(await suggestion("complete")).toBe("oauth");
+    expect(await suggestion("challenge-pointer")).toBe("oauth");
+    expect(await suggestion("challenge-pointer-private")).toBe("oauth");
+  });
+
+  it("is none when a step of the ladder was accepted with 200", async () => {
+    expect(await suggestion("challenge-open")).toBe("none");
+  });
+
+  it("is null for a bare 401, a 405 without metadata, or a failure", async () => {
+    expect(await suggestion("challenge-neither")).toBeNull();
+    expect(await suggestion("challenge-timeout")).toBeNull();
+  });
+});
+
 describe("scan() shapes the report (contracts/report.md)", () => {
   it("fills checks, discovered, requests, grade and observations for a listed server", async () => {
     const f = fixture("complete");

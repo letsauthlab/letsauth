@@ -5,4 +5,15 @@ homepage: https://box.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
+access:
+  class: closed
+  method: manual
+  evidence: "https://developer.box.com/guides/box-mcp/setup — A Box admin must enable the Box MCP server integration in the Admin Console and issue integration credentials before any client can connect."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developer.box.com/guides/box-mcp — OAuth 2.0 authorization code against account.box.com with admin-issued client ID and secret; no dynamic client registration."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

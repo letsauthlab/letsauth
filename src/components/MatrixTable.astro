@@ -1,5 +1,6 @@
 ---
 import { cellKey, featureInRevision, type Matrix, type RevisionDiff } from "@/lib/atlas";
+import { ACCESS_LABEL, AUTH_LABEL, accessOf, authOf } from "@/lib/classes";
 import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
 import type { ScanView } from "@/lib/scanner";
 import GradeBadge from "./GradeBadge.astro";
@@ -119,8 +120,16 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     </thead>
     <tbody>
       {
-        rows.map((server) => (
-          <tr data-server={server.id} data-name={server.name.toLowerCase()}>
+        rows.map((server) => {
+          const access = accessOf(server);
+          const auth = authOf(server);
+          return (
+          <tr
+            data-server={server.id}
+            data-name={server.name.toLowerCase()}
+            data-access={access.value}
+            data-auth={auth.value}
+          >
             <th scope="row" class="server-cell">
               <span class="server-cell__row">
                 <a class="server-link" href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
@@ -140,11 +149,22 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                   );
                 })()}
               </span>
-              {server.authClaimed && (
-                <span class="claim" title={`Authentication as listed by the source: ${server.authClaimed}`}>
-                  {server.authClaimed}
+              <span class="classes">
+                <span
+                  class:list={["class", `class-access-${access.value}`, { derived: access.derived }]}
+                  title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
+                >
+                  <span class="visually-hidden">Access: </span>
+                  {ACCESS_LABEL[access.value].toLowerCase()}
                 </span>
-              )}
+                <span
+                  class:list={["class", `class-auth-${auth.value}`, { derived: auth.derived }]}
+                  title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
+                >
+                  <span class="visually-hidden">Auth: </span>
+                  {AUTH_LABEL[auth.value].toLowerCase()}
+                </span>
+              </span>
             </th>
             {columns.map((feature) => {
               const cell = cells.get(cellKey(server.id, feature.id));
@@ -166,7 +186,8 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
               );
             })}
           </tr>
-        ))
+          );
+        })
       }
     </tbody>
   </table>
@@ -395,13 +416,59 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     text-decoration: underline;
     text-underline-offset: 0.15em;
   }
-  .claim {
-    display: block;
+  .classes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.3rem;
+  }
+  .class {
     font-family: var(--font-mono);
     font-weight: 400;
-    font-size: 0.62rem;
+    font-size: 0.6rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    padding: 0.2rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+  }
+  .class.derived {
+    border-style: dashed;
+    background: transparent;
     color: var(--ink-faint);
-    margin-top: 0.2rem;
+  }
+  .class-access-closed {
+    border-color: color-mix(in oklch, var(--accent-2) 55%, var(--line));
+    color: var(--ink);
+  }
+  .class-auth-oauth {
+    border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
+    color: var(--ink);
+  }
+  /* group header rows the island inserts when the reader groups by a class */
+  .matrix tbody tr.group > th {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    color: var(--ink-muted);
+    background: var(--bg-sunken);
+    padding: var(--space-2) var(--space-4);
+    border-right: 1px solid var(--line);
+  }
+  .matrix tbody tr.group > td {
+    background: var(--bg-sunken);
+  }
+  .matrix tbody tr.group .n {
+    font-family: var(--font-mono);
+    color: var(--ink-faint);
+    margin-left: var(--space-2);
   }
   tbody tr:hover > * {
     background: color-mix(in oklch, var(--accent-soft) 55%, var(--bg-elevated));

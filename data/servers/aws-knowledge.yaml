@@ -6,4 +6,15 @@ homepage: https://aws.github.io/
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: open
+access:
+  class: public
+  method: manual
+  evidence: "https://awslabs.github.io/mcp/servers/aws-knowledge-mcp-server — Publicly accessible at no cost; the FAQ states no AWS account is needed, subject to rate limits."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: none
+  method: manual
+  evidence: "https://awslabs.github.io/mcp/servers/aws-knowledge-mcp-server — The docs state the Knowledge MCP server does not require authentication."
+  observedAt: 2026-10-17T20:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

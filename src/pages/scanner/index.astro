@@ -136,8 +136,9 @@ const issue = `${repo}/issues/new?template=observation.yml`;
         same grade with a link to the full report at <code>/scanner/&lt;server&gt;/</code>, which lists
         each of the {checks.length} checks with the metadata it read. A server without a scanner
         observation reads "not scanned": the nightly run has not yet been able to read its metadata, or
-        has not run since it was listed. Open servers and servers behind an API key read "no OAuth"
-        and are not scanned.
+        has not run since it was listed. Servers whose <a href="/atlas/mcp/#f-auth">auth class</a> is API
+        key or no authentication read "no OAuth" and are not scanned; a server whose class is not yet
+        stated is scanned, and the run summary says what its endpoint's answer suggests.
       </p>
     </section>
 

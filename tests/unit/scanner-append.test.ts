@@ -6,7 +6,13 @@ import { parse } from "yaml";
 import { currentRevision } from "@/lib/atlas";
 import { type Dataset, getDataset } from "@/lib/data";
 import { type Fixture, recordingFetcher } from "@/scanner/fetch";
-import { appendObservations, heldCells, summarise, toAppend } from "@/scanner/observations";
+import {
+  appendObservations,
+  authNote,
+  heldCells,
+  summarise,
+  toAppend,
+} from "@/scanner/observations";
 import { type Report, scan } from "@/scanner/report";
 import { type Observation, observationFileSchema } from "@/schema";
 
@@ -165,6 +171,65 @@ describe("appendObservations", () => {
     expect(observationFileSchema.parse(parse(readFileSync(file, "utf8")))).toHaveLength(
       r.observations.length,
     );
+  });
+});
+
+describe("authNote (009 FR-006)", () => {
+  const statement = (cls: "oauth" | "api-key" | "none" | "unknown") => ({
+    class: cls,
+    method: "manual" as const,
+    evidence: "https://example.com/docs — says so",
+    observedAt: "2026-10-17T00:00:00Z",
+    observedBy: "tester",
+  });
+
+  it("names the suggestion when the class is not stated or stated unknown", async () => {
+    const r = await report();
+    expect(r.discovered?.authSuggestion).toBe("oauth");
+    const bare = { ...(server as NonNullable<typeof server>), auth: undefined };
+    expect(authNote(r, bare)).toBe("auth class not stated; the endpoint's answer suggests oauth");
+    expect(authNote(r, { ...bare, auth: statement("unknown") })).toBe(
+      "auth class unknown; the endpoint's answer suggests oauth",
+    );
+  });
+
+  it("names a disagreement and is silent when the class agrees", async () => {
+    const r = await report();
+    const s = server as NonNullable<typeof server>;
+    expect(authNote(r, { ...s, auth: statement("api-key") })).toBe(
+      "auth class api key (manual); the endpoint's answer suggests oauth",
+    );
+    expect(authNote(r, { ...s, auth: statement("oauth") })).toBeUndefined();
+  });
+
+  it("is silent when the probe settles nothing", async () => {
+    const neither = JSON.parse(
+      readFileSync(resolve(__dirname, "../fixtures/scanner/challenge-neither.json"), "utf8"),
+    ) as Fixture;
+    const r = await scan({ url: neither.target, serverId: server?.id }, base, {
+      fetcher: recordingFetcher(neither),
+    });
+    expect(r.discovered?.authSuggestion).toBeNull();
+    expect(
+      authNote(r, { ...(server as NonNullable<typeof server>), auth: undefined }),
+    ).toBeUndefined();
+  });
+
+  it("lands in the summary's Notes column", async () => {
+    const r = await report();
+    const md = summarise(
+      [
+        {
+          server: { id: server?.id ?? "", name: server?.name ?? "", url: fixture.target },
+          report: r,
+          appended: [],
+          authNote: "auth class not stated; the endpoint's answer suggests oauth",
+        },
+      ],
+      "2026-10-15T03:17:04Z",
+      revision,
+    );
+    expect(md).toContain("| 0 | auth class not stated; the endpoint's answer suggests oauth |");
   });
 });
 
