@@ -8,13 +8,15 @@ import Base from "@/layouts/Base.astro";
   path="/404/"
   noindex
 >
-  <div class="wrap prose notfound">
-    <p class="eyebrow">404</p>
-    <h1>No page at this address</h1>
-    <p class="lede">
-      The link may be old, or the address mistyped. An id in the atlas stays stable once
-      published, so a missing server or feature page usually means a typo.
-    </p>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">404</p>
+      <h1>No page at this address</h1>
+      <p class="lede">
+        The link may be old, or the address mistyped. An id in the atlas stays stable once
+        published, so a missing server or feature page usually means a typo.
+      </p>
+    </header>
     <p class="cta">
       <a class="button primary" href="/">Go to the home page</a>
       <a class="button" href="/mcp/">MCP auth atlas</a>
@@ -28,13 +30,10 @@ import Base from "@/layouts/Base.astro";
 </Base>
 
 <style>
-  .notfound {
-    padding-block: var(--space-6) var(--space-7);
-  }
   .cta {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin: var(--space-5) 0 var(--space-6);
+    margin: 0 0 var(--space-5);
   }
 </style>

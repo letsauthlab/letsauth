@@ -38,6 +38,32 @@ const products = [
     text: "What eIDAS 2.0 and the EUDI wallet, the AI Act and NIS2 ask of agent delegation, as scenarios and long reads.",
   },
 ];
+const principles = [
+  {
+    name: "Cited, not asserted",
+    text: "A claim without a specification revision and section does not ship.",
+  },
+  {
+    name: "Neutral",
+    text: "Nothing is ranked or scored. Rows are alphabetical, and no vendor pays for anything.",
+  },
+  {
+    name: "Unknown is honest",
+    text: "A missing observation reads <em>unknown</em>, never failure.",
+  },
+  {
+    name: "Passive by default",
+    text: "We read public metadata only, on a schedule, never on a visitor's request, and never with credentials.",
+  },
+  {
+    name: "Open",
+    text: "Code under MIT, data under CC BY 4.0, history kept in a public repository where anyone can propose a correction.",
+  },
+  {
+    name: "European by default",
+    text: 'Built in Berlin, hosted and measured in the EU; see <a href="/made-in-europe/">made in Europe</a>.',
+  },
+];
 ---
 
 <Document
@@ -60,15 +86,15 @@ const products = [
   </p>
 
   <h2>What we build</h2>
-  <ul class="products" role="list">
+  <ul class="cards" role="list">
     {
       products.map((p) => (
-        <li class="card product">
-          <p class="product__head">
+        <li class="card">
+          <h3 class="product__head">
             {p.href ? <a href={p.href}>{p.name}</a> : <span>{p.name}</span>}
             <span class:list={["pill", { accent: p.status === "Live" }]}>{p.status}</span>
-          </p>
-          <p class="product__text">{p.text}</p>
+          </h3>
+          <p>{p.text}</p>
         </li>
       ))
     }
@@ -79,13 +105,15 @@ const products = [
   </p>
 
   <h2>How we work</h2>
-  <ul>
-    <li><strong>Cited, not asserted.</strong> A claim without a specification revision and section does not ship.</li>
-    <li><strong>Neutral.</strong> Nothing is ranked or scored. Rows are alphabetical, and no vendor pays for anything.</li>
-    <li><strong>Unknown is honest.</strong> A missing observation reads <em>unknown</em>, never failure.</li>
-    <li><strong>Passive by default.</strong> We read public metadata only, on a schedule, never on a visitor's request, and never with credentials.</li>
-    <li><strong>Open.</strong> Code under MIT, data under CC BY 4.0, history kept in a public repository where anyone can propose a correction.</li>
-    <li><strong>European by default.</strong> Built in Berlin, hosted and measured in the EU; see <a href="/made-in-europe/">made in Europe</a>.</li>
+  <ul class="cards principles" role="list">
+    {
+      principles.map((p) => (
+        <li class="card">
+          <h3>{p.name}</h3>
+          <p set:html={p.text} />
+        </li>
+      ))
+    }
   </ul>
 
   <h2>Who is behind it</h2>
@@ -103,30 +131,25 @@ const products = [
     <a href={REPO} rel="noopener">repository</a>. Anything else:{" "}
     <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>.
   </p>
+
+  <Fragment slot="aside">
+    <div class="card">
+      <p class="eyebrow">Contact</p>
+      <p class="contact">
+        <a href={OPERATOR.site} rel="noopener">{OPERATOR.name}</a><br />
+        <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a><br />
+        <a href={REPO} rel="noopener">Source on GitHub</a>
+      </p>
+    </div>
+  </Fragment>
 </Document>
 
 <style>
-  .products {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-    gap: var(--space-3);
-    padding: 0;
-    margin-bottom: var(--space-5);
-    list-style: none;
-  }
-  .products .product {
-    margin: 0;
-    padding: var(--space-4);
-  }
   .product__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    margin-bottom: var(--space-2);
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: var(--text-md);
   }
   .product__head a {
     color: var(--ink);
@@ -135,9 +158,19 @@ const products = [
   .product__head a:hover {
     color: var(--accent);
   }
-  .product__text {
+  .principles {
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  }
+  .contact {
     margin: 0;
     font-size: var(--text-sm);
-    color: var(--ink-muted);
+    line-height: 1.8;
+  }
+  .contact a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .contact a:hover {
+    color: var(--accent);
   }
 </style>

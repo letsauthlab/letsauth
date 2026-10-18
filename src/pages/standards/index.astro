@@ -42,17 +42,15 @@ const repo = "https://github.com/letsauthlab/letsauth";
   path="/standards/"
 >
   <div class="wrap">
-    <header class="page-head standards-head">
-      <div class="standards-head__copy">
-        <p class="eyebrow">Agent auth atlas</p>
-        <h1>The standards that decide how agents are authorized, and how they relate</h1>
-        <p class="lede">
-          One map of the OAuth extensions, workload identity drafts, agent protocols, credential
-          formats and EU acts that an agent, an MCP server or an identity provider has to follow.
-          Every node is a specification with dated revisions; every line is a typed relation with
-          a note on what it is based on.
-        </p>
-      </div>
+    <header class="page-head">
+      <p class="eyebrow">Agent auth atlas</p>
+      <h1>The standards that decide how agents are authorized, and how they relate</h1>
+      <p class="lede">
+        One map of the OAuth extensions, workload identity drafts, agent protocols, credential
+        formats and EU acts that an agent, an MCP server or an identity provider has to follow.
+        Every node is a specification with dated revisions; every line is a typed relation with
+        a note on what it is based on.
+      </p>
       <dl class="facts" aria-label="Map at a glance">
         <div>
           <dt>Specifications</dt>
@@ -215,9 +213,9 @@ const repo = "https://github.com/letsauthlab/letsauth";
         relation to an unknown document and names the field. See
         <a href={`${repo}/blob/main/docs/atlas-maintenance.md`} rel="noopener">the maintenance guide</a>.
       </p>
-      <p>
-        <a href="/standards/data.json">Download the map as JSON</a> ·
-        <a href={`${repo}/tree/main/data`} rel="noopener">Browse the data</a> ·
+      <p class="page-foot__links">
+        <a href="/standards/data.json">Download the map as JSON</a>
+        <a href={`${repo}/tree/main/data`} rel="noopener">Browse the data</a>
         <a href="/mcp/">MCP auth atlas</a>
       </p>
     </footer>
@@ -225,46 +223,11 @@ const repo = "https://github.com/letsauthlab/letsauth";
 </Base>
 
 <style>
-  .standards-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-4) var(--space-7);
-    align-items: end;
-  }
-  .standards-head__copy .lede {
-    margin-bottom: 0;
-  }
-  .facts {
-    display: flex;
-    gap: var(--space-6);
-    margin: 0 0 var(--space-2);
-    padding-left: var(--space-6);
-    border-left: 1px solid var(--line);
-  }
-  .facts dt {
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    white-space: nowrap;
-  }
-  .facts dd {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: var(--text-xl);
-    letter-spacing: var(--tracking-tight);
-    line-height: 1.1;
-  }
   .recent {
-    grid-column: 1 / -1;
     font-size: var(--text-sm);
     color: var(--ink-muted);
     max-width: none;
-    margin: 0;
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+    margin: var(--space-4) 0 0;
     line-height: 1.8;
   }
   .recent__label {
@@ -319,21 +282,9 @@ const repo = "https://github.com/letsauthlab/letsauth";
     margin: 0;
   }
   .actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-4);
     width: 100%;
   }
-  .count {
-    margin: 0 0 0 auto;
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
-  }
   .note {
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
     margin: 0;
   }
   /* Line samples match the SVG edge styles: dash pattern first, colour second. */
@@ -467,26 +418,6 @@ const repo = "https://github.com/letsauthlab/letsauth";
   }
   .meta time {
     font-family: var(--font-mono);
-  }
-  .page-foot {
-    margin-top: var(--space-6);
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-  }
-  .page-foot h2 {
-    font-size: var(--text-lg);
-    color: var(--ink);
-  }
-  @media (max-width: 56rem) {
-    .standards-head {
-      grid-template-columns: 1fr;
-      align-items: start;
-    }
-    .facts {
-      border-left: 0;
-      padding-left: 0;
-      gap: var(--space-5);
-    }
   }
   @media (max-width: 40rem) {
     .count {

@@ -34,7 +34,7 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
       ]}
       current="Scan report"
     />
-    <header class="head">
+    <header class="page-head">
       <p class="eyebrow">Scan report</p>
       <h1>{server.name}</h1>
       <p class="lede">
@@ -45,7 +45,7 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
           </span>
         )}
       </p>
-      <p class="links">
+      <p class="page-head__meta">
         <a class="button small" href={`/mcp/servers/${server.id}/`}>Atlas page</a>
         {!server.withdrawn && <a class="button small" href={`/mcp/servers/${server.id}/scan.json`}>JSON</a>}
         <a class="button small" href={`${repo}/blob/main/data/observations/${server.id}.yaml`} rel="noopener">Data file</a>
@@ -90,11 +90,13 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
               </ul>
             </section>
           </div>
-          <p class="self muted">
-            Reproduce this report: <code>pnpm scan {server.id}</code> in the{" "}
-            <a href={repo} rel="noopener">repository</a>. Corrections are new observations, never
-            edits; see <a href={`${repo}/blob/main/docs/scanner.md`} rel="noopener">docs/scanner.md</a>.
-          </p>
+          <footer class="page-foot">
+            <p class="self">
+              Reproduce this report: <code>pnpm scan {server.id}</code> in the{" "}
+              <a href={repo} rel="noopener">repository</a>. Corrections are new observations, never
+              edits; see <a href={`${repo}/blob/main/docs/scanner.md`} rel="noopener">docs/scanner.md</a>.
+            </p>
+          </footer>
         </>
       )
     }
@@ -102,24 +104,11 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
 </Base>
 
 <style>
-  .head {
-    margin-bottom: var(--space-5);
-  }
-  .head .lede {
+  .page-head .lede {
     font-size: var(--text-md);
   }
-  .head code {
+  .page-head code {
     overflow-wrap: anywhere;
-  }
-  .links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: 0;
-  }
-  .notice {
-    border-color: color-mix(in oklch, var(--accent-2) 50%, transparent);
-    background: var(--accent-2-soft);
   }
   .after {
     display: grid;
@@ -144,7 +133,6 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
     color: var(--accent);
   }
   .muted {
-    color: var(--ink-muted);
     font-size: var(--text-sm);
   }
   .unscanned {
@@ -162,7 +150,7 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
     flex-wrap: wrap;
   }
   .self {
-    margin-bottom: var(--space-7);
+    margin: 0;
     max-width: none;
   }
 </style>

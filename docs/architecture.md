@@ -88,7 +88,8 @@ scripts/         command-line entry points: validate-data, scan, scan-nightly, a
 specs/           Spec Kit artifacts per feature: spec, plan, tasks, contracts
 src/
   components/    Astro components and the Svelte islands (matrix, standards map, explorer, scan report)
-  layouts/       Base (header, footer, theme) and Document (long-form pages)
+  layouts/       Base (header, footer, theme) and Document (long-form pages); the shared
+                 page head and foot every page uses are in styles/global.css
   lib/           pure functions over the dataset: atlas matrix, standards graph, chains, exports, citations
   pages/         routes; file-system routing, every page pre-rendered
   scanner/       the passive scanner: url guard, fetch, checks, grade, observations, nightly job

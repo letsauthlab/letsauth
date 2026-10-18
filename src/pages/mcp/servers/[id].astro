@@ -82,7 +82,7 @@ const classes = [
 >
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={server.name} />
-    <header class="head">
+    <header class="page-head">
       <p class="eyebrow">Server</p>
       <h1>{server.name}</h1>
       {server.vendor && server.vendor !== server.name && <p class="lede">by {server.vendor}</p>}
@@ -240,7 +240,7 @@ const classes = [
             return (
               <section class="party" aria-labelledby={`party-${party}`}>
                 <h2 id={`party-${party}`}>
-                  {PARTY_LABEL[party]} features <span class="count num">{features.length}</span>
+                  {PARTY_LABEL[party]} features <span class="n">{features.length}</span>
                 </h2>
                 <div class="table-wrap">
                   <table class="features">
@@ -344,13 +344,6 @@ const classes = [
 </Base>
 
 <style>
-  .head {
-    margin-bottom: var(--space-5);
-  }
-  .notice {
-    border-color: color-mix(in oklch, var(--accent-2) 50%, transparent);
-    background: var(--accent-2-soft);
-  }
   .profile {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr);
@@ -369,9 +362,6 @@ const classes = [
   .profile__status-title strong {
     color: var(--ink);
     font-weight: 600;
-  }
-  .muted {
-    color: var(--ink-muted);
   }
   .class-statement {
     display: block;
@@ -425,7 +415,11 @@ const classes = [
     gap: var(--space-2) var(--space-4);
   }
   .summary .n {
+    margin-left: 0.3em;
+    font: inherit;
     font-weight: 600;
+    color: inherit;
+    vertical-align: baseline;
   }
   .scan {
     display: flex;
@@ -445,9 +439,6 @@ const classes = [
     color: var(--ink-muted);
   }
   .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
     margin: 0;
   }
   .revision-note {
@@ -464,12 +455,6 @@ const classes = [
     align-items: baseline;
     gap: var(--space-3);
     margin-top: var(--space-5);
-  }
-  .party .count {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--ink-faint);
   }
   .table-wrap {
     overflow-x: auto;

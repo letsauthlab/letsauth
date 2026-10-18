@@ -64,17 +64,15 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
 ---
 
 <div class="wrap">
-  <header class="page-head atlas-head">
-    <div class="atlas-head__copy">
-      <p class="eyebrow">MCP auth atlas</p>
-      <h1>Who supports what in <span class="nowrap">MCP Authorization</span></h1>
-      <p class="lede">
-        Every public MCP server we list, against every requirement the specification puts on
-        servers and their authorization servers. Each cell cites an observation; nothing here is
-        inferred from silence.
-      </p>
-    </div>
-    <dl class="atlas-head__facts" aria-label="Atlas at a glance">
+  <header class="page-head">
+    <p class="eyebrow">MCP auth atlas</p>
+    <h1>Who supports what in <span class="nowrap">MCP Authorization</span></h1>
+    <p class="lede">
+      Every public MCP server we list, against every requirement the specification puts on
+      servers and their authorization servers. Each cell cites an observation; nothing here is
+      inferred from silence.
+    </p>
+    <dl class="facts" aria-label="Atlas at a glance">
       <div>
         <dt>Servers</dt>
         <dd class="num">{matrix.rows.length}</dd>
@@ -87,9 +85,11 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
         <dt>Cells observed</dt>
         <dd class="num">{observedCells}<span class="of"> / {totalCells}</span></dd>
       </div>
-      <div class="atlas-head__classes">
+      <div>
         <dt>Access</dt>
         <dd class="words" data-classes="access">{classWords(accessCounts, ACCESS_LABEL)}</dd>
+      </div>
+      <div>
         <dt>Auth</dt>
         <dd class="words" data-classes="auth">{classWords(authCounts, AUTH_LABEL)}</dd>
       </div>
@@ -276,60 +276,8 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
 </div>
 
 <style>
-  .atlas-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-5) var(--space-7);
-    align-items: end;
-  }
-  .atlas-head__copy .lede {
-    margin-bottom: 0;
-  }
   .nowrap {
     white-space: nowrap;
-  }
-  .atlas-head__facts {
-    display: flex;
-    gap: var(--space-6);
-    margin: 0 0 var(--space-2);
-    padding-left: var(--space-6);
-    border-left: 1px solid var(--line);
-  }
-  .atlas-head__facts dt {
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    white-space: nowrap;
-  }
-  .atlas-head__facts dd {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: var(--text-xl);
-    letter-spacing: var(--tracking-tight);
-    line-height: 1.1;
-  }
-  .atlas-head__classes {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.15rem var(--space-3);
-    align-items: baseline;
-  }
-  .atlas-head__facts .words {
-    font-family: var(--font-body);
-    font-weight: 500;
-    font-size: var(--text-xs);
-    letter-spacing: 0;
-    color: var(--ink-muted);
-  }
-  .atlas-head__facts .of {
-    font-family: var(--font-mono);
-    font-weight: 400;
-    font-size: var(--text-sm);
-    letter-spacing: 0;
-    color: var(--ink-faint);
   }
 
   .revision-bar {
@@ -424,15 +372,8 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     padding-left: 2.2em;
     min-width: 13rem;
   }
-  .actions {
-    flex-direction: row;
-    gap: var(--space-2);
-  }
   .count {
-    margin: 0 0 0.45em auto;
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
+    margin-bottom: 0.45em;
   }
 
   .legend {
@@ -492,34 +433,6 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     cursor: help;
   }
 
-  .page-foot {
-    margin-top: var(--space-6);
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-  }
-  .page-foot__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  @media (max-width: 56rem) {
-    .atlas-head {
-      grid-template-columns: 1fr;
-      align-items: start;
-    }
-    .atlas-head__facts {
-      flex-wrap: wrap;
-      border-left: 0;
-      padding-left: 0;
-      padding-top: var(--space-4);
-      border-top: 1px solid var(--line);
-      gap: var(--space-4) var(--space-5);
-    }
-    .atlas-head__classes {
-      flex-basis: 100%;
-    }
-  }
   @media (max-width: 40rem) {
     .count {
       margin-left: 0;

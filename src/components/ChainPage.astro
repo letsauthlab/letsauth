@@ -61,7 +61,7 @@ function arrow(from: string, to: string) {
       }
       current={toggle ? toggle.name : scenario.title}
     />
-    <header class="head">
+    <header class="page-head">
       <p class="eyebrow">Delegation chain explorer</p>
       <h1>{scenario.title}</h1>
       <p class="lede">{scenario.summary}</p>
@@ -205,20 +205,19 @@ function arrow(from: string, to: string) {
           ))
         }
       </ul>
-      <p class="data-links">
+    </section>
+
+    <footer class="page-foot">
+      <p class="page-foot__links">
         <a href="/explorer/data.json">All scenarios as JSON</a>
         <a href={`${repo}/blob/main/data/scenarios/${scenario.id}.yaml`} rel="noopener">Data file</a>
         <a href={`${repo}/edit/main/data/scenarios/${scenario.id}.yaml`} rel="noopener">Propose a change</a>
       </p>
-    </section>
+    </footer>
   </div>
 </Base>
 
 <style>
-  .head {
-    margin-bottom: var(--space-4);
-  }
-
   /* toggles: one row of links, the current one filled */
   .toggles {
     display: flex;
@@ -576,14 +575,6 @@ function arrow(from: string, to: string) {
   }
   .requirements__party {
     margin-left: var(--space-2);
-  }
-  .data-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    margin: 0;
-    font-size: var(--text-sm);
-    max-width: none;
   }
 
   @media (max-width: 56rem) {

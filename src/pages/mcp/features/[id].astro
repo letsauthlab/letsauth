@@ -53,11 +53,11 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
 >
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={feature.name} />
-    <header class="head">
+    <header class="page-head">
       <p class="eyebrow">{PARTY_LABEL[feature.party]} · {CATEGORY_LABEL[feature.category]}</p>
       <h1>{feature.name}</h1>
       <p class="lede">{feature.description}</p>
-      <p class="idline">
+      <p class="page-head__meta">
         <code>{feature.id}</code>
         {feature.supersedes && (
           <>
@@ -206,13 +206,6 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
 </Base>
 
 <style>
-  .head {
-    margin-bottom: var(--space-5);
-  }
-  .idline {
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-  }
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
@@ -289,10 +282,6 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
       transparent 0 6px,
       var(--status-unknown-soft) 6px 12px
     );
-  }
-  .n {
-    font-weight: 600;
-    margin-left: var(--space-1);
   }
   .status-lists {
     display: grid;

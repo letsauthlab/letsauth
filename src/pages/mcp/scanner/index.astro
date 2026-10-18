@@ -25,18 +25,16 @@ const issue = `${repo}/issues/new?template=observation.yml`;
 >
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current="Scanner" />
-    <header class="page-head scanner-head">
-      <div class="scanner-head__copy">
-        <p class="eyebrow">Scanner</p>
-        <h1>What a server's metadata says, measured every night</h1>
-        <p class="lede">
-          The scanner reads the public authorization metadata an MCP server publishes for every
-          client and judges the {checks.length} requirements of MCP Authorization {revision.id} that
-          metadata can answer. Nothing else is sent: no token, no authorization flow, no protocol
-          message; the one request to the endpoint itself carries no credentials and only its
-          status and headers are read. Results land in the atlas as observations, by pull request.
-        </p>
-      </div>
+    <header class="page-head">
+      <p class="eyebrow">Scanner</p>
+      <h1>What a server's metadata says, measured every night</h1>
+      <p class="lede">
+        The scanner reads the public authorization metadata an MCP server publishes for every
+        client and judges the {checks.length} requirements of MCP Authorization {revision.id} that
+        metadata can answer. Nothing else is sent: no token, no authorization flow, no protocol
+        message; the one request to the endpoint itself carries no credentials and only its
+        status and headers are read. Results land in the atlas as observations, by pull request.
+      </p>
       <dl class="facts" aria-label="Scanner at a glance">
         <div>
           <dt>Servers listed</dt>
@@ -185,44 +183,6 @@ pnpm scan notion --write                # append what the nightly rule would</co
 </Base>
 
 <style>
-  .scanner-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-4) var(--space-7);
-    align-items: end;
-  }
-  .scanner-head__copy .lede {
-    margin-bottom: 0;
-  }
-  .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-5);
-    margin: 0 0 var(--space-2);
-    padding-left: var(--space-6);
-    border-left: 1px solid var(--line);
-  }
-  .facts dt {
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    white-space: nowrap;
-  }
-  .facts dd {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: var(--text-xl);
-    letter-spacing: var(--tracking-tight);
-    line-height: 1.1;
-  }
-  .facts dd.muted {
-    font-size: var(--text-md);
-    font-weight: 500;
-    color: var(--ink-muted);
-  }
   .how,
   .where {
     margin-bottom: var(--space-7);
@@ -265,9 +225,6 @@ pnpm scan notion --write                # append what the nightly rule would</co
     font-family: var(--font-mono);
     color: var(--accent);
   }
-  .muted {
-    color: var(--ink-muted);
-  }
   .split {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
@@ -277,19 +234,5 @@ pnpm scan notion --write                # append what the nightly rule would</co
   .split h2 {
     font-size: var(--text-xl);
     margin-top: 0;
-  }
-  pre {
-    font-size: var(--text-xs);
-  }
-  @media (max-width: 56rem) {
-    .scanner-head {
-      grid-template-columns: 1fr;
-    }
-    .facts {
-      padding-left: 0;
-      border-left: 0;
-      padding-top: var(--space-4);
-      border-top: 1px solid var(--line);
-    }
   }
 </style>

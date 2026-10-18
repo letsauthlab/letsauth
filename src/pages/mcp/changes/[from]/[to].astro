@@ -34,7 +34,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
 >
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={`Changes ${from} to ${to}`} />
-    <header class="head">
+    <header class="page-head">
       <p class="eyebrow">Revision diff</p>
       <h1>
         What changed from <a href={href(from)}>{from}</a> to <a href={href(to)}>{to}</a>
@@ -42,7 +42,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
       <p class="lede">
         {diff.to.changes ?? "Differences in the requirement levels between the two revisions."}
       </p>
-      <p class="links">
+      <p class="page-head__meta">
         <a href={diff.from.url} rel="noopener">Read {from}</a> ·
         <a href={diff.to.url} rel="noopener">Read {to}</a> ·
         {unchanged} feature{unchanged === 1 ? "" : "s"} unchanged
@@ -153,19 +153,12 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
 </Base>
 
 <style>
-  .head {
-    margin-bottom: var(--space-6);
-  }
-  .head h1 a {
+  .page-head h1 a {
     font-family: var(--font-mono);
     font-weight: 600;
     font-size: 0.75em;
     letter-spacing: -0.01em;
     text-decoration-thickness: 2px;
-  }
-  .links {
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
   }
   .cols {
     display: grid;
@@ -181,12 +174,6 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
     font-size: var(--text-md);
     padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--line-soft);
-  }
-  .n {
-    font-family: var(--font-mono);
-    color: var(--ink-faint);
-    font-weight: 500;
-    font-size: var(--text-sm);
   }
   .note {
     color: var(--ink-muted);
