@@ -12,5 +12,5 @@ if (all.length > 0) {
 }
 
 console.log(
-  `data ok: ${data.specs.length} spec(s), ${data.relations.length} relation(s), ${data.features.length} feature(s), ${data.servers.length} server(s), ${data.observations.length} observation(s), ${data.scenarios.length} scenario(s)`,
+  `data ok: ${data.specs.length} spec(s), ${data.relations.length} relation(s), ${data.features.length} feature(s), ${data.servers.length} server(s), ${data.observations.length} observation(s), ${data.scenarios.length} scenario(s), ${data.vulnerabilities.length} vulnerability(ies)`,
 );

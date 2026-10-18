@@ -48,6 +48,18 @@ describe("scripts/validate-data.ts", () => {
     expect(result.stderr).toMatch(/replaces\.missing\[0\]\.id: step id "ask" collides/);
   });
 
+  it("names both ends of a replay that does not point back (005, rule 8)", () => {
+    expect(result.stderr).toMatch(
+      /vulnerabilities\/orphan\.yaml\.features\[0\]: feature "mcp\.as\.nope"/,
+    );
+    expect(result.stderr).toMatch(
+      /vulnerabilities\/orphan\.yaml\.scenario: no toggle of scenario "broken" names vulnerability "orphan"/,
+    );
+    expect(result.stderr).toMatch(
+      /toggles\[0\]\.vulnerability: vulnerability "nope" does not exist/,
+    );
+  });
+
   it("passes on the real data", () => {
     const ok = run("scripts/validate-data.ts", []);
     expect(ok.status, ok.stderr).toBe(0);

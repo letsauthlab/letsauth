@@ -188,10 +188,10 @@ describe("scenarioList, featureSupport and the export (FR-006, FR-008, FR-009)",
     expect(out.scenarios).toEqual([scenario]);
   });
 
-  it("ships three scenarios with eight toggles, every one resolvable (SC-001)", () => {
+  it("ships three scenarios with eleven toggles, every one resolvable (003 SC-001, 005 FR-005)", () => {
     const list = scenarioList(real);
     expect(list).toHaveLength(3);
-    expect(list.reduce((n, s) => n + s.toggles.length, 0)).toBe(8);
+    expect(list.reduce((n, s) => n + s.toggles.length, 0)).toBe(11);
     for (const { scenario: s } of list) {
       resolveChain(s);
       for (const t of s.toggles) resolveChain(s, t.id);

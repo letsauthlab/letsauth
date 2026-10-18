@@ -31,7 +31,7 @@ export interface Dataset {
   relations: Relation[];
   /** Explorer scenarios, from `data/scenarios/`. */
   scenarios: Scenario[];
-  /** Vulnerabilities, from `data/vulnerabilities/` (validated here, rendered by 005). */
+  /** Vulnerabilities, from `data/vulnerabilities/` (rendered by Breach Anatomy, 005). */
   vulnerabilities: Vulnerability[];
   /** Where each loaded observation came from (`data/observations/<id>.yaml[i]`), for messages. */
   locations?: WeakMap<Observation, string>;
@@ -266,8 +266,6 @@ export function crossCheckScenarios(data: Dataset): DataIssue[] {
     for (const rev of spec.revisions) revisionKeys.add(`${spec.id}@${rev.id}`);
   }
   const featureIds = new Set(data.features.map((f) => f.id));
-  const scenarioIds = new Set(data.scenarios.map((s) => s.id));
-  const vulnerabilityIds = new Set(data.vulnerabilities.map((v) => v.id));
 
   for (const scenario of data.scenarios) {
     const file = `data/scenarios/${scenario.id}.yaml`;
@@ -327,18 +325,37 @@ export function crossCheckScenarios(data: Dataset): DataIssue[] {
           issues.push({ path: `${at}.violates[${i}]`, message: `feature "${id}" does not exist` });
         }
       });
-      if (toggle.vulnerability && !vulnerabilityIds.has(toggle.vulnerability)) {
-        issues.push({
-          path: `${at}.vulnerability`,
-          message: `vulnerability "${toggle.vulnerability}" does not exist`,
-        });
+      if (toggle.vulnerability) {
+        const v = data.vulnerabilities.find((x) => x.id === toggle.vulnerability);
+        if (!v) {
+          issues.push({
+            path: `${at}.vulnerability`,
+            message: `vulnerability "${toggle.vulnerability}" does not exist`,
+          });
+        } else if (v.scenario !== scenario.id) {
+          issues.push({
+            path: `${at}.vulnerability`,
+            message: `vulnerability "${toggle.vulnerability}" names scenario "${v.scenario ?? "none"}" as its replay, not "${scenario.id}"`,
+          });
+        }
       }
     });
   }
   for (const v of data.vulnerabilities) {
     const file = `data/vulnerabilities/${v.id}.yaml`;
-    if (v.scenario && !scenarioIds.has(v.scenario)) {
-      issues.push({ path: `${file}.scenario`, message: `scenario "${v.scenario}" does not exist` });
+    if (v.scenario) {
+      const scenario = data.scenarios.find((s) => s.id === v.scenario);
+      if (!scenario) {
+        issues.push({
+          path: `${file}.scenario`,
+          message: `scenario "${v.scenario}" does not exist`,
+        });
+      } else if (!scenario.toggles.some((t) => t.vulnerability === v.id)) {
+        issues.push({
+          path: `${file}.scenario`,
+          message: `no toggle of scenario "${v.scenario}" names vulnerability "${v.id}" as its replay`,
+        });
+      }
     }
     v.features.forEach((id, i) => {
       if (!featureIds.has(id)) {

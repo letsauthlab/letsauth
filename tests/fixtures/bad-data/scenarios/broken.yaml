@@ -23,6 +23,7 @@ toggles:
     kind: attack
     summary: Replaces a step that does not exist.
     cites: { spec: mcp-authorization, revision: "2026-07-28", section: Authorization }
+    vulnerability: nope
     replaces:
       missing:
         - id: ask

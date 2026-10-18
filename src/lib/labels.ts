@@ -8,6 +8,7 @@ import type {
   SpecFamily,
   SpecMaturity,
   ToggleKind,
+  VulnerabilityClass,
 } from "../schema";
 
 export const ACTOR_KIND_LABEL: Record<ActorKind, string> = {
@@ -23,6 +24,21 @@ export const ACTOR_KIND_LABEL: Record<ActorKind, string> = {
 export const TOGGLE_KIND_LABEL: Record<ToggleKind, string> = {
   attack: "Attack",
   misconfiguration: "Misconfiguration",
+};
+
+export const VULNERABILITY_CLASS_LABEL: Record<VulnerabilityClass, string> = {
+  "confused-deputy": "Confused deputy",
+  "token-passthrough": "Token passthrough",
+  "audience-missing": "Missing audience check",
+  "scope-accumulation": "Scope accumulation",
+  "consent-bypass": "Consent bypass",
+  "issuer-confusion": "Issuer confusion",
+  "redirect-uri": "Unchecked redirect URI",
+  "pkce-bypass": "PKCE bypass",
+  "untrusted-metadata": "Untrusted metadata",
+  "tenant-isolation": "Tenant isolation",
+  "token-theft": "Token theft",
+  other: "Other",
 };
 
 export const STATUS_META: Record<ObservationStatus, { glyph: string; label: string }> = {

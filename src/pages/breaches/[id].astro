@@ -1,0 +1,262 @@
+---
+import Citation from "@/components/Citation.astro";
+import Crumbs from "@/components/Crumbs.astro";
+import Base from "@/layouts/Base.astro";
+import { missingControls, replayOf } from "@/lib/breaches";
+import { getDataset } from "@/lib/data";
+import { PARTY_LABEL, TOGGLE_KIND_LABEL, VULNERABILITY_CLASS_LABEL } from "@/lib/labels";
+import { REPO } from "@/lib/site";
+import type { Vulnerability } from "@/schema";
+
+export function getStaticPaths() {
+  return getDataset().vulnerabilities.map((vulnerability) => ({
+    params: { id: vulnerability.id },
+    props: { vulnerability },
+  }));
+}
+
+const { vulnerability: v } = Astro.props as { vulnerability: Vulnerability };
+const data = getDataset();
+const replay = replayOf(data, v);
+const controls = missingControls(data, v);
+const featureById = new Map(data.features.map((f) => [f.id, f]));
+const date = new Date(`${v.disclosed}T00:00:00Z`).toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
+---
+
+<Base title={v.title} description={v.summary.trim()} path={`/breaches/${v.id}/`}>
+  <div class="wrap">
+    <Crumbs trail={[{ href: "/breaches/", label: "Breach anatomy" }]} current={v.id} />
+    <header class="head">
+      <p class="eyebrow">Breach anatomy</p>
+      <h1>{v.title}</h1>
+      <p class="lede">{v.summary}</p>
+    </header>
+
+    <section class="card facts" aria-label="Facts">
+      <dl class="kv">
+        <dt>Class</dt>
+        <dd><span class="pill accent" data-class={v.class}>{VULNERABILITY_CLASS_LABEL[v.class]}</span></dd>
+        <dt>Disclosed</dt>
+        <dd><time datetime={v.disclosed}>{date}</time></dd>
+        {
+          v.fixed && (
+            <>
+              <dt>Fixed</dt>
+              <dd>{v.fixed}</dd>
+            </>
+          )
+        }
+        <dt>Affects</dt>
+        <dd>
+          <ul class="plain" role="list">
+            {v.affects.map((a) => <li>{a}</li>)}
+          </ul>
+        </dd>
+        <dt>Sources</dt>
+        <dd>
+          <ul class="plain" role="list">
+            {
+              v.sources.map((s) => (
+                <li>
+                  <a href={s} rel="noopener">{s}</a>
+                  <span class="host"> {host(s)}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </dd>
+      </dl>
+    </section>
+
+    <section id="controls" class="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">The control that was missing</h2>
+      {
+        controls.length > 0 ? (
+          <ul role="list" class="controls__list">
+            {controls.map((c) => {
+              const current = c.feature.revisions.at(-1);
+              return (
+                <li data-feature={c.feature.id} class="card">
+                  <p class="controls__name">
+                    <a href={`/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
+                    <span class="party">{PARTY_LABEL[c.feature.party]}</span>
+                    {current && <span class:list={["level", `level-${current.level}`]}>{current.level}</span>}
+                  </p>
+                  <p class="controls__text">{c.feature.description}</p>
+                  {current && (
+                    <p class="controls__cite">
+                      <Citation entry={{ spec: current.spec, revision: current.revision, section: current.section }} withRevision />
+                    </p>
+                  )}
+                  <p class="controls__counts" data-observed={c.observed ? "true" : "false"}>
+                    {c.observed
+                      ? `Listed servers under MCP Authorization ${c.revisionId}: ${c.counts.supported} supported, ${c.counts.partial} partial, ${c.counts.unsupported} unsupported, ${c.counts.unknown} unknown${c.counts.notApplicable > 0 ? `, ${c.counts.notApplicable} not applicable` : ""}.`
+                      : `${c.reason[0]?.toUpperCase()}${c.reason.slice(1)}.`}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p class="controls__none" data-no-controls>
+            No requirement in the MCP auth atlas stands for this control yet. The summary above
+            says what it is; a requirement is added to the atlas when a specification revision
+            states it, not before.
+          </p>
+        )
+      }
+    </section>
+
+    <section id="replay" class="replay" aria-labelledby="replay-title">
+      <h2 id="replay-title">Replay in the explorer</h2>
+      {
+        replay ? (
+          <div class="card">
+            <p class="replay__head">
+              <a href={`/explorer/${replay.scenario.id}/${replay.toggle.id}/`} data-replay={replay.toggle.id}>
+                {replay.scenario.title} · {replay.toggle.name}
+              </a>
+              <span class:list={["replay__kind", `kind-${replay.toggle.kind}`]}>{TOGGLE_KIND_LABEL[replay.toggle.kind]}</span>
+            </p>
+            <p class="replay__summary">{replay.toggle.summary}</p>
+            <p class="replay__meta">
+              {Object.keys(replay.toggle.replaces).length} step{Object.keys(replay.toggle.replaces).length === 1 ? "" : "s"} of the baseline change ·
+              Against <Citation entry={replay.toggle.cites} withRevision />
+              {replay.toggle.violates && replay.toggle.violates.length > 0 && (
+                <>
+                  {" · "}Defeats{" "}
+                  {replay.toggle.violates.map((id, i) => (
+                    <>
+                      {i > 0 && ", "}
+                      <a href={`/mcp/features/${id}/`}>{featureById.get(id)?.name ?? id}</a>
+                    </>
+                  ))}
+                </>
+              )}
+            </p>
+          </div>
+        ) : (
+          <p class="replay__none" data-no-replay>
+            No scenario in the explorer replays this pattern yet. The incident is recorded here
+            from its public notice; a replay follows when a baseline chain exists for it.
+          </p>
+        )
+      }
+    </section>
+
+    <p class="data-links">
+      <a href="/breaches/data.json">All entries as JSON</a>
+      <a href={`${REPO}/blob/main/data/vulnerabilities/${v.id}.yaml`} rel="noopener">Data file</a>
+      <a href={`${REPO}/edit/main/data/vulnerabilities/${v.id}.yaml`} rel="noopener">Propose a change</a>
+    </p>
+  </div>
+</Base>
+
+<style>
+  .head {
+    margin-bottom: var(--space-5);
+  }
+  .plain {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+  .plain a {
+    overflow-wrap: anywhere;
+  }
+  .host {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--ink-faint);
+  }
+  .controls,
+  .replay {
+    margin-top: var(--space-7);
+  }
+  .controls h2,
+  .replay h2 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-3);
+  }
+  .controls__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .controls__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-2);
+    font-weight: 500;
+    max-width: none;
+  }
+  .party {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .controls__text,
+  .replay__summary {
+    margin: 0 0 var(--space-2);
+    color: var(--ink-muted);
+  }
+  .controls__cite {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+  }
+  .controls__counts,
+  .replay__meta {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+    max-width: none;
+  }
+  .controls__none,
+  .replay__none {
+    color: var(--ink-muted);
+  }
+  .replay__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-2);
+    font-weight: 500;
+    font-size: var(--text-md);
+    max-width: none;
+  }
+  .replay__kind {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .replay__kind.kind-attack {
+    color: var(--status-unsupported);
+  }
+  .replay__kind.kind-misconfiguration {
+    color: var(--status-partial);
+  }
+  .data-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 0;
+    font-size: var(--text-sm);
+    max-width: none;
+  }
+</style>

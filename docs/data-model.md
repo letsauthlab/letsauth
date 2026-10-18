@@ -159,15 +159,21 @@ toggle defeats, so the explorer can point at the atlas; `vulnerability` names a 
 
 ### Vulnerability
 
+A published vulnerability or incident in how an agent system was authorized, written from its
+advisory or the vendor's notice. Breach Anatomy renders one page per entry.
+
 | Field | Type | Notes |
 |---|---|---|
-| `id` | string | CVE id or advisory slug |
-| `title` | string | |
-| `class` | enum | `confused-deputy`, `token-passthrough`, `audience-missing`, `scope-accumulation`, `consent-bypass`, `issuer-confusion`, `other` |
-| `affects` | string[] | Products or servers |
-| `features` | feature id[] | Features whose absence or misuse caused it |
-| `scenario` | scenario id? | Replay in the explorer |
-| `sources` | url[] | |
+| `id` | string | CVE id (`cve-2025-4144`) or advisory slug |
+| `title` | string | What failed, in one line |
+| `class` | enum | `confused-deputy`, `token-passthrough`, `audience-missing`, `scope-accumulation`, `consent-bypass`, `issuer-confusion`, `redirect-uri`, `pkce-bypass`, `untrusted-metadata`, `tenant-isolation`, `token-theft`, `other` |
+| `summary` | string | What failed and which control would have stopped it, in the atlas vocabulary; nothing beyond what the advisory states |
+| `disclosed` | date | Date of the public advisory or notice the entry is written from |
+| `fixed` | string? | The fixed version or the remediation, as the advisory states it |
+| `affects` | string[] | Products, versions or servers; at least one |
+| `features` | feature id[] | Requirements whose absence or misuse caused it; may be empty when the atlas has none, and the page says so |
+| `scenario` | scenario id? | The scenario whose toggle replays it; that toggle names this id back (rule 8) |
+| `sources` | url[] | At least one; the advisory first |
 
 ## Rules
 
@@ -188,6 +194,9 @@ toggle defeats, so the explorer can point at the atlas; `vulnerability` names a 
    symmetric types `(to, from, type)` counts as the same relation. `competes-with` and
    `solves-same-problem-as` carry a `note`. The directed dependency types (`builds-on`,
    `profiles`, `replaces`) form no cycle, because the standards map lays specs out along them.
+8. A vulnerability's `scenario` and a toggle's `vulnerability` point at each other: the scenario
+   has a toggle naming the vulnerability, and that vulnerability names the scenario. A replay is
+   never a dangling link in either direction.
 
 ## Examples
 

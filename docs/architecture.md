@@ -16,6 +16,8 @@ Every product on the site is a view on the same entities:
 | Server | `data/servers/<id>.yaml` | A public MCP server: URL, transport, why it is listed, what its vendor claims. |
 | Observation | `data/observations/<server>.yaml` | A dated statement that a server has a status for a feature under a revision, with a method (`manual`, `vendor-claim`, `passive-scan`, `active-scan`) and evidence. Append-only. |
 | Relation | `data/relations.yaml` | One edge between two specs: `builds-on`, `profiles`, `references`, `replaces`, `competes-with`, `solves-same-problem-as`. |
+| Scenario | `data/scenarios/<id>.yaml` | An explorer chain: actors, cited steps with the token each carries, and toggles that replace steps to show an attack or misconfiguration. |
+| Vulnerability | `data/vulnerabilities/<id>.yaml` | A published vulnerability or incident, written from its advisory: class, summary, dates, the features whose absence caused it and the toggle that replays it. |
 
 `src/schema/` is the executable form of the model (Zod). `src/lib/data.ts` loads every file,
 validates it and cross-checks references; `scripts/validate-data.ts` runs the same checks from
@@ -27,6 +29,7 @@ the command line and in CI. A product that needs a field the model lacks amends 
  specifications ─┐                                    ┌─▶ /mcp         matrix, server, feature, revision and scan pages
  vendor docs ────┼─▶ pull request ─▶ data/ (YAML) ─▶ build ─┼─▶ /standards   the standards map
  nightly scanner ┘        ▲                           ├─▶ /explorer    delegation chains, toggles, tokens
+                          │                           ├─▶ /breaches    one anatomy per vulnerability, linked to its replay
                           │                           └─▶ *.json       exports under CC BY 4.0
                    review: CI green,
                    evidence opened
@@ -80,7 +83,7 @@ edge rules for the moved JSON exports, which a forwarding page cannot serve.
 ## Repository layout
 
 ```
-data/            the dataset: specs, features, servers, observations, relations, scenarios (YAML)
+data/            the dataset: specs, features, servers, observations, relations, scenarios, vulnerabilities (YAML)
 docs/            this documentation, the roadmap and the research notes
 public/          static assets copied as is: brand SVGs, favicon, social card, robots.txt
 scripts/         command-line entry points: validate-data, scan, scan-nightly, append-only check,

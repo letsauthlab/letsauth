@@ -1,0 +1,20 @@
+id: asana-mcp-cross-tenant
+title: One tenant's MCP server answered with another tenant's data
+class: tenant-isolation
+summary: >
+  Asana's MCP server, released on 1 May 2025, carried a logic flaw that could return data from
+  one customer's domain to MCP users of other customers, within the kinds of objects the asking
+  user was allowed to see. Asana found it on 4 June, took the server offline, fixed the code,
+  reset every connection and notified about a thousand customers; it reported no evidence of
+  malicious use. The server authenticated who was asking but did not bind every answer to that
+  caller's tenant, which is the check a multi-tenant resource server owes on every request, not
+  only at sign-in.
+disclosed: 2025-06-16
+fixed: Server offline from 5 to 17 June 2025; code fixed and all MCP connections reset
+affects:
+  - Asana MCP server (beta), 1 May to 4 June 2025
+features: []
+sources:
+  - https://www.upguard.com/blog/asana-discloses-data-exposure-bug-in-mcp-server
+  - https://www.bleepingcomputer.com/news/security/asana-warns-mcp-ai-feature-exposed-customer-data-to-other-orgs/
+  - https://www.theregister.com/security/2025/06/18/asana-mcp-server-back-online-after-plugging-a-data-leak-hole/

@@ -1,0 +1,22 @@
+id: salesloft-drift-oauth-tokens
+title: Stolen OAuth tokens of an AI chat agent used to export Salesforce data
+class: token-theft
+summary: >
+  Salesloft's Drift chat agent held OAuth access and refresh tokens for its customers'
+  Salesforce instances and other integrations. Between 8 and 18 August 2025 an actor who had
+  obtained those tokens used them to run queries and bulk exports against hundreds of
+  instances, then searched the exports for cloud keys and passwords. The tokens were accepted
+  from wherever they were presented, so a credential issued to one agent vendor became a key to
+  every tenant that had connected it. Salesloft and Salesforce revoked all Drift tokens on 20
+  August. Short-lived, sender-constrained tokens and a narrow scope per integration limit what a
+  stolen token can do; this incident is why those controls exist.
+disclosed: 2025-08-26
+fixed: All Drift access and refresh tokens revoked on 20 August 2025; the integration removed from the Salesforce AppExchange
+affects:
+  - Salesloft Drift integrations with Salesforce and, for a few accounts, Google Workspace
+  - More than 700 organizations that had connected Drift
+features: []
+sources:
+  - https://cloud.google.com/blog/topics/threat-intelligence/data-theft-salesforce-instances-via-salesloft-drift
+  - https://blog.cloudflare.com/response-to-salesloft-drift-incident/
+  - https://unit42.paloaltonetworks.com/threat-brief-compromised-salesforce-instances/

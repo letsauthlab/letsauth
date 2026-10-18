@@ -274,3 +274,122 @@ toggles:
           note: >
             The attacker redeems the code at the honest server and holds Alex's access token.
           cites: { spec: rfc9700, revision: rfc, section: "4.4. Mix-Up Attacks" }
+  - id: redirect-uri-unchecked
+    name: Redirect URI not checked at authorization
+    kind: misconfiguration
+    summary: >
+      The authorization server compares the redirect URI with the client's registered URIs only
+      when the code is exchanged, not when the authorization request arrives. A request that
+      names a redirect URI the client never registered is still processed, and a server that
+      re-approves a client Alex has authorized before sends the code to that URI without
+      asking. Whoever controls the URI now holds a code for Alex's grant. This is the pattern
+      behind CVE-2025-4143.
+    cites: { spec: rfc9700, revision: rfc, section: "4.1. Insufficient Redirect URI Validation" }
+    vulnerability: cve-2025-4143
+    replaces:
+      consent:
+        - id: silent-reapproval
+          from: as
+          to: as
+          message: "Client seen before: re-approve without a consent screen; redirect_uri not compared with the registered list"
+          note: >
+            The baseline step shows Alex the client's name and redirect URI and checks that URI
+            against the client's metadata document. Here neither happens: the request carries a
+            redirect URI the client never listed, and nobody looks.
+          cites: { spec: rfc9700, revision: rfc, section: "4.1. Insufficient Redirect URI Validation" }
+      authorization-response:
+        - id: code-to-unregistered-uri
+          from: as
+          to: client
+          message: "Redirect with code, state and iss to the redirect URI named in the request, which is not one the client registered"
+          note: >
+            The browser follows the redirect wherever it points. If the request was started from
+            a page an attacker controls, the code lands with the attacker, who can exchange it at
+            the token endpoint, where the redirect URI check that does exist is satisfied by
+            repeating the same value.
+          cites: { spec: rfc9700, revision: rfc, section: "4.1. Insufficient Redirect URI Validation" }
+  - id: pkce-skipped
+    name: PKCE verifier not checked
+    kind: misconfiguration
+    summary: >
+      The authorization server advertises S256 and records the code challenge, but a token
+      request can be shaped so the verifier is never compared with it. An authorization code
+      that leaked, through a redirect, a log or a referrer, can then be exchanged by whoever has
+      it, without the secret the honest client holds. The check that PKCE exists for is the one
+      that is skipped. This is the pattern behind CVE-2025-4144.
+    cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Authorization Code Protection" }
+    violates: [mcp.as.pkce-s256]
+    vulnerability: cve-2025-4144
+    replaces:
+      token-request:
+        - id: token-request-without-verifier
+          from: client
+          to: as
+          message: "POST /token: grant_type=authorization_code, code, resource=https://mcp.tasks.example/mcp; shaped so no verifier is compared"
+          note: >
+            Sent by whoever holds the code. The honest client's code_verifier is not needed,
+            because the server will not ask for it.
+          cites: { spec: rfc7636, revision: rfc, section: "4.6. Server Verifies code_verifier before Returning the Tokens" }
+      token-response:
+        - id: token-without-pkce-check
+          from: as
+          to: client
+          message: "Access token bound to the tasks server, issued without comparing a verifier with the recorded challenge"
+          note: >
+            The token is as valid as the baseline one. Nothing downstream can tell that the
+            code was redeemed by a party that never held the verifier.
+          cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Authorization Code Protection" }
+          token:
+            name: Access token issued without the PKCE check
+            header: { typ: at+jwt, alg: ES256, kid: auth-2026-1 }
+            claims:
+              iss: https://auth.tasks.example
+              sub: alex
+              aud: https://mcp.tasks.example/mcp
+              client_id: https://agent.example/client.json
+              scope: tasks:read tasks:write
+              exp: 1790000000
+              iat: 1789996400
+              jti: 7f2c
+  - id: endpoint-from-untrusted-metadata
+    name: Authorization endpoint taken from untrusted metadata
+    kind: attack
+    summary: >
+      The MCP server Alex's host was pointed at is hostile or hijacked. It names an authorization
+      server the attacker controls, whose metadata lists an authorization_endpoint that is not an
+      https URL. The client hands that value to the operating system to open, as it would a web
+      address, without checking the scheme first. What should have been a browser navigation to a
+      consent screen becomes whatever the operating system does with that string. This is the
+      pattern behind CVE-2025-6514.
+    cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Communication Security" }
+    violates: [mcp.as.https]
+    vulnerability: cve-2025-6514
+    replaces:
+      prm:
+        - id: hostile-prm
+          from: server
+          to: client
+          message: "resource: https://mcp.tasks.example/mcp, authorization_servers: [an authorization server the attacker controls]"
+          note: >
+            Everything the client learns about where to authorize comes from this answer. A
+            server reached over plain http, or one the person was tricked into adding, can say
+            anything here.
+          cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization Server Discovery › Authorization Server Location" }
+      as-metadata:
+        - id: hostile-as-metadata
+          from: as
+          to: client
+          message: "issuer, authorization_endpoint: <not an https URL>, token_endpoint, code_challenge_methods_supported: [S256]"
+          note: >
+            The specification requires every authorization server endpoint to be https. A client
+            that checks this refuses the metadata here and the chain stops.
+          cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Communication Security" }
+      authorization-request:
+        - id: open-unchecked-endpoint
+          from: client
+          to: user
+          message: "Open the authorization_endpoint value on Alex's machine, unchecked, with the request parameters appended"
+          note: >
+            In the baseline this opens Alex's browser at the authorization server. Here the
+            client acts on a value it never validated, on the machine the person is using.
+          cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Communication Security" }

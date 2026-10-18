@@ -1,0 +1,9 @@
+id: orphan
+title: A replay nobody provides
+class: other
+summary: Names a scenario whose toggles do not name it back.
+disclosed: 2025-01-01
+affects: [nothing]
+features: [mcp.as.nope]
+scenario: broken
+sources: [https://example.org/advisory]
