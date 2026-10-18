@@ -328,3 +328,23 @@
   observedAt: 2026-10-17T01:18:47Z
   observedBy: scanner@0.3.0
   evidence: https://zoom.us/.well-known/oauth-authorization-server — HTTP 200; all 2 endpoints use https
+- server: zoom
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable — HTTP 200; scopes_supported: [docs:read:export, agentic_search:read:search, my_notes:read:content, meeting:update:in_meeting_controls, docs:write:import, cloud_recording:read:content, docs:read:list_file_collaborators, do…"
+- server: zoom
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable — HTTP 200; scopes_supported without offline_access: [docs:read:export, agentic_search:read:search, my_notes:read:content, meeting:update:in_meeting_controls, docs:write:import, cloud_recording:read:content, docs:read:list…"
