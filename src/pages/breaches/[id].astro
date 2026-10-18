@@ -31,7 +31,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
 <Base title={v.title} description={v.summary.trim()} path={`/breaches/${v.id}/`}>
   <div class="wrap">
     <Crumbs trail={[{ href: "/breaches/", label: "Breach anatomy" }]} current={v.id} />
-    <header class="head">
+    <header class="page-head">
       <p class="eyebrow">Breach anatomy</p>
       <h1>{v.title}</h1>
       <p class="lede">{v.summary}</p>
@@ -149,18 +149,22 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
       }
     </section>
 
-    <p class="data-links">
-      <a href="/breaches/data.json">All entries as JSON</a>
-      <a href={`${REPO}/blob/main/data/vulnerabilities/${v.id}.yaml`} rel="noopener">Data file</a>
-      <a href={`${REPO}/edit/main/data/vulnerabilities/${v.id}.yaml`} rel="noopener">Propose a change</a>
-    </p>
+    <footer class="page-foot">
+      <p>
+        Written from the public notice linked above; the dates and the fixed version are the
+        advisory's. To correct this entry, edit its data file and open a pull request.
+      </p>
+      <p class="page-foot__links">
+        <a href="/breaches/">All entries</a>
+        <a href="/breaches/data.json">All entries as JSON</a>
+        <a href={`${REPO}/blob/main/data/vulnerabilities/${v.id}.yaml`} rel="noopener">Data file</a>
+        <a href={`${REPO}/edit/main/data/vulnerabilities/${v.id}.yaml`} rel="noopener">Propose a change</a>
+      </p>
+    </footer>
   </div>
 </Base>
 
 <style>
-  .head {
-    margin-bottom: var(--space-5);
-  }
   .plain {
     list-style: none;
     margin: 0;
@@ -250,13 +254,5 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
   }
   .replay__kind.kind-misconfiguration {
     color: var(--status-partial);
-  }
-  .data-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    margin: var(--space-6) 0 0;
-    font-size: var(--text-sm);
-    max-width: none;
   }
 </style>

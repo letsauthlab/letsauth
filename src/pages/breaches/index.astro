@@ -36,15 +36,15 @@ const date = (d: string) =>
       <dl class="facts" aria-label="Breach anatomy at a glance">
         <div>
           <dt>Entries</dt>
-          <dd class="num">{breaches.length}</dd>
+          <dd>{breaches.length}</dd>
         </div>
         <div>
           <dt>With a replay</dt>
-          <dd class="num">{replays}</dd>
+          <dd>{replays}</dd>
         </div>
         <div>
           <dt>Requirements named</dt>
-          <dd class="num">{linked}</dd>
+          <dd>{linked}</dd>
         </div>
       </dl>
     </header>
@@ -92,8 +92,8 @@ const date = (d: string) =>
       }
     </ol>
 
-    <section class="about card" aria-labelledby="about-title">
-      <h2 id="about-title">How to read an entry</h2>
+    <footer class="page-foot">
+      <h2>How to read an entry</h2>
       <p>
         The class says which kind of control failed. The requirements are the atlas rows that
         stand for that control under the current MCP Authorization revision; the entry's page
@@ -104,36 +104,18 @@ const date = (d: string) =>
       </p>
       <p>
         Entries are data: one YAML file each under <code>data/vulnerabilities/</code>, validated
-        against the shared model, open under CC BY 4.0 as <a href="/breaches/data.json">one JSON document</a>.
-        To add one, open a pull request in the
-        <a href={`${REPO}/tree/main/data/vulnerabilities`} rel="noopener">repository</a> with the
+        against the shared model, open under CC BY 4.0. To add one, open a pull request with the
         advisory as its first source.
       </p>
-    </section>
+      <p class="page-foot__links">
+        <a href="/breaches/data.json">All entries as JSON</a>
+        <a href={`${REPO}/tree/main/data/vulnerabilities`} rel="noopener">Data files</a>
+      </p>
+    </footer>
   </div>
 </Base>
 
 <style>
-  .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-5);
-    margin: var(--space-4) 0 0;
-  }
-  .facts div {
-    display: grid;
-    gap: 2px;
-  }
-  .facts dt {
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-  .facts dd {
-    margin: 0;
-  }
   .breaches {
     list-style: none;
     margin: var(--space-6) 0 0;
@@ -216,11 +198,5 @@ const date = (d: string) =>
   }
   .replay.kind-misconfiguration .replay__kind {
     color: var(--status-partial);
-  }
-  .about {
-    margin-top: var(--space-7);
-  }
-  .about h2 {
-    margin-top: 0;
   }
 </style>
