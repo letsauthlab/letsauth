@@ -32,4 +32,4 @@ and screenshots.
 
 - [x] T013 `src/layouts/Base.astro` nav and footer, `src/pages/about.astro`, `README.md`, `lighthouserc.json` (FR-007)
 - [x] T014 `docs/architecture.md`, `docs/roadmap.md` (rows 005 and 009)
-- [x] T015 `pnpm check`; baselines for `breaches.spec.ts` generated through the `refresh-screenshots` label on the pull request (the explorer baselines stayed within tolerance)
+- [x] T015 `pnpm check`; baselines for `breaches.spec.ts` generated through the `refresh-screenshots` label on the pull request (after the merge with the page tree, the scenario page baseline was refreshed the same way: three more toggles in its list)
