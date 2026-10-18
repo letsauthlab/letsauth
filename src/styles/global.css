@@ -232,14 +232,27 @@ hr {
 }
 
 /* breadcrumb above page titles */
+/* Breadcrumb (src/components/Crumbs.astro): ancestors as links, the page itself last. */
 .crumbs {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-bottom: var(--space-5);
+}
+
+.crumbs ol {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  margin-bottom: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crumbs li + li::before {
+  content: "/";
+  margin-right: var(--space-2);
+  color: var(--line-strong);
 }
 
 .crumbs a {
@@ -249,10 +262,6 @@ hr {
 
 .crumbs a:hover {
   color: var(--ink);
-}
-
-.crumbs [aria-hidden] {
-  color: var(--line-strong);
 }
 
 /*
@@ -522,6 +531,10 @@ hr {
 
 .cards > li {
   margin: 0;
+}
+
+/* a list item that is not itself a card carries no list padding; a card keeps its own */
+.cards > li:not(.card) {
   padding: 0;
 }
 
@@ -567,16 +580,24 @@ hr {
   border-top: 1px solid var(--line);
 }
 
+/* a plain numeral in a ring, so a step never reads as a section label */
 .steps > li::before {
-  content: counter(step, decimal-leading-zero);
+  content: counter(step);
   position: absolute;
   left: 0;
-  top: var(--space-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  line-height: 1.6;
-  color: var(--accent);
+  top: calc(var(--space-3) + 0.1em);
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink);
 }
 
 .steps > li:last-child {

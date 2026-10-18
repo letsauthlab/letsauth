@@ -66,7 +66,7 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
             {s.entries.map(({ relation, other }) => (
               <li data-other={other.id} data-type={typeOf(s.id)}>
                 <span class="who">
-                  <a href={`/atlas/standards/${other.id}/`}>{other.name}</a>
+                  <a href={`/standards/${other.id}/`}>{other.name}</a>
                   <MaturityTag maturity={other.maturity} note={other.maturityNote} />
                 </span>
                 {relation.note && <span class="why">{relation.note}</span>}

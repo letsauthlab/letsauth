@@ -49,23 +49,23 @@ const latest = [...data.observations]
           observation, and the data is yours to download.
         </p>
         <p class="cta">
-          <a class="button primary" href="/atlas/mcp/">
+          <a class="button primary" href="/mcp/">
             Open the MCP auth atlas
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </a>
           <a class="button" href="/explorer/">Step through a delegation chain</a>
-          <a class="button" href="/atlas/standards/">See the standards map</a>
-          <a class="button" href="/atlas/mcp/data.json">Get the data</a>
+          <a class="button" href="/standards/">See the standards map</a>
+          <a class="button" href="/mcp/data.json">Get the data</a>
         </p>
       </div>
 
-      <a class="hero__thumb" href="/atlas/mcp/" aria-label="Open the MCP auth atlas matrix">
+      <a class="hero__thumb" href="/mcp/" aria-label="Open the MCP auth atlas matrix">
         <figure class="thumb">
           <div class="thumb__bar" aria-hidden="true">
             <span class="thumb__dots"><i></i><i></i><i></i></span>
-            <span class="thumb__title">atlas/mcp · {revision.id}</span>
+            <span class="thumb__title">mcp · {revision.id}</span>
           </div>
           <svg
             class="thumb__grid"
@@ -182,19 +182,19 @@ const latest = [...data.observations]
         <p>
           The atlas contacts no server at build time. Seed data comes from vendor documentation
           and public directories, and says so on every cell. The{" "}
-          <a href="/scanner/">scanner</a> reads public metadata every night; its output lands in
+          <a href="/mcp/scanner/">scanner</a> reads public metadata every night; its output lands in
           the same repository, as pull requests, like everything else.
         </p>
         <h3>And the standards behind it</h3>
         <p>
-          The <a href="/atlas/standards/">agent auth atlas</a> draws the specifications behind all
+          The <a href="/standards/">agent auth atlas</a> draws the specifications behind all
           of this as one graph: OAuth and its extensions, workload identity, the agent protocols,
           credential formats and the EU acts, with what builds on what, what competes with what,
           and each document's maturity and dated revisions.
         </p>
         <p class="cta">
-          <a class="button" href="/atlas/standards/">Open the standards map</a>
-          <a class="button" href="/atlas/mcp/contribute/">Add what you know</a>
+          <a class="button" href="/standards/">Open the standards map</a>
+          <a class="button" href="/contribute/">Add what you know</a>
         </p>
       </section>
 
@@ -210,9 +210,9 @@ const latest = [...data.observations]
                 <li>
                   <StatusCell status={o.status} variant="cell" />
                   <span class="latest__what">
-                    <a href={`/atlas/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
+                    <a href={`/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
                     <span class="latest__feature">
-                      <a href={`/atlas/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
+                      <a href={`/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
                       {f && <span class="latest__cat"> · {CATEGORY_LABEL[f.category]}</span>}
                     </span>
                   </span>
@@ -226,7 +226,7 @@ const latest = [...data.observations]
           }
         </ol>
         <p class="latest__more">
-          <a href="/atlas/mcp/">See the full matrix</a>
+          <a href="/mcp/">See the full matrix</a>
         </p>
       </section>
     </div>

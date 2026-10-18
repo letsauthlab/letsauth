@@ -18,7 +18,7 @@ const share = featureShare(data, feature.id, revision.id);
 
 test.describe("feature page (US3)", () => {
   test("cites the revision document and section (FR-005, SC-002)", async ({ page }) => {
-    await page.goto(`/atlas/mcp/features/${feature.id}/`);
+    await page.goto(`/mcp/features/${feature.id}/`);
     const cite = page.locator('[aria-labelledby="definition"] cite a');
     await expect(cite).toHaveAttribute("href", revision.url);
     await expect(cite).toHaveText(entry?.section ?? "");
@@ -28,7 +28,7 @@ test.describe("feature page (US3)", () => {
   });
 
   test("share excludes unknown and not-applicable and shows both counts", async ({ page }) => {
-    await page.goto(`/atlas/mcp/features/${feature.id}/`);
+    await page.goto(`/mcp/features/${feature.id}/`);
     const known = share.supported + share.partial + share.unsupported;
     const line = page.locator(".share-line");
     if (share.share === null) {
@@ -43,7 +43,7 @@ test.describe("feature page (US3)", () => {
   });
 
   test("server lists per status match the matrix column", async ({ page }) => {
-    await page.goto(`/atlas/mcp/features/${feature.id}/`);
+    await page.goto(`/mcp/features/${feature.id}/`);
     const expected = new Map<string, string[]>();
     for (const server of matrixRows(data)) {
       const status = currentCell(data, server, feature, revision.id).status;
@@ -57,7 +57,7 @@ test.describe("feature page (US3)", () => {
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto(`/atlas/mcp/features/${feature.id}/`);
+    await page.goto(`/mcp/features/${feature.id}/`);
     await expectNoSeriousA11yViolations(page);
     await expect(page).toHaveScreenshot("feature.png");
   });

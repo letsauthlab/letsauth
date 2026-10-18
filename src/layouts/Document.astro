@@ -2,12 +2,12 @@
 import Base from "@/layouts/Base.astro";
 
 /**
- * A long-form page (about, contribute, imprint, privacy and the like). It opens with the shared
- * page head, then runs as two columns: the text on the left, and on the right a rail with the
- * page's sections (read from the h2s the page renders), an optional aside and the date the
- * text last changed. Sections are numbered; the rail tracks the reader's place without
- * JavaScript. Pages put their sections in the default slot and a card for the rail in the
- * `aside` slot.
+ * A long-form page (about, contribute, imprint, privacy and the like). These sit at the top of
+ * the tree, so none has a breadcrumb. The page opens with the shared page head, then runs as
+ * two columns: the text on the left, and on the right a rail with the page's sections (read
+ * from the h2s the page renders), an optional aside and the date the text last changed.
+ * Sections are numbered; the rail tracks the reader's place without JavaScript. Pages put
+ * their sections in the default slot and a card for the rail in the `aside` slot.
  */
 interface Props {
   title: string;
@@ -17,22 +17,11 @@ interface Props {
   /** The h1. Defaults to the title. */
   heading?: string;
   lede?: string;
-  /** The trail before the page's own title. Defaults to Home. */
-  crumbs?: { href: string; label: string }[];
   /** ISO date (YYYY-MM-DD) the text was last changed; omit on pages that are not dated. */
   updated?: string;
 }
 
-const {
-  title,
-  description,
-  path,
-  eyebrow,
-  heading,
-  lede,
-  crumbs = [{ href: "/", label: "Home" }],
-  updated,
-} = Astro.props;
+const { title, description, path, eyebrow, heading, lede, updated } = Astro.props;
 const updatedLabel = updated
   ? new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-GB", {
       day: "numeric",
@@ -70,16 +59,6 @@ const hasAside = Astro.slots.has("aside");
 
 <Base title={title} description={description} path={path}>
   <article class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      {
-        crumbs.map((c) => (
-          <>
-            <a href={c.href}>{c.label}</a> <span aria-hidden="true">/</span>{" "}
-          </>
-        ))
-      }
-      {title}
-    </nav>
     <header class="page-head">
       <p class="eyebrow">{eyebrow}</p>
       <h1>{heading ?? title}</h1>

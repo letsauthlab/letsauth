@@ -1,4 +1,5 @@
 ---
+import Crumbs from "@/components/Crumbs.astro";
 import ScanReport from "@/components/ScanReport.svelte";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
@@ -22,15 +23,17 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
 <Base
   title={`${server.name} · Scanner`}
   description={`Passive scan report for ${server.name} against MCP Authorization ${view.revisionId}: ${view.scanned ? `${gradeWord}, newest observation ${view.scannedAt?.slice(0, 10)}` : "not scanned yet"}.`}
-  path={`/scanner/${server.id}/`}
+  path={`/mcp/servers/${server.id}/scan/`}
   noindex={Boolean(server.withdrawn)}
 >
   <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span>
-      <a href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a> <span aria-hidden="true">/</span>
-      Scan report
-    </nav>
+    <Crumbs
+      trail={[
+        { href: "/mcp/", label: "MCP auth atlas" },
+        { href: `/mcp/servers/${server.id}/`, label: server.name },
+      ]}
+      current="Scan report"
+    />
     <header class="page-head">
       <p class="eyebrow">Scan report</p>
       <h1>{server.name}</h1>
@@ -43,8 +46,8 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
         )}
       </p>
       <p class="page-head__meta">
-        <a class="button small" href={`/atlas/mcp/servers/${server.id}/`}>Atlas page</a>
-        {!server.withdrawn && <a class="button small" href={`/scanner/${server.id}.json`}>JSON</a>}
+        <a class="button small" href={`/mcp/servers/${server.id}/`}>Atlas page</a>
+        {!server.withdrawn && <a class="button small" href={`/mcp/servers/${server.id}/scan.json`}>JSON</a>}
         <a class="button small" href={`${repo}/blob/main/data/observations/${server.id}.yaml`} rel="noopener">Data file</a>
       </p>
     </header>
@@ -68,19 +71,19 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
               <ol class="rule">{GRADE_RULE.map((line) => <li>{line}</li>)}</ol>
               <p class="muted">
                 Derived from the statuses above at build time; never used to sort or rank
-                servers. <a href="/scanner/#grade-rule">About the scanner</a>.
+                servers. <a href="/mcp/scanner/#grade-rule">About the scanner</a>.
               </p>
             </section>
             <section class="card" aria-labelledby="not-title">
               <h2 id="not-title">Not checked by the scanner</h2>
               <p class="muted">
-                These requirements need a token, a scope or a reading of the implementation. Their cells on the <a href={`/atlas/mcp/servers/${server.id}/`}>atlas page</a>{" "}
+                These requirements need a token, a scope or a reading of the implementation. Their cells on the <a href={`/mcp/servers/${server.id}/`}>atlas page</a>{" "}
                 come from documentation and manual checks.
               </p>
               <ul class="unscanned">
                 {unscanned.map((f) => (
                   <li>
-                    <a href={`/atlas/mcp/features/${f.id}/`}>{f.name}</a>
+                    <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
                     <span class="pill">{f.observable}</span>
                   </li>
                 ))}

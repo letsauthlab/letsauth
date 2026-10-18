@@ -11,7 +11,7 @@ import { LAB, LEGAL_LINKS, OPERATOR, REPO } from "@/lib/site";
 interface Props {
   title: string;
   description: string;
-  /** Path for the canonical URL, e.g. "/atlas/mcp/". Defaults to the current path. */
+  /** Path for the canonical URL, e.g. "/mcp/". Defaults to the current path. */
   path?: string;
   /** When set, the page is excluded from search indexing and the sitemap hint. */
   noindex?: boolean;
@@ -29,19 +29,19 @@ const footerGroups = [
   {
     title: "Explore",
     links: [
-      { href: "/atlas/mcp/", label: "MCP auth atlas" },
-      { href: "/atlas/standards/", label: "Agent auth atlas" },
+      { href: "/mcp/", label: "MCP auth atlas" },
+      { href: "/mcp/scanner/", label: "Scanner" },
+      { href: "/standards/", label: "Agent auth atlas" },
       { href: "/explorer/", label: "Delegation chain explorer" },
-      { href: "/scanner/", label: "Scanner" },
     ],
   },
   {
     title: "Open data",
     links: [
-      { href: "/atlas/mcp/data.json", label: "MCP atlas (JSON)" },
-      { href: "/atlas/standards/data.json", label: "Standards (JSON)" },
+      { href: "/mcp/data.json", label: "MCP atlas (JSON)" },
+      { href: "/standards/data.json", label: "Standards (JSON)" },
       { href: "/explorer/data.json", label: "Scenarios (JSON)" },
-      { href: "/atlas/mcp/contribute/", label: "Contribute" },
+      { href: "/contribute/", label: "Contribute" },
       { href: REPO, label: "Source on GitHub", external: true },
     ],
   },
@@ -54,20 +54,20 @@ const footerGroups = [
     ],
   },
 ];
+// The primary navigation: one entry per top-level section, each matching its whole subtree.
+// Pages outside these subtrees (about, the legal pages) light up nothing.
 const nav = [
   {
-    href: "/atlas/mcp/",
+    href: "/mcp/",
     label: "MCP auth atlas",
     short: "MCP",
-    match: (p: string) =>
-      (p.startsWith("/atlas/mcp/") && !p.startsWith("/atlas/mcp/contribute/")) ||
-      p.startsWith("/scanner/"),
+    match: (p: string) => p.startsWith("/mcp/"),
   },
   {
-    href: "/atlas/standards/",
+    href: "/standards/",
     label: "Agent auth atlas",
     short: "Standards",
-    match: (p: string) => p.startsWith("/atlas/standards/"),
+    match: (p: string) => p.startsWith("/standards/"),
   },
   {
     href: "/explorer/",
@@ -76,10 +76,10 @@ const nav = [
     match: (p: string) => p.startsWith("/explorer/"),
   },
   {
-    href: "/atlas/mcp/contribute/",
+    href: "/contribute/",
     label: "Contribute",
     short: "Contribute",
-    match: (p: string) => p.startsWith("/atlas/mcp/contribute/"),
+    match: (p: string) => p.startsWith("/contribute/"),
   },
 ];
 ---
@@ -134,7 +134,7 @@ const nav = [
           <strong>Work in progress.</strong> letsauth is an early preview: the data is partial,
           pages change often, and nothing here is final yet.
         </p>
-        <a class="wip__link" href="/atlas/mcp/contribute/">Help fill the gaps</a>
+        <a class="wip__link" href="/contribute/">Help fill the gaps</a>
       </div>
     </aside>
     <header class="site-header">

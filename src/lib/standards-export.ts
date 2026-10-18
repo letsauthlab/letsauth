@@ -20,7 +20,7 @@ export function buildStandardsExport(data: Dataset, generatedAt = new Date().toI
     version: STANDARDS_EXPORT_VERSION,
     generatedAt,
     license: licenseLine(),
-    source: "https://letsauth.eu/atlas/standards/",
+    source: "https://letsauth.eu/standards/",
     specs: specNodes(data),
     relations: data.relations,
     withdrawn: withdrawnSpecs(data).map((s) => s.id),

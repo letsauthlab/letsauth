@@ -29,17 +29,17 @@ test.describe("scanner index (US2)", () => {
   test("has no list of its own and points at the atlas where the grades show (FR-010)", async ({
     page,
   }) => {
-    await page.goto("/scanner/");
+    await page.goto("/mcp/scanner/");
     await expect(page.locator("#scanner-index")).toHaveCount(0);
     await expect(page.locator("table tr[data-server]")).toHaveCount(0);
     const where = page.locator("[aria-labelledby='where-title']");
-    await expect(where.locator("a[href='/atlas/mcp/']")).toBeVisible();
-    await expect(where.locator("a[href='/atlas/mcp/servers/']")).toBeVisible();
+    await expect(where.locator("a[href='/mcp/']")).toBeVisible();
+    await expect(where.locator("a[href='/mcp/servers/']")).toBeVisible();
     await expect(page.locator("[data-nightly]")).toHaveCount(2);
   });
 
   test("publishes the grade rule next to the grades (FR-008)", async ({ page }) => {
-    await page.goto("/scanner/");
+    await page.goto("/mcp/scanner/");
     const rule = page.locator("#grade-rule li");
     await expect(rule).toHaveCount(GRADE_RULE.length);
     await expect(rule.first()).toContainText("MUST");
@@ -48,16 +48,16 @@ test.describe("scanner index (US2)", () => {
   test("reads fully without JavaScript (FR-013)", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
-    await page.goto("/scanner/");
+    await page.goto("/mcp/scanner/");
     await expect(page.locator("[data-enhanced]")).toHaveCount(0);
-    await expect(page.locator("a[href='/atlas/mcp/']").first()).toBeVisible();
+    await expect(page.locator("a[href='/mcp/']").first()).toBeVisible();
     await expect(page.locator("#grade-rule li")).toHaveCount(GRADE_RULE.length);
     await context.close();
   });
 
   test("has no horizontal page scroll at phone width (SC-007)", async ({ page }) => {
     await page.setViewportSize({ width: 412, height: 900 });
-    await page.goto("/scanner/");
+    await page.goto("/mcp/scanner/");
     const [scroll, inner] = await page.evaluate(() => [
       document.documentElement.scrollWidth,
       window.innerWidth,
@@ -66,7 +66,7 @@ test.describe("scanner index (US2)", () => {
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto("/scanner/");
+    await page.goto("/mcp/scanner/");
     await expectNoSeriousA11yViolations(page);
     await hideNightlyData(page);
     await expect(page).toHaveScreenshot("scanner.png", { fullPage: false });
@@ -78,7 +78,7 @@ test.describe("scan report page (US2)", () => {
     page,
   }) => {
     test.skip(!scanned, "no server with a scanner observation in the dataset yet");
-    await page.goto(`/scanner/${scanned?.server.id}/`);
+    await page.goto(`/mcp/servers/${scanned?.server.id}/scan/`);
     const rows = page.locator("[data-report] tr[data-check]");
     await expect(rows).toHaveCount(checks.length);
     await expect(page.locator("[data-report] [data-grade-label]")).toHaveCount(1);
@@ -93,7 +93,7 @@ test.describe("scan report page (US2)", () => {
     page,
   }) => {
     test.skip(!unscanned, "every server has a scanner observation");
-    await page.goto(`/scanner/${unscanned?.server.id}/`);
+    await page.goto(`/mcp/servers/${unscanned?.server.id}/scan/`);
     await expect(page.locator("#not-scanned")).toBeVisible();
     await expect(page.locator("[data-grade-letter]")).toHaveCount(0);
     const rows = page.locator("[data-report] tr[data-check]");
@@ -107,14 +107,15 @@ test.describe("scan report page (US2)", () => {
   });
 
   test("links the atlas, the server page, the JSON and the grade rule", async ({ page }) => {
-    await page.goto(`/scanner/${first.server.id}/`);
-    await expect(page.locator(".crumbs a[href='/atlas/mcp/']")).toBeVisible();
+    await page.goto(`/mcp/servers/${first.server.id}/scan/`);
+    await expect(page.locator(".crumbs a[href='/mcp/']")).toBeVisible();
+    await expect(page.locator(`.crumbs a[href='/mcp/servers/${first.server.id}/']`)).toBeVisible();
+    await expect(page.locator(`a[href="/mcp/servers/${first.server.id}/"]`).first()).toBeVisible();
     await expect(
-      page.locator(`a[href="/atlas/mcp/servers/${first.server.id}/"]`).first(),
+      page.locator(`a[href="/mcp/servers/${first.server.id}/scan.json"]`).first(),
     ).toBeVisible();
-    await expect(page.locator(`a[href="/scanner/${first.server.id}.json"]`).first()).toBeVisible();
     await expect(page.locator("#rule-title")).toBeVisible();
-    const response = await page.request.get(`/scanner/${first.server.id}.json`);
+    const response = await page.request.get(`/mcp/servers/${first.server.id}/scan.json`);
     expect(response.ok()).toBe(true);
     const body = await response.json();
     expect(body.version).toBe(1);
@@ -123,7 +124,7 @@ test.describe("scan report page (US2)", () => {
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto(`/scanner/${first.server.id}/`);
+    await page.goto(`/mcp/servers/${first.server.id}/scan/`);
     await expectNoSeriousA11yViolations(page);
     await hideNightlyData(page);
     await expect(page).toHaveScreenshot("report.png", {

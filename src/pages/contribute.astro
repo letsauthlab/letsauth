@@ -23,9 +23,8 @@ const entry = `- server: stripe                     # must equal the file's serv
   title="Contribute"
   heading="Add what you know, with evidence"
   description="How to add an observation, correct a cell, list a server or withdraw one from the MCP auth atlas. Two paths, both reviewed before anything is published."
-  path="/atlas/mcp/contribute/"
+  path="/contribute/"
   eyebrow="Contribute"
-  crumbs={[{ href: "/atlas/mcp/", label: "MCP auth atlas" }]}
   lede="The atlas is a dataset in a git repository. Anyone can add an observation or correct one; a maintainer reviews the evidence before it is published. Nothing is ever edited in place."
 >
   <h2>Two ways in</h2>
@@ -83,7 +82,7 @@ const entry = `- server: stripe                     # must equal the file's serv
 
   <h2>Let the scanner write it</h2>
   <p>
-    For the {scannerChecks} requirements the <a href="/scanner/">passive scanner</a> can read
+    For the {scannerChecks} requirements the <a href="/mcp/scanner/">passive scanner</a> can read
     from public metadata, prefer <code>pnpm scan &lt;server-id&gt; --write</code> over a hand-written
     entry. It appends exactly the observations whose status or evidence changed, with evidence
     anyone can reproduce by running the same command. The nightly run does the same for every
@@ -129,7 +128,7 @@ const entry = `- server: stripe                     # must equal the file's serv
         <li><a href={issue} rel="noopener">Issue form</a></li>
         <li><a href={`${repo}/tree/main/data/observations`} rel="noopener">Observation files</a></li>
         <li><a href={`${repo}/blob/main/docs/atlas-maintenance.md`} rel="noopener">Maintenance guide</a></li>
-        <li><a href="/atlas/mcp/data.json">The atlas as JSON</a></li>
+        <li><a href="/mcp/data.json">The atlas as JSON</a></li>
       </ul>
     </div>
   </Fragment>

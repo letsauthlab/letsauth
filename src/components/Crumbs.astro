@@ -1,0 +1,26 @@
+---
+/**
+ * The one breadcrumb. `trail` is the chain of ancestors from the product root down to the parent,
+ * `current` the page itself (shown, not linked). Pages at the top level of the tree, which the
+ * header and footer already name, render no breadcrumb at all; see docs/architecture.md, "Pages".
+ */
+interface Props {
+  trail: { href: string; label: string }[];
+  current: string;
+}
+
+const { trail, current } = Astro.props;
+---
+
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol role="list">
+    {
+      trail.map((crumb) => (
+        <li>
+          <a href={crumb.href}>{crumb.label}</a>
+        </li>
+      ))
+    }
+    <li aria-current="page">{current}</li>
+  </ol>
+</nav>
