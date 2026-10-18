@@ -2,8 +2,8 @@
 import Base from "@/layouts/Base.astro";
 
 /**
- * A long-form text page (about, imprint, privacy and the like): breadcrumb, eyebrow, title,
- * lede, prose body and a dated footer line. Pages put their sections in the default slot.
+ * A long-form text page (about, imprint, privacy and the like): eyebrow, title, lede, prose body
+ * and a dated footer line. These pages sit at the top of the tree, so none has a breadcrumb. Pages put their sections in the default slot.
  */
 interface Props {
   title: string;
@@ -28,9 +28,6 @@ const updatedLabel = new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-GB"
 
 <Base title={title} description={description} path={path}>
   <article class="wrap doc">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/">Home</a> <span aria-hidden="true">/</span> {title}
-    </nav>
     <header class="doc__head">
       <p class="eyebrow">{eyebrow}</p>
       <h1>{heading ?? title}</h1>

@@ -231,14 +231,27 @@ hr {
 }
 
 /* breadcrumb above page titles */
+/* Breadcrumb (src/components/Crumbs.astro): ancestors as links, the page itself last. */
 .crumbs {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-bottom: var(--space-5);
+}
+
+.crumbs ol {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  margin-bottom: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crumbs li + li::before {
+  content: "/";
+  margin-right: var(--space-2);
+  color: var(--line-strong);
 }
 
 .crumbs a {
@@ -248,10 +261,6 @@ hr {
 
 .crumbs a:hover {
   color: var(--ink);
-}
-
-.crumbs [aria-hidden] {
-  color: var(--line-strong);
 }
 
 .page-head {

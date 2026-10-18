@@ -5,19 +5,19 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
 const products = [
   {
     name: "MCP auth atlas",
-    href: "/atlas/mcp/",
+    href: "/mcp/",
     status: "Live",
     text: "Public MCP servers against every requirement of the MCP Authorization specification, one cited observation per cell.",
   },
   {
     name: "Agent auth atlas",
-    href: "/atlas/standards/",
+    href: "/standards/",
     status: "Live",
     text: "The specifications, drafts and EU acts behind agent authorization as one map of what builds on and competes with what.",
   },
   {
     name: "Scanner",
-    href: "/scanner/",
+    href: "/mcp/scanner/",
     status: "Live",
     text: "A nightly job that reads listed servers' public metadata and proposes new observations as pull requests.",
   },
@@ -98,7 +98,7 @@ const products = [
 
   <h2>Get involved</h2>
   <p>
-    Know how a server behaves? <a href="/atlas/mcp/contribute/">Add an observation</a>. Found a
+    Know how a server behaves? <a href="/contribute/">Add an observation</a>. Found a
     mistake, or want a specification on the map? Open an issue in the{" "}
     <a href={REPO} rel="noopener">repository</a>. Anything else:{" "}
     <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>.

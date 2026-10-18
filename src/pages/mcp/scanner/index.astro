@@ -1,4 +1,5 @@
 ---
+import Crumbs from "@/components/Crumbs.astro";
 import Base from "@/layouts/Base.astro";
 import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
@@ -20,9 +21,10 @@ const issue = `${repo}/issues/new?template=observation.yml`;
 <Base
   title="Scanner"
   description={`The passive scanner behind the MCP auth atlas: what it reads, how it grades, and where its reports for the ${facts.servers} listed servers show against MCP Authorization ${revision.id}.`}
-  path="/scanner/"
+  path="/mcp/scanner/"
 >
   <div class="wrap">
+    <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current="Scanner" />
     <header class="page-head scanner-head">
       <div class="scanner-head__copy">
         <p class="eyebrow">Scanner</p>
@@ -131,12 +133,12 @@ const issue = `${repo}/issues/new?template=observation.yml`;
       <h2 id="where-title">Where the results show</h2>
       <p>
         The scanner has no list of its own. Its results live in the
-        <a href="/atlas/mcp/">MCP auth atlas</a>: the letter next to each server name in the matrix is
-        that server's latest grade, and every <a href="/atlas/mcp/servers/">server page</a> carries the
-        same grade with a link to the full report at <code>/scanner/&lt;server&gt;/</code>, which lists
+        <a href="/mcp/">MCP auth atlas</a>: the letter next to each server name in the matrix is
+        that server's latest grade, and every <a href="/mcp/servers/">server page</a> carries the
+        same grade with a link to the full report at <code>/mcp/servers/&lt;server&gt;/scan/</code>, which lists
         each of the {checks.length} checks with the metadata it read. A server without a scanner
         observation reads "not scanned": the nightly run has not yet been able to read its metadata, or
-        has not run since it was listed. Servers whose <a href="/atlas/mcp/#f-auth">auth class</a> is API
+        has not run since it was listed. Servers whose <a href="/mcp/#f-auth">auth class</a> is API
         key or no authentication read "no OAuth" and are not scanned; a server whose class is not yet
         stated is scanned, and the run summary says what its endpoint's answer suggests.
       </p>
@@ -165,7 +167,7 @@ pnpm scan notion --write                # append what the nightly rule would</co
           {unscanned.slice(0, 3).map((f, i) => (
             <>
               {i > 0 && ", "}
-              <a href={`/atlas/mcp/features/${f.id}/`}>{f.name}</a>
+              <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
             </>
           ))}. Their cells come from documentation and manual checks until active probes exist for
           verified owners.

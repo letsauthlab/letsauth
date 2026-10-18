@@ -32,7 +32,7 @@ for (const f of columns) {
 
 const changedIds = new Map(diff?.changed.map((c) => [c.feature.id, c]) ?? []);
 const addedIds = new Set(diff?.added.map((f) => f.id) ?? []);
-const changesHref = diff ? `/atlas/mcp/changes/${diff.from.id}/${diff.to.id}/` : undefined;
+const changesHref = diff ? `/mcp/changes/${diff.from.id}/${diff.to.id}/` : undefined;
 const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
 ---
 
@@ -61,7 +61,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
             {scans && (
               <>
                 {" · "}
-                <a href="/scanner/">nightly scan grade</a>
+                <a href="/mcp/scanner/">nightly scan grade</a>
               </>
             )}
           </span>
@@ -98,7 +98,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                       </a>
                     )}
                   </span>
-                  <a class="feature-link" href={`/atlas/mcp/features/${f.id}/`}>
+                  <a class="feature-link" href={`/mcp/features/${f.id}/`}>
                     <span class="feature-short">{shortLabel(f.id)}</span>
                     <span class="visually-hidden">{f.name}</span>
                   </a>
@@ -132,7 +132,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
           >
             <th scope="row" class="server-cell">
               <span class="server-cell__row">
-                <a class="server-link" href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
+                <a class="server-link" href={`/mcp/servers/${server.id}/`}>{server.name}</a>
                 {(() => {
                   const scan = scans?.get(server.id);
                   if (!scan) return null;
@@ -140,7 +140,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                   return (
                     <a
                       class="grade-link"
-                      href={`/scanner/${server.id}/`}
+                      href={`/mcp/servers/${server.id}/scan/`}
                       data-grade={scan.grade.letter ?? scan.grade.label}
                       aria-label={`${server.name}, nightly scan: ${word}. Open the report`}
                     >

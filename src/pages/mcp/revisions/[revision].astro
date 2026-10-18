@@ -1,0 +1,26 @@
+---
+import Crumbs from "@/components/Crumbs.astro";
+import MatrixPage from "@/components/MatrixPage.astro";
+import Base from "@/layouts/Base.astro";
+import { currentRevision, getSpec } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+
+export function getStaticPaths() {
+  return getSpec(getDataset()).revisions.map((r) => ({ params: { revision: r.id } }));
+}
+
+const { revision } = Astro.params;
+// The current revision lives at the atlas root; its revision URL is a redirect page there.
+if (currentRevision(getDataset()).id === revision) return Astro.redirect("/mcp/", 301);
+---
+
+<Base
+  title={`MCP auth atlas, revision ${revision}`}
+  description={`Which public MCP servers support which features of the MCP Authorization specification as of revision ${revision}.`}
+  path={`/mcp/revisions/${revision}/`}
+>
+  <div class="wrap">
+    <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={`Revision ${revision}`} />
+  </div>
+  <MatrixPage revisionId={revision} />
+</Base>

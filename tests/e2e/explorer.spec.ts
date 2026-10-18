@@ -201,7 +201,7 @@ test.describe("toggle page (US2)", () => {
     await expect(notice.locator("li[data-violates]")).toHaveCount(violates.length);
     for (const id of violates) {
       const item = notice.locator(`li[data-violates="${id}"]`);
-      await expect(item.locator("a").first()).toHaveAttribute("href", `/atlas/mcp/features/${id}/`);
+      await expect(item.locator("a").first()).toHaveAttribute("href", `/mcp/features/${id}/`);
       await expect(item).toContainText(/unknown|does not observe clients|not defined by/);
     }
   });

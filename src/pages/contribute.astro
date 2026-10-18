@@ -22,12 +22,9 @@ const entry = `- server: stripe                     # must equal the file's serv
 <Base
   title="Contribute to the MCP auth atlas"
   description="How to add an observation, correct a cell, list a server or withdraw one from the MCP auth atlas. Two paths, both reviewed before anything is published."
-  path="/atlas/mcp/contribute/"
+  path="/contribute/"
 >
   <div class="wrap prose contribute">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span> Contribute
-    </nav>
     <p class="eyebrow">Contribute</p>
     <h1>Add what you know, with evidence</h1>
     <p class="lede">
@@ -72,7 +69,7 @@ const entry = `- server: stripe                     # must equal the file's serv
 
     <h3>Run the scanner</h3>
     <p>
-      For the {scannerChecks} requirements the <a href="/scanner/">passive scanner</a> can read
+      For the {scannerChecks} requirements the <a href="/mcp/scanner/">passive scanner</a> can read
       from public metadata, prefer <code>pnpm scan &lt;server-id&gt; --write</code> over a hand-written
       entry. It appends exactly the observations whose status or evidence changed, with evidence
       anyone can reproduce by running the same command. The nightly run does the same for every

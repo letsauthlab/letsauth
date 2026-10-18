@@ -63,7 +63,7 @@ describe("data.json export (FR-013)", () => {
   });
 
   it("matches the built file when dist/ exists", () => {
-    const built = resolve(__dirname, "../../dist/atlas/mcp/data.json");
+    const built = resolve(__dirname, "../../dist/mcp/data.json");
     if (!existsSync(built)) return;
     const file = JSON.parse(readFileSync(built, "utf8"));
     expect(exportSchema.safeParse(file).success).toBe(true);

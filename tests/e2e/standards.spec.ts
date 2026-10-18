@@ -16,11 +16,11 @@ test.describe("standards map (US1)", () => {
   test("renders one node per spec and one edge per relation, every node a link (FR-001)", async ({
     page,
   }) => {
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     await expect(page.locator("#map a[data-spec]")).toHaveCount(nodes.length);
     await expect(page.locator("#map path[data-relation]")).toHaveCount(relations.length);
     const node = page.locator(`#map a[data-spec="${first.id}"]`);
-    await expect(node).toHaveAttribute("href", `/atlas/standards/${first.id}/`);
+    await expect(node).toHaveAttribute("href", `/standards/${first.id}/`);
     const label = (await node.getAttribute("aria-label")) ?? "";
     expect(label).toContain(first.name);
     expect(label).toContain(BODY_LABEL[first.body]);
@@ -28,7 +28,7 @@ test.describe("standards map (US1)", () => {
   });
 
   test("an edge names both specs and the relation in its title (FR-003)", async ({ page }) => {
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     const rel = relations.find((r) => r.note);
     test.skip(!rel, "no relation with a note in the seed data");
     const edge = page.locator(
@@ -43,14 +43,11 @@ test.describe("standards map (US1)", () => {
   test("lists every spec grouped by body with maturity and current revision (FR-015)", async ({
     page,
   }) => {
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     await expect(page.locator("#spec-list [data-body-group]")).toHaveCount(bodies.length);
     await expect(page.locator("#spec-list li[data-spec]")).toHaveCount(nodes.length);
     const entry = page.locator(`#spec-list li[data-spec="${first.id}"]`);
-    await expect(entry.locator("a").first()).toHaveAttribute(
-      "href",
-      `/atlas/standards/${first.id}/`,
-    );
+    await expect(entry.locator("a").first()).toHaveAttribute("href", `/standards/${first.id}/`);
     await expect(entry.locator("[data-maturity]")).toHaveAttribute("data-maturity", first.maturity);
     await expect(entry.locator("time")).toHaveCount(1);
   });
@@ -58,7 +55,7 @@ test.describe("standards map (US1)", () => {
   test("renders fully without JavaScript, filter note shown (FR-006)", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
-    await page.goto("/atlas/standards/?type=competes-with");
+    await page.goto("/standards/?type=competes-with");
     await expect(page.locator("#map a[data-spec]")).toHaveCount(nodes.length);
     await expect(page.locator("#map path[data-relation]")).toHaveCount(relations.length);
     await expect(page.locator("#map-frame[data-enhanced]")).toHaveCount(0);
@@ -68,7 +65,7 @@ test.describe("standards map (US1)", () => {
 
   test("has no horizontal page scroll at phone width (SC-004)", async ({ page }) => {
     await page.setViewportSize({ width: 412, height: 900 });
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     const [scroll, inner] = await page.evaluate(() => [
       document.documentElement.scrollWidth,
       window.innerWidth,
@@ -78,7 +75,7 @@ test.describe("standards map (US1)", () => {
 
   test("filter state in the URL restores the filtered view (FR-007)", async ({ page }) => {
     test.skip(competes.length === 0, "no competes-with relation in the seed data");
-    await page.goto("/atlas/standards/?type=competes-with");
+    await page.goto("/standards/?type=competes-with");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
     await expect(page.locator("#map path[data-relation]:not(.is-hidden)")).toHaveCount(
       competes.length,
@@ -100,7 +97,7 @@ test.describe("standards map (US1)", () => {
     const own = nodes.filter((s) => s.body === body);
     const ownIds = new Set(own.map((s) => s.id));
     const ownEdges = relations.filter((r) => ownIds.has(r.from) && ownIds.has(r.to));
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
     await page.locator(`#map-filters input[name='body'][value='${body}']`).check();
     await expect(page.locator("#map a[data-spec]:not(.is-hidden)")).toHaveCount(own.length);
@@ -116,7 +113,7 @@ test.describe("standards map (US1)", () => {
   test("hovering a node highlights its neighbourhood", async ({ page }) => {
     const rel = relations[0];
     test.skip(!rel, "no relation in the seed data");
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
     const node = page.locator(`#map a[data-spec="${rel?.from}"]`);
     await node.scrollIntoViewIfNeeded();
@@ -129,7 +126,7 @@ test.describe("standards map (US1)", () => {
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto("/atlas/standards/");
+    await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
     await expectNoSeriousA11yViolations(page);
     await expect(page).toHaveScreenshot("standards.png", { fullPage: false });

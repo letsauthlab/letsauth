@@ -1,5 +1,6 @@
 ---
 import Citation from "@/components/Citation.astro";
+import Crumbs from "@/components/Crumbs.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
 import {
@@ -76,13 +77,11 @@ const classes = [
 <Base
   title={server.name}
   description={`${server.name}'s support for the MCP Authorization specification, revision ${revision.id}: current status per feature with the observations behind it.`}
-  path={`/atlas/mcp/servers/${server.id}/`}
+  path={`/mcp/servers/${server.id}/`}
   noindex={Boolean(server.withdrawn)}
 >
   <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span> Servers
-    </nav>
+    <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={server.name} />
     <header class="head">
       <p class="eyebrow">Server</p>
       <h1>{server.name}</h1>
@@ -100,7 +99,7 @@ const classes = [
           </p>
           <p>
             Its observations stay in the repository history, but no status is shown here. The
-            maintainer can ask to be relisted through the <a href="/atlas/mcp/contribute/">contribution page</a>.
+            maintainer can ask to be relisted through the <a href="/contribute/">contribution page</a>.
           </p>
         </section>
       ) : (
@@ -203,13 +202,13 @@ const classes = [
                     {" · "}
                     <time datetime={scanView.scannedAt}>{scanView.scannedAt?.slice(0, 10)}</time>
                     {" · "}
-                    <a href={`/scanner/${server.id}/`}>Report</a>
+                    <a href={`/mcp/servers/${server.id}/scan/`}>Report</a>
                   </>
                 ) : (
                   <>
                     <span class="muted">not scanned yet</span>
                     {" · "}
-                    <a href={`/scanner/${server.id}/`}>Report</a>
+                    <a href={`/mcp/servers/${server.id}/scan/`}>Report</a>
                   </>
                 )}
               </p>
@@ -220,7 +219,7 @@ const classes = [
                 <a class="button small" href={`${issueBase}&title=${encodeURIComponent(`Withdraw ${server.name}`)}&server=${server.id}&kind=withdraw`} rel="noopener">
                   Withdraw this server
                 </a>
-                <a class="button small" href={`/atlas/mcp/servers/${server.id}.json`}>JSON</a>
+                <a class="button small" href={`/mcp/servers/${server.id}.json`}>JSON</a>
               </p>
             </section>
           </div>
@@ -231,7 +230,7 @@ const classes = [
               {revisions
                 .filter((r) => r.id !== revision.id)
                 .map((r) => (
-                  <a href={`/atlas/mcp/${r.id}/`}>{r.id}</a>
+                  <a href={`/mcp/${r.id}/`}>{r.id}</a>
                 ))}
             </p>
           )}
@@ -263,7 +262,7 @@ const classes = [
                         return (
                           <tr data-feature={feature.id} data-status={cell.status}>
                             <th scope="row">
-                              <a href={`/atlas/mcp/features/${feature.id}/`}>{feature.name}</a>
+                              <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
                               <span class="meta">
                                 <code>{feature.id}</code> · {CATEGORY_LABEL[feature.category]}
                                 {entry && (

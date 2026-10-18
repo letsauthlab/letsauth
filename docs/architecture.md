@@ -24,11 +24,10 @@ the command line and in CI. A product that needs a field the model lacks amends 
 ## Data flow
 
 ```
- specifications ─┐                                    ┌─▶ /atlas/mcp        matrix, server, feature, revision pages
- vendor docs ────┼─▶ pull request ─▶ data/ (YAML) ─▶ build ─┼─▶ /atlas/standards  the standards map
- nightly scanner ┘        ▲                           ├─▶ /explorer         delegation chains, toggles, tokens
-                          │                           ├─▶ /scanner          report per server, grade
-                          │                           └─▶ *.json            exports under CC BY 4.0
+ specifications ─┐                                    ┌─▶ /mcp         matrix, server, feature, revision and scan pages
+ vendor docs ────┼─▶ pull request ─▶ data/ (YAML) ─▶ build ─┼─▶ /standards   the standards map
+ nightly scanner ┘        ▲                           ├─▶ /explorer    delegation chains, toggles, tokens
+                          │                           └─▶ *.json       exports under CC BY 4.0
                    review: CI green,
                    evidence opened
 ```
@@ -41,6 +40,42 @@ the command line and in CI. A product that needs a field the model lacks amends 
   Citations are resolved at build time and a dangling one fails the build.
 - **Out.** HTML pages, one JSON export per atlas and one per scanner report, a sitemap, and a
   Pagefind index for search. Everything is static files.
+
+## Pages
+
+One top-level segment per product; a product's pages all live under it. Nothing sits at a path
+that has no page of its own.
+
+```
+/                               home
+/mcp/                           MCP auth atlas: the matrix for the current revision
+/mcp/servers/<id>/              one server; <id>.json is its export
+/mcp/servers/<id>/scan/         the scanner's report for that server; scan.json is its export
+/mcp/features/<id>/             one requirement
+/mcp/revisions/<id>/            the matrix as of an older revision (the current one redirects to /mcp/)
+/mcp/changes/<from>/<to>/       what changed between two revisions
+/mcp/scanner/                   what the scanner reads, how it grades, and every report
+/mcp/data.json                  the atlas export
+/standards/                     Agent auth atlas: the standards map
+/standards/<id>/                one specification
+/standards/data.json
+/explorer/                      Delegation chain explorer
+/explorer/<scenario>/           one scenario; /<toggle>/ below it is one toggle switched on
+/explorer/data.json
+/breaches/                      Breach anatomy (roadmap 005), one breach per /<id>/
+/contribute/                    how to add or correct data
+/about/  /made-in-europe/       the lab
+/imprint/  /privacy/  /disclaimer/  /accessibility/   legal
+```
+
+Pages at the top of the tree are named by the header or the footer and carry no breadcrumb. Every
+page below them renders one with `Crumbs` (`src/components/Crumbs.astro`): the ancestors as links,
+from the product root down, then the page itself. A product's subtree lights up its entry in the
+header on every page under it.
+
+Old addresses (`/atlas/mcp/…`, `/atlas/standards/…`, `/scanner/…`) are listed in `redirects` in
+`astro.config.mjs`; the build writes a forwarding page for each. [`deploy.md`](deploy.md) has the
+edge rules for the moved JSON exports, which a forwarding page cannot serve.
 
 ## Repository layout
 

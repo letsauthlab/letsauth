@@ -43,7 +43,7 @@ why that is still a passive scan under the constitution. Redirects are followed 
 host over HTTPS. URLs that are not
 HTTPS, carry credentials or a port, name an IP address or a local name, or resolve to a private
 address are refused, whether they are a listed server's URL or an issuer found in metadata. The
-`User-Agent` is `letsauth-scanner/<version> (+https://letsauth.eu/scanner/)`.
+`User-Agent` is `letsauth-scanner/<version> (+https://letsauth.eu/mcp/scanner/)`.
 
 Every status is decided by the table in `specs/004-scanner/data-model.md` (the challenge row is
 in `specs/008-discovery-challenge/data-model.md`). A document that could
@@ -153,7 +153,7 @@ Set up once, by the owner:
 
 1. The `letsauthlab` organisation → Settings → Developer settings → GitHub Apps → New GitHub App
    (`https://github.com/organizations/letsauthlab/settings/apps/new`). Name it, for example,
-   `letsauth-scanner` (the name becomes the bot's name). Homepage: `https://letsauth.eu/scanner/`.
+   `letsauth-scanner` (the name becomes the bot's name). Homepage: `https://letsauth.eu/mcp/scanner/`.
    Untick *Webhook → Active*. Repository permissions: *Contents: Read and write*, *Pull requests:
    Read and write* (*Metadata: Read-only* is added automatically); nothing else. *Where can this
    GitHub App be installed?* Only on this account (the organisation).

@@ -23,7 +23,7 @@ repository.
 
 Out of scope: the MCP servers, authorization servers and products listed in the atlases. Report
 problems in those to their vendors. A wrong cell in the atlas is not a security issue; correct it
-through the [contribution guide](https://letsauth.eu/atlas/mcp/contribute/).
+through the [contribution guide](https://letsauth.eu/contribute/).
 
 ## Supported versions
 

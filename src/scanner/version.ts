@@ -8,4 +8,4 @@ export const SCANNER_ID = `${SCANNER_NAME}/${SCANNER_VERSION}`;
 /** The `observedBy` value on every observation the scanner writes. */
 export const OBSERVER = `scanner@${SCANNER_VERSION}`;
 /** Names the project and links to the page that explains the scanner and how to opt out. */
-export const USER_AGENT = `${SCANNER_ID} (+https://letsauth.eu/scanner/)`;
+export const USER_AGENT = `${SCANNER_ID} (+https://letsauth.eu/mcp/scanner/)`;
