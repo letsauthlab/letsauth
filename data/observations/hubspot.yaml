@@ -228,3 +228,143 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: hubspot
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-protected-resource — HTTP 200; resource: https://mcp.hubspot.com"
+- server: hubspot
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-protected-resource — HTTP 200; authorization_servers: [https://mcp.hubspot.com]"
+- server: hubspot
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported: []"
+- server: hubspot
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: https://app.hubspot.com/.well-known/oauth-protected-resource — HTTP 404; not at either well-known location (path-aware HTTP 404, root HTTP 404, root HTTP 200)
+- server: hubspot
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://app.hubspot.com/mcp/v1/http — HTTP 401; WWW-Authenticate resource_metadata: https://mcp.hubspot.com/.well-known/oauth-protected-resource"
+- server: hubspot
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: 'https://app.hubspot.com/mcp/v1/http — HTTP 401; WWW-Authenticate: Bearer resource_metadata="https://mcp.hubspot.com/.well-known/oauth-protected-resource", no scope parameter'
+- server: hubspot
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported without offline_access: []"
+- server: hubspot
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.hubspot.com equals the issuer the PRM named"
+- server: hubspot
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.hubspot.com"
+- server: hubspot
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: absent"
+- server: hubspot
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: absent"
+- server: hubspot
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: absent"
+- server: hubspot
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: "https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: hubspot
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-18T01:18:14Z
+  observedBy: scanner@0.3.0
+  evidence: https://mcp.hubspot.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
