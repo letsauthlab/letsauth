@@ -77,7 +77,7 @@ test.describe("breach page (US2)", () => {
       const item = page.locator(`#controls li[data-feature="${c.feature.id}"]`);
       await expect(item.locator("a").first()).toHaveAttribute(
         "href",
-        `/atlas/mcp/features/${c.feature.id}/`,
+        `/mcp/features/${c.feature.id}/`,
       );
       await expect(item.locator("cite.citation a")).toHaveAttribute("href", /^https:\/\//);
       await expect(item.locator(".controls__counts")).toContainText(

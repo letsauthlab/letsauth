@@ -25,7 +25,7 @@ pnpm build && pnpm test:e2e
 4. Add new features (next section) for requirements the revision introduces.
 5. `pnpm validate:data`, then `pnpm build`: the changes page for the new pair of revisions and
    the matrix for the new revision are generated from the data. Observations against the old
-   revision stay visible under `/atlas/mcp/<old-id>`; cells under the new revision start as
+   revision stay visible under `/mcp/revisions/<old-id>`; cells under the new revision start as
    `unknown` until someone observes them again.
 
 ## Add or change a feature
@@ -48,7 +48,7 @@ pnpm build && pnpm test:e2e
 
 ## Add a specification or a relation (agent auth atlas)
 
-The standards map at `/atlas/standards/` is drawn from `data/specs/*.yaml` and
+The standards map at `/standards/` is drawn from `data/specs/*.yaml` and
 `data/relations.yaml`. Nothing is laid out by hand: a spec is placed one column right of what it
 builds on, profiles or replaces, in the row of its publishing body.
 

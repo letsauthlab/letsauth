@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: How to contribute
-    url: https://letsauth.eu/atlas/mcp/contribute
+    url: https://letsauth.eu/contribute/
     about: The entry format, the append-only rule and how withdrawal works.
   - name: Contributing guide
     url: https://github.com/letsauthlab/letsauth/blob/main/CONTRIBUTING.md

@@ -35,7 +35,7 @@ test.describe("server page (US2)", () => {
     const { server, feature } = withHistory;
     const current = currentCell(data, server, feature, revision.id);
     const older = cellHistory(data, server.id, feature.id, revision.id);
-    await page.goto(`/atlas/mcp/servers/${server.id}/`);
+    await page.goto(`/mcp/servers/${server.id}/`);
     const row = page.locator(`tr[data-feature="${feature.id}"]`);
     await expect(row).toHaveAttribute("data-status", current.status);
     const history = row.locator("details.history");
@@ -48,7 +48,7 @@ test.describe("server page (US2)", () => {
 
   test("shows the listing reason and source link", async ({ page }) => {
     test.skip(!listed, "no listed server with a source");
-    await page.goto(`/atlas/mcp/servers/${listed?.id}/`);
+    await page.goto(`/mcp/servers/${listed?.id}/`);
     await expect(page.locator("h1")).toHaveText(listed?.name ?? "");
     await expect(page.getByText("Why it is listed")).toBeVisible();
     await expect(page.locator(`a[href="${listed?.source}"]`).first()).toBeVisible();
@@ -59,7 +59,7 @@ test.describe("server page (US2)", () => {
   test("states access and auth with method, date and evidence (009 FR-004)", async ({ page }) => {
     test.skip(!classified, "no classified server in the data");
     if (!classified?.access || !classified.auth) return;
-    await page.goto(`/atlas/mcp/servers/${classified.id}/`);
+    await page.goto(`/mcp/servers/${classified.id}/`);
     const access = page.locator("dd[data-class='access']");
     await expect(access).toHaveAttribute("data-value", classified.access.class);
     await expect(access).toHaveAttribute("data-derived", "false");
@@ -73,7 +73,7 @@ test.describe("server page (US2)", () => {
 
   test("a server nobody classified reads as a derived unknown (009 FR-002)", async ({ page }) => {
     test.skip(!unclassified, "every server carries a class statement");
-    await page.goto(`/atlas/mcp/servers/${unclassified?.id}/`);
+    await page.goto(`/mcp/servers/${unclassified?.id}/`);
     const auth = page.locator("dd[data-class='auth']");
     await expect(auth).toHaveAttribute("data-value", "unknown");
     await expect(auth).toHaveAttribute("data-derived", "true");
@@ -82,15 +82,15 @@ test.describe("server page (US2)", () => {
 
   test("a withdrawn server shows the notice and has no matrix row", async ({ page }) => {
     test.skip(!withdrawn, "no withdrawn server in the seed data");
-    await page.goto(`/atlas/mcp/servers/${withdrawn?.id}/`);
+    await page.goto(`/mcp/servers/${withdrawn?.id}/`);
     await expect(page.getByText("Withdrawn from the atlas")).toBeVisible();
     await expect(page.locator("table.features")).toHaveCount(0);
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     await expect(page.locator(`#matrix tbody tr[data-server="${withdrawn?.id}"]`)).toHaveCount(0);
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto(`/atlas/mcp/servers/${listed?.id}/`);
+    await page.goto(`/mcp/servers/${listed?.id}/`);
     await expectNoSeriousA11yViolations(page);
     await expect(page).toHaveScreenshot("server.png");
   });

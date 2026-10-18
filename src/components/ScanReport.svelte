@@ -81,7 +81,7 @@ function splitEvidence(text: string): { url?: string; note: string } {
               {@const observed = Boolean(c.observedAt)}
               <tr data-check={c.feature} data-status={c.status}>
                 <th scope="row">
-                  <a href={`/atlas/mcp/features/${c.feature}/`}>{c.name}</a>
+                  <a href={`/mcp/features/${c.feature}/`}>{c.name}</a>
                   <span class="meta">
                     <code>{c.feature}</code> ·
                     <a href={c.citation} rel="noopener">{c.section}</a>

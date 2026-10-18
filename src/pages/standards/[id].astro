@@ -1,5 +1,6 @@
 ---
 import Citation from "@/components/Citation.astro";
+import Crumbs from "@/components/Crumbs.astro";
 import MaturityTag from "@/components/MaturityTag.astro";
 import RelationList from "@/components/RelationList.astro";
 import Base from "@/layouts/Base.astro";
@@ -35,7 +36,7 @@ const defined = featuresDefinedBy(data, spec.id);
 const diffHref = new Map<string, string>();
 if (spec.id === ATLAS_SPEC) {
   for (const [older, newer] of adjacentRevisionPairs(spec)) {
-    diffHref.set(newer.id, `/atlas/mcp/changes/${older.id}/${newer.id}/`);
+    diffHref.set(newer.id, `/mcp/changes/${older.id}/${newer.id}/`);
   }
 }
 const gone = spec.maturity === "withdrawn" || spec.maturity === "expired";
@@ -45,14 +46,11 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
 <Base
   title={spec.name}
   description={`${spec.name}: what it is, who publishes it, its revisions and how it relates to the other standards for agent authorization.`}
-  path={`/atlas/standards/${spec.id}/`}
+  path={`/standards/${spec.id}/`}
   noindex={spec.maturity === "withdrawn"}
 >
   <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/standards/">Agent auth atlas</a> <span aria-hidden="true">/</span>
-      {BODY_LABEL[spec.body]}
-    </nav>
+    <Crumbs trail={[{ href: "/standards/", label: "Agent auth atlas" }]} current={spec.name} />
     <header class="head">
       <p class="eyebrow">{BODY_LABEL[spec.body]} · {FAMILY_LABEL[spec.family]}</p>
       <h1>{spec.name}</h1>
@@ -130,7 +128,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
             <ul class="features" data-defines>
               {defined.map(({ feature, entry }) => (
                 <li data-feature={feature.id}>
-                  <a href={`/atlas/mcp/features/${feature.id}/`}>{feature.name}</a>
+                  <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
                   <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>
                   <span class="meta">
                     {PARTY_LABEL[feature.party]} · {CATEGORY_LABEL[feature.category]} ·{" "}
@@ -151,8 +149,8 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
         see <a href="https://github.com/letsauthlab/letsauth/blob/main/docs/atlas-maintenance.md" rel="noopener">the maintenance guide</a>.
       </p>
       <p>
-        <a href="/atlas/standards/">Back to the map</a> ·
-        <a href="/atlas/standards/data.json">Download the data</a>
+        <a href="/standards/">Back to the map</a> ·
+        <a href="/standards/data.json">Download the data</a>
       </p>
     </footer>
   </div>

@@ -10,7 +10,7 @@ const [older, newer] = pair;
 
 test.describe("revisions (US5)", () => {
   test("an older revision shows its own name and feature set (FR-006)", async ({ page }) => {
-    await page.goto(`/atlas/mcp/${older.id}/`);
+    await page.goto(`/mcp/revisions/${older.id}/`);
     await expect(page.locator("[data-revision]")).toHaveText(older.id);
     await expect(page.locator("#matrix thead th[data-feature]")).toHaveCount(
       matrixColumns(data, older.id).length,
@@ -19,7 +19,7 @@ test.describe("revisions (US5)", () => {
   });
 
   test("the changes page lists level changes and additions (FR-007)", async ({ page }) => {
-    await page.goto(`/atlas/mcp/changes/${older.id}/${newer.id}/`);
+    await page.goto(`/mcp/changes/${older.id}/${newer.id}/`);
     const dcr = page.locator(
       "#changed ~ ul li[data-feature='mcp.as.dcr'], [aria-labelledby='changed'] li[data-feature='mcp.as.dcr']",
     );
@@ -31,15 +31,15 @@ test.describe("revisions (US5)", () => {
     ).toHaveCount(1);
   });
 
-  test("the current revision canonicalises to /atlas/mcp/", async ({ page }) => {
-    await page.goto(`/atlas/mcp/${current.id}/`);
-    await page.waitForURL("**/atlas/mcp/");
+  test("the current revision canonicalises to /mcp/", async ({ page }) => {
+    await page.goto(`/mcp/revisions/${current.id}/`);
+    await page.waitForURL("**/mcp/");
     await expect(page.locator("[data-revision]")).toHaveText(current.id);
   });
 
   test("the matrix header links to the changes page for changed columns", async ({ page }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     const badge = page.locator("th[data-feature='mcp.as.dcr'] a.changed");
-    await expect(badge).toHaveAttribute("href", `/atlas/mcp/changes/${older.id}/${newer.id}/`);
+    await expect(badge).toHaveAttribute("href", `/mcp/changes/${older.id}/${newer.id}/`);
   });
 });

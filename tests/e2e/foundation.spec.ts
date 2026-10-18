@@ -67,7 +67,7 @@ test.describe("foundation pages", () => {
   }
 
   test("every page links the legal pages from the footer", async ({ page }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     const legal = page.getByRole("navigation", { name: "Legal" });
     for (const link of LEGAL_LINKS) {
       await expect(legal.getByRole("link", { name: link.label })).toHaveAttribute(

@@ -19,9 +19,9 @@ const date = obs ? obs.observedAt.slice(0, 10) : undefined;
 
 <div class="detail" data-detail>
   <p class="detail__head">
-    <a href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
+    <a href={`/mcp/servers/${server.id}/`}>{server.name}</a>
     <span aria-hidden="true">×</span>
-    <a href={`/atlas/mcp/features/${feature.id}/`}>{feature.name}</a>
+    <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
   </p>
   <p><StatusCell status={cell.status} derived={cell.derived} variant="label" /></p>
   {

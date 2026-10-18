@@ -31,7 +31,7 @@ test.describe("matrix page (US1)", () => {
   test("names the revision and renders every server, feature and cell (FR-001)", async ({
     page,
   }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     await expect(page.locator("[data-revision]")).toHaveText(revision.id);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix thead th[data-feature]")).toHaveCount(matrix.columns.length);
@@ -47,7 +47,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const summary = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
@@ -70,7 +70,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     test.skip(!allUnknown, "no all-unknown server in the seed data");
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     const row = page.locator(`#matrix tbody tr[data-server="${allUnknown?.id}"]`);
     await expect(row.locator("td[data-status='unknown']")).toHaveCount(matrix.columns.length);
     await expect(row.locator("td[data-status='unsupported']")).toHaveCount(0);
@@ -78,7 +78,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("filter state in the URL restores the filtered view (FR-008)", async ({ page }) => {
-    await page.goto("/atlas/mcp/?level=MUST&q=stripe");
+    await page.goto("/mcp/?level=MUST&q=stripe");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page.locator("#matrix-count")).toHaveText(/^1 of \d+ servers/);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(1);
@@ -95,7 +95,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("every row carries its access and auth class as pills (009 FR-002)", async ({ page }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     for (const server of matrix.rows.slice(0, 5)) {
       const row = page.locator(`#matrix tbody tr[data-server="${server.id}"]`);
       const access = accessOf(server);
@@ -110,7 +110,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("filters rows by access and auth class from the URL (009 FR-003)", async ({ page }) => {
-    await page.goto(`/atlas/mcp/?access=${topAccess?.value}&auth=${topAuth?.value}`);
+    await page.goto(`/mcp/?access=${topAccess?.value}&auth=${topAuth?.value}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const visible = page.locator("#matrix tbody tr[data-server]:not([hidden])");
     await expect(visible).toHaveCount(bothCount);
@@ -128,7 +128,7 @@ test.describe("matrix page (US1)", () => {
   test("groups rows by a class with a header per group, alphabetical within (009 FR-003)", async ({
     page,
   }) => {
-    await page.goto("/atlas/mcp/?group=auth");
+    await page.goto("/mcp/?group=auth");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const present = countBy(matrix.rows, AUTH_ORDER, authOf).filter((c) => c.count > 0);
     const heads = page.locator("#matrix tbody tr.group");
@@ -168,7 +168,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("rows are alphabetical and nothing sorts or scores servers (FR-014)", async ({ page }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     const names = await page
       .locator("#matrix tbody th[scope='row'] a.server-link")
       .allTextContents();
@@ -181,13 +181,13 @@ test.describe("matrix page (US1)", () => {
   test("each server carries its latest scan grade, linked to the report (004 FR-010)", async ({
     page,
   }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     const links = page.locator("#matrix tbody th[scope='row'] a.grade-link");
     await expect(links).toHaveCount(matrix.rows.length);
     for (const server of matrix.rows.slice(0, 5)) {
       const scan = latestScan(data, server, revision.id);
       const link = page.locator(`#matrix tbody tr[data-server="${server.id}"] a.grade-link`);
-      await expect(link).toHaveAttribute("href", `/scanner/${server.id}/`);
+      await expect(link).toHaveAttribute("href", `/mcp/servers/${server.id}/scan/`);
       await expect(link).toHaveAttribute("data-grade", scan.grade.letter ?? scan.grade.label);
       // the badge's word, not its decorative letter, carries the grade for every reader
       await expect(link.locator(".word")).toHaveText(scan.grade.letter ?? scan.grade.label);
@@ -196,7 +196,7 @@ test.describe("matrix page (US1)", () => {
 
   test("keyboard-only walkthrough opens and closes a cell", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const summary = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
@@ -213,7 +213,7 @@ test.describe("matrix page (US1)", () => {
 
   test("has no horizontal page scroll at phone width (constitution V)", async ({ page }) => {
     await page.setViewportSize({ width: 412, height: 900 });
-    await page.goto("/atlas/mcp/?group=access");
+    await page.goto("/mcp/?group=access");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const [scroll, inner] = await page.evaluate(() => [
       document.documentElement.scrollWidth,
@@ -223,12 +223,12 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("has no serious accessibility violations", async ({ page }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     await expectNoSeriousA11yViolations(page);
   });
 
   test("looks right", async ({ page }) => {
-    await page.goto("/atlas/mcp/");
+    await page.goto("/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page).toHaveScreenshot("matrix.png", {
       mask: [page.locator("#matrix a.grade-link")],
@@ -241,7 +241,7 @@ test.describe("matrix page without JavaScript", () => {
 
   test("renders the full matrix and native cell details", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/atlas/mcp/?level=MUST");
+    await page.goto("/mcp/?level=MUST");
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(
       matrix.rows.length,
@@ -258,7 +258,7 @@ test.describe("matrix page without JavaScript", () => {
   test("renders every row alphabetically with its class pills and no group rows (009 FR-003)", async ({
     page,
   }) => {
-    await page.goto("/atlas/mcp/?group=auth&access=public");
+    await page.goto("/mcp/?group=auth&access=public");
     await expect(page.locator("#matrix tbody tr.group")).toHaveCount(0);
     await expect(page.locator("#matrix tbody tr[data-server] .classes .class")).toHaveCount(
       matrix.rows.length * 2,

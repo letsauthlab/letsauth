@@ -3,17 +3,17 @@
     "collect": {
       "staticDistDir": "./dist",
       "url": [
-        "http://localhost/atlas/mcp/index.html",
-        "http://localhost/atlas/mcp/servers/stripe/index.html",
-        "http://localhost/atlas/mcp/features/mcp.as.cimd/index.html",
-        "http://localhost/atlas/standards/index.html",
-        "http://localhost/atlas/standards/rfc8693/index.html",
+        "http://localhost/mcp/index.html",
+        "http://localhost/mcp/servers/stripe/index.html",
+        "http://localhost/mcp/features/mcp.as.cimd/index.html",
+        "http://localhost/standards/index.html",
+        "http://localhost/standards/rfc8693/index.html",
         "http://localhost/explorer/index.html",
         "http://localhost/explorer/mcp-authorization/index.html",
         "http://localhost/breaches/index.html",
         "http://localhost/breaches/cve-2025-4144/index.html",
-        "http://localhost/scanner/index.html",
-        "http://localhost/scanner/notion/index.html"
+        "http://localhost/mcp/scanner/index.html",
+        "http://localhost/mcp/servers/notion/scan/index.html"
       ],
       "numberOfRuns": 3,
       "settings": {

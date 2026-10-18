@@ -1,5 +1,6 @@
 ---
 import Citation from "@/components/Citation.astro";
+import Crumbs from "@/components/Crumbs.astro";
 import Base from "@/layouts/Base.astro";
 import { missingControls, replayOf } from "@/lib/breaches";
 import { getDataset } from "@/lib/data";
@@ -29,9 +30,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
 
 <Base title={v.title} description={v.summary.trim()} path={`/breaches/${v.id}/`}>
   <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/breaches/">Breach anatomy</a> <span aria-hidden="true">/</span> {v.id}
-    </nav>
+    <Crumbs trail={[{ href: "/breaches/", label: "Breach anatomy" }]} current={v.id} />
     <header class="head">
       <p class="eyebrow">Breach anatomy</p>
       <h1>{v.title}</h1>
@@ -84,7 +83,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
               return (
                 <li data-feature={c.feature.id} class="card">
                   <p class="controls__name">
-                    <a href={`/atlas/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
+                    <a href={`/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
                     <span class="party">{PARTY_LABEL[c.feature.party]}</span>
                     {current && <span class:list={["level", `level-${current.level}`]}>{current.level}</span>}
                   </p>
@@ -134,7 +133,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
                   {replay.toggle.violates.map((id, i) => (
                     <>
                       {i > 0 && ", "}
-                      <a href={`/atlas/mcp/features/${id}/`}>{featureById.get(id)?.name ?? id}</a>
+                      <a href={`/mcp/features/${id}/`}>{featureById.get(id)?.name ?? id}</a>
                     </>
                   ))}
                 </>

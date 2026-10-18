@@ -1,5 +1,6 @@
 ---
 import Citation from "@/components/Citation.astro";
+import Crumbs from "@/components/Crumbs.astro";
 import Explorer from "@/components/Explorer.svelte";
 import TokenView from "@/components/TokenView.astro";
 import Base from "@/layouts/Base.astro";
@@ -49,10 +50,17 @@ function arrow(from: string, to: string) {
 
 <Base title={title} description={description} path={path}>
   <div class="wrap">
-    <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/explorer/">Explorer</a> <span aria-hidden="true">/</span>
-      {toggle ? <><a href={`/explorer/${scenario.id}/`}>{scenario.title}</a> <span aria-hidden="true">/</span> {toggle.name}</> : scenario.title}
-    </nav>
+    <Crumbs
+      trail={
+        toggle
+          ? [
+              { href: "/explorer/", label: "Delegation chain explorer" },
+              { href: `/explorer/${scenario.id}/`, label: scenario.title },
+            ]
+          : [{ href: "/explorer/", label: "Delegation chain explorer" }]
+      }
+      current={toggle ? toggle.name : scenario.title}
+    />
     <header class="head">
       <p class="eyebrow">Delegation chain explorer</p>
       <h1>{scenario.title}</h1>
@@ -99,7 +107,7 @@ function arrow(from: string, to: string) {
               {violated.map((v) => (
                 <li data-violates={v.feature.id}>
                   <span class="violates__name">
-                    Defeats <a href={`/atlas/mcp/features/${v.feature.id}/`}>{v.feature.name}</a>
+                    Defeats <a href={`/mcp/features/${v.feature.id}/`}>{v.feature.name}</a>
                     <span class="violates__party">{PARTY_LABEL[v.feature.party]}</span>
                   </span>
                   <span class="violates__counts">
@@ -191,7 +199,7 @@ function arrow(from: string, to: string) {
         {
           exercised.map((f) => (
             <li data-feature={f.id}>
-              <a href={`/atlas/mcp/features/${f.id}/`}>{f.name}</a>
+              <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
               <span class="requirements__party">{PARTY_LABEL[f.party]}</span>
             </li>
           ))

@@ -16,7 +16,7 @@ and what a pull request needs. The rules it applies come from the
 | A new revision of the MCP Authorization spec | `data/specs/mcp-authorization.yaml`, `data/features/` | [Add a specification revision](docs/atlas-maintenance.md#add-a-specification-revision) |
 | A scanner check, a page, a fix | `src/`, `scripts/`, `tests/` | [Code](#code) below |
 
-The site's own [contribution page](https://letsauth.eu/atlas/mcp/contribute/) explains the entry
+The site's own [contribution page](https://letsauth.eu/contribute/) explains the entry
 format for observations with examples. No account on the site is needed; everything is a pull
 request against `main`.
 

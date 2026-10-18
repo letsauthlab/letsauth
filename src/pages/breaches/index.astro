@@ -68,7 +68,7 @@ const date = (d: string) =>
                   {features.map((f, i) => (
                     <>
                       {i > 0 && ", "}
-                      <a href={`/atlas/mcp/features/${f.id}/`}>{f.name}</a>
+                      <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
                       <span class="breach__party"> {PARTY_LABEL[f.party]}</span>
                     </>
                   ))}

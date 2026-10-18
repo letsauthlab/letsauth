@@ -107,7 +107,7 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
             const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
             return (
               <a
-                href={`/atlas/standards/${n.spec.id}/`}
+                href={`/standards/${n.spec.id}/`}
                 class:list={["node", `maturity-${n.spec.maturity}`]}
                 data-spec={n.spec.id}
                 data-body={n.spec.body}
