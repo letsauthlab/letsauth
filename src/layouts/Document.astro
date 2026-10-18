@@ -2,9 +2,12 @@
 import Base from "@/layouts/Base.astro";
 
 /**
- * A long-form text page (about, imprint, privacy, contribute and the like): breadcrumb, the
- * shared page head, a prose body and a dated foot line. Pages put their sections in the
- * default slot.
+ * A long-form page (about, contribute, imprint, privacy and the like). It opens with the shared
+ * page head, then runs as two columns: the text on the left, and on the right a rail with the
+ * page's sections (read from the h2s the page renders), an optional aside and the date the
+ * text last changed. Sections are numbered; the rail tracks the reader's place without
+ * JavaScript. Pages put their sections in the default slot and a card for the rail in the
+ * `aside` slot.
  */
 interface Props {
   title: string;
@@ -38,6 +41,31 @@ const updatedLabel = updated
       timeZone: "UTC",
     })
   : undefined;
+
+// The sections of the page are its h2s. Each gets an id (its own, or one from its text) so the
+// rail can link to it, and the rail lists them in order.
+const slug = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/&[a-z]+;|&#\d+;/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+const sections: { id: string; title: string }[] = [];
+const body = (await Astro.slots.render("default")).replace(
+  /<h2(\s[^>]*)?>([\s\S]*?)<\/h2>/g,
+  (_match, attrs: string | undefined, inner: string) => {
+    const text = inner.replace(/<[^>]+>/g, "").trim();
+    let open = attrs ?? "";
+    let id = /\sid="([^"]+)"/.exec(open)?.[1];
+    if (!id) {
+      id = slug(text);
+      open += ` id="${id}"`;
+    }
+    sections.push({ id, title: text });
+    return `<h2${open}>${inner}</h2>`;
+  },
+);
+const hasAside = Astro.slots.has("aside");
 ---
 
 <Base title={title} description={description} path={path}>
@@ -57,39 +85,174 @@ const updatedLabel = updated
       <h1>{heading ?? title}</h1>
       {lede && <p class="lede">{lede}</p>}
     </header>
-    <div class="prose doc__body">
-      <slot />
+    <div class="doc">
+      <div class="prose doc__body" set:html={body} />
+      <aside class="doc__rail">
+        {
+          sections.length > 1 && (
+            <nav class="doc__toc" aria-label="On this page">
+              <p class="doc__rail-title">On this page</p>
+              <ol>
+                {sections.map((s) => (
+                  <li>
+                    <a href={`#${s.id}`}>{s.title}</a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+        {
+          hasAside && (
+            <div class="doc__aside">
+              <slot name="aside" />
+            </div>
+          )
+        }
+        {
+          updated && (
+            <p class="doc__updated">
+              Last updated <time datetime={updated}>{updatedLabel}</time>
+            </p>
+          )
+        }
+      </aside>
     </div>
-    {
-      updated && (
-        <footer class="page-foot prose">
-          <p class="doc__updated">
-            Last updated <time datetime={updated}>{updatedLabel}</time>
-          </p>
-        </footer>
-      )
-    }
   </article>
 </Base>
 
 <style>
+  .doc {
+    display: grid;
+    grid-template-columns: minmax(0, 46rem) 15rem;
+    justify-content: space-between;
+    gap: var(--space-7) var(--space-8);
+    align-items: start;
+  }
+  .doc__rail {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-5));
+    display: grid;
+    gap: var(--space-5);
+    font-size: var(--text-sm);
+  }
+  .doc__rail-title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .doc__toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: toc;
+    display: grid;
+    gap: 0.15rem;
+  }
+  .doc__toc li {
+    counter-increment: toc;
+  }
+  .doc__toc a {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+    padding: 0.3em 0 0.3em var(--space-3);
+    border-left: 1px solid var(--line);
+    color: var(--ink-muted);
+    text-decoration: none;
+    line-height: 1.35;
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+  .doc__toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    color: var(--ink-faint);
+  }
+  .doc__toc a:hover {
+    color: var(--ink);
+    border-left-color: var(--line-strong);
+  }
+  .doc__toc li:has(:target) a,
+  .doc__toc a:focus-visible {
+    color: var(--ink);
+  }
   .doc__updated {
     margin: 0;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--ink-faint);
   }
+  @media (max-width: 64rem) {
+    .doc {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+    /* The rail reads first on one column: a row of section chips, then the text. */
+    .doc__rail {
+      position: static;
+      order: -1;
+      gap: var(--space-4);
+    }
+    .doc__toc ol {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .doc__toc a {
+      padding: 0.35em 0.75em;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--bg-elevated);
+    }
+    .doc__toc a::before {
+      content: none;
+    }
+    .doc__aside {
+      display: none;
+    }
+  }
 </style>
 
 <style is:global>
-  /* Body typography for document pages. Wrapped in :where() so a page's own classes win. */
+  /*
+   * Body typography for long-form pages. Wrapped in :where() so a page's own classes win.
+   * Sections are numbered like the rail; the number sits above the heading as a small label.
+   */
+  :where(.doc__body) {
+    counter-reset: section;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
   :where(.doc__body) h2 {
-    margin-top: var(--space-7);
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--line);
+    counter-increment: section;
+    margin-top: var(--space-8);
+    scroll-margin-top: calc(var(--header-h) + var(--space-5));
+  }
+  :where(.doc__body) h2::before {
+    content: counter(section, decimal-leading-zero);
+    display: block;
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    color: var(--accent);
   }
   :where(.doc__body) h2:first-child {
     margin-top: 0;
+  }
+  :where(.doc__body) h3 {
+    margin-top: var(--space-6);
+  }
+  :where(.doc__body) :where(p, ul, ol, dl) {
+    max-width: var(--measure);
   }
   :where(.doc__body) :where(ul, ol) {
     padding-left: 1.3em;
@@ -106,5 +269,8 @@ const updatedLabel = updated
     max-width: 24rem;
     line-height: 1.7;
     margin-bottom: var(--space-4);
+  }
+  :where(.doc__body) > :last-child {
+    margin-bottom: 0;
   }
 </style>

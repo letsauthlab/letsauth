@@ -510,6 +510,100 @@ hr {
   margin-bottom: 0;
 }
 
+/* a grid of cards: as many across as fit */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.cards > li {
+  margin: 0;
+  padding: 0;
+}
+
+.cards .card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+/* a card's closing action sits on one line across the row, whatever the text above it */
+.cards .card > p:has(> .button:only-child) {
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+.cards h3 {
+  font-size: var(--text-md);
+  margin: 0;
+}
+
+.cards p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* a numbered procedure: one row per step, the number in the margin */
+.steps {
+  list-style: none;
+  counter-reset: step;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.steps > li {
+  counter-increment: step;
+  position: relative;
+  margin: 0;
+  padding: var(--space-3) 0 var(--space-3) 2.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.steps > li::before {
+  content: counter(step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--accent);
+}
+
+.steps > li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+/* a remark set off from the text: a rule to lead a paragraph the reader must not miss */
+.callout {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--bg-elevated);
+}
+
+.callout__title {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-md);
+}
+
+.callout > :last-child {
+  margin-bottom: 0;
+}
+
 /* requirement level tag */
 .level {
   display: inline-block;
