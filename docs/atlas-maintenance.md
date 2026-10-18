@@ -183,7 +183,9 @@ rasterises fonts a few percent differently. After an intended visual change, eit
 locally with that pinned build, or add the `refresh-screenshots` label to the pull request:
 the screenshots workflow regenerates the baselines with CI's browser, commits them to the
 branch and removes the label. A push made by that workflow does not start CI, so push any
-further commit (or merge the base branch) to get a green run.
+further commit (or merge the base branch) to get a green run. The workflow removes the label even
+when its push was rejected because the branch moved while it ran; add the label again in that
+case rather than pushing on top of it.
 
 Scanner pull requests must not need new baselines. The scanner screenshots set every
 `[data-nightly]` element (counts and dates the nightly run changes) to a fixed value and mask the
