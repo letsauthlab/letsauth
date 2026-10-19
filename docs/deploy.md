@@ -1,57 +1,88 @@
 # Deployment
 
-letsauth.eu is a static site served by a Bunny CDN pull zone whose origin is a Bunny Storage
-Zone in an EU region (constitution VII). `.github/workflows/deploy.yml` runs after the CI workflow
-has passed for a push to this repository's `main`, builds that commit, uploads `dist/` with
-the existing Bunny Storage API uploader and purges the pull zone. Fork and pull-request CI runs cannot deploy.
-Both production workflows serialize deployments and compare the triggering SHA with current
-`main` before checkout or secret-bearing steps, so delayed CI cannot roll production back.
-The scanner builds each eligible main snapshot; a per-commit path filter could miss changes
-from a skipped older deployment.
+letsauth.eu is a static Astro site on Bunny Storage (EU) behind a Bunny CDN pull zone.
+The workflow builds with the existing pinned Node/pnpm toolchain and passes `dist/` to
+[Bunny's official deploy-site action](https://github.com/BunnyWay/actions/tree/deploy-site_0.1.1/deploy-site).
+No repository-owned uploader, manifest, pruning engine or separate purge step is needed.
 
-## One-time setup in Bunny
+## Trust and publication
 
-1. Create a **Storage Zone** in an EU region (for example Falkenstein, `DE`). Note its name and
-   the region host shown in its FTP & API Access panel (for example `storage.bunnycdn.com` for
-   Falkenstein, `uk.storage.bunnycdn.com` for London).
-2. Create a **Pull Zone** with the storage zone as origin and attach the `letsauth.eu` hostname
-   with a free SSL certificate. Note the pull zone id (in the URL of its dashboard page).
-3. In the pull zone, enable **Optimizer** only if wanted; enable **Brotli** and set the default
-   cache time to one day. No URL rewriting is needed: the build writes every page as
-   `<path>/index.html` and links with a trailing slash, which the storage zone serves as is.
-   Optional: add an edge rule that redirects a request without an extension and without a
-   trailing slash to `{{path}}/`, so hand-typed URLs like `/mcp` land on the page too.
-4. In the storage zone, set the **custom 404 file path** to `/404.html`, so a missing page shows
-   the site's own not-found page (built from `src/pages/404.astro`) with a 404 status.
+Only successful push CI from this repository's `main`, or manual dispatch on current `main`,
+can deploy. Both production workflows serialize deployments and reject stale candidates before
+checkout or secret-bearing steps. The scanner builds every eligible main snapshot.
 
-## GitHub secrets and variables
+The action is pinned to the commit for deploy-site 0.1.1, and its CLI to **0.20.0**.
+That CLI includes `.well-known` files and supports importing existing zones. Update both pins
+deliberately and rerun the migration smoke checks below. Do not accept the action's default
+CLI range: it selects an older generation of Sites.
 
-Set these in the repository's `production` environment (Settings → Environments → production):
+The existing protected `production` job environment remains in place. Action-created deployment
+records are disabled: the action records `github.sha`, which on `workflow_run` need not be the
+tested `head_sha` checked out by this workflow. No additional `deployments: write` permission
+is granted.
 
-| Name | Kind | Value |
-|---|---|---|
-| `BUNNY_STORAGE_KEY` | secret | The storage zone's password (API access key). |
-| `BUNNY_STORAGE_ZONE` | secret | The storage zone name. |
-| `BUNNY_STORAGE_HOST` | secret | The region host, for example `storage.bunnycdn.com`. |
-| `BUNNY_PULL_ZONE_ID` | secret | Numeric id of the pull zone. |
-| `BUNNY_API_KEY` | secret | Account API key (Account → API), used only for the purge call. |
-| `PLAUSIBLE_DOMAIN` | variable | `letsauth.eu`. When unset, no analytics script is emitted. |
+## Required setup before merging the action migration
 
-The storage key only grants access to that one zone; the account API key is used for the purge
-call alone. Rotate both from the Bunny dashboard and update the secrets.
+This is an operator-run migration, not CI provisioning. No live Bunny settings are changed by
+opening the PR. Merge the workflow-hardening PR first.
+
+1. Review/export the existing pull-zone settings and edge rules, and retain a known-good build.
+   Confirm the storage zone and all replicas are in the EU. Identify its exact name or ID.
+2. Install `@bunny.net/cli@0.20.0` and authenticate locally with `bunny login`.
+3. Import the existing zone, reviewing the CLI's confirmation:
+   `bunny sites create letsauth --from-zone <existing-zone-name-or-id> --no-link`.
+   This preserves the storage region, pull zone and hostnames. Import requires exactly one
+   attached pull zone, no attached middleware script, and no conflicting reserved root entries
+   (`_bunny` or `deploys`). Stop and review any conflict; do not delete or detach resources
+   just to satisfy import. Existing unrelated edge rules remain and need conflict review.
+4. Import writes Sites metadata and blocks internal paths immediately. Existing root content
+   remains served until the first Sites deploy. That first deploy changes routing and caching,
+   including a 30-day edge cache and browser revalidation for HTML; review this change.
+5. Set the production-environment variable `BUNNY_SITE` to `letsauth` (or the actual imported
+   site name). Keep `BUNNY_API_KEY`: it must be the Bunny account API key, not a storage password.
+   The action now uses it for Sites operations, not only cache purge. Keep environment approval
+   and main-only deployment restrictions enabled. `PLAUSIBLE_DOMAIN=letsauth.eu` is unchanged.
+6. Merge this PR only after import and configuration are complete. The first successful main CI
+   run publishes through Sites. Never run the old root uploader after this cutover: it no longer
+   updates the release served by Sites.
+
+The workflow no longer reads `BUNNY_STORAGE_KEY`, `BUNNY_STORAGE_ZONE`,
+`BUNNY_STORAGE_HOST` or `BUNNY_PULL_ZONE_ID`. Remove those environment secrets after a successful
+cutover and recovery review, not as part of this code change. No secrets belong in the repository.
+
+## Verify the first deployment
+
+Check the production hostname and its b-cdn.net alias:
+- Home, `/mcp/`, `/standards/`, nested pages and their assets work.
+- `/.well-known/security.txt` and other generated discovery files are served.
+- A nonexistent URL returns the custom 404 with a 404 status, not an SPA fallback.
+- Existing redirect rules, JSON exports and Pagefind search still work.
+- A known removed page/export returns 404 after publication and purge.
+- `/deploys/<id>/` and `/_bunny/` cannot expose historical releases or metadata.
+
+## Release history and recovery
+
+Sites uploads each release into an immutable directory, switches its routing rules and purges
+the cache. Files absent from the new build are no longer served at their old public paths;
+historical files remain in storage. This is withdrawal from serving, not physical data erasure.
+CDN changes still propagate; verify the public endpoints rather than assuming zero propagation time.
+
+Use `bunny sites deployments list letsauth` to inspect history. After there are two Sites releases,
+`bunny sites deployments publish --previous letsauth` rolls back through the vendor CLI.
+A rollback can re-expose withdrawn content: choose its target deliberately.
+
+The original pre-import root is not a Sites release and cannot be selected with `--previous`.
+If the first cutover fails, use the retained known-good build with
+`bunny sites deploy <known-good-build-directory> --site letsauth`.
+Reverting the workflow alone is not an infrastructure rollback.
+
+Old releases accumulate. Review `bunny sites deployments prune letsauth --keep 10` manually
+when needed; no automated deletion policy is introduced here.
 
 ## Manual deploy
 
-`workflow_dispatch` runs the same workflow from the Actions tab, restricted to the current
-`main` commit.
-
-## Known limitation: withdrawals
-
-The upload-and-purge deployment does not delete files absent from the new build. Removed pages
-and withdrawn JSON exports can therefore remain accessible at their old URLs. Cache purging
-alone does not remove origin files. Until the separate official Bunny Sites migration is complete,
-withdrawals require operator removal of the exact obsolete origin files followed by cache purge.
-Uploads remain non-atomic; this workflow hardening does not claim to fix publication semantics.
+Use the Actions tab on current `main`. Local deployment, when explicitly intended, is
+`pnpm build` followed by `bunny sites deploy dist --site letsauth`; it publishes immediately.
 
 ## Moved pages and renamed ids
 
@@ -74,3 +105,9 @@ want a 301 edge rule each, old path to new path, with the id wildcarded:
 The page redirects for that move live in `astro.config.mjs` as well; a 301 edge rule for each of
 those prefixes (`/atlas/mcp/`, `/atlas/standards/`, `/scanner/`) is optional and only makes the
 forward faster and keeps the status code honest.
+
+## Vendor references
+
+- [Action inputs and behavior](https://github.com/BunnyWay/actions/blob/deploy-site_0.1.1/deploy-site/README.md)
+- [CLI 0.20.0 import implementation](https://github.com/BunnyWay/cli/blob/v0.20.0/packages/cli/src/commands/sites/create.ts)
+- [CLI 0.20.0 file selection](https://github.com/BunnyWay/cli/blob/v0.20.0/packages/cli/src/commands/sites/uploader.ts)
