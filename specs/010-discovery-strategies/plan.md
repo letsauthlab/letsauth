@@ -58,3 +58,6 @@ tests/unit/scanner-{checks,challenge,view}.test.ts; tests/fixtures/scanner/*.jso
 | Date | Change | By |
 |---|---|---|
 | 2026-10-16 | Plan written and implemented in one pull request, as 008 was | owner |
+
+> Superseded by 013-scanner-conformance: the `as.scopes` positive fallback is removed.
+> When only the AS advertises scopes, the resource check is `unknown` via `prm.silent`.

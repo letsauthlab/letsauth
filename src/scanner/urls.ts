@@ -12,13 +12,9 @@ function cleanPath(url: URL): string {
   return url.pathname.replace(/\/+$/, "");
 }
 
-/** Removes one trailing slash so `https://a/` and `https://a` compare equal (RFC 8414 §3.1). */
-export function normaliseIssuer(issuer: string): string {
-  return issuer.endsWith("/") ? issuer.slice(0, -1) : issuer;
-}
-
+/** RFC 8414 §3.3 requires an identical issuer string, without URL normalization. */
 export function sameIssuer(a: string, b: string): boolean {
-  return normaliseIssuer(a) === normaliseIssuer(b);
+  return a === b;
 }
 
 /**
@@ -27,7 +23,7 @@ export function sameIssuer(a: string, b: string): boolean {
  */
 export function wellKnownPrmUrls(serverUrl: string): string[] {
   const url = new URL(serverUrl);
-  const path = cleanPath(url);
+  const path = url.pathname === "/" ? "" : url.pathname;
   const root = `${url.origin}${PRM}`;
   return path === "" ? [root] : [`${url.origin}${PRM}${path}`, root];
 }

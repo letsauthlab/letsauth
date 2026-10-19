@@ -200,3 +200,6 @@ No entity or field changes. One feature file changes `observable`; five server f
   owner can keep the feature active if the atlas should not grade on it yet.
 - Correcting stale listings is a data change to the server entity, not to observations; older
   observations keep citing the old URL, as the append-only rule wants.
+
+> Superseded by 013-scanner-conformance: the `as.scopes` positive fallback is removed.
+> When only the AS advertises scopes, the resource check is `unknown` via `prm.silent`.

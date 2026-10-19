@@ -3,7 +3,7 @@
  * the append rule (observations.ts) re-observes every cell written by an older version.
  */
 export const SCANNER_NAME = "letsauth-scanner";
-export const SCANNER_VERSION = "0.3.1";
+export const SCANNER_VERSION = "0.4.0";
 export const SCANNER_ID = `${SCANNER_NAME}/${SCANNER_VERSION}`;
 /** The `observedBy` value on every observation the scanner writes. */
 export const OBSERVER = `scanner@${SCANNER_VERSION}`;

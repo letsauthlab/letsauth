@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normaliseIssuer, sameIssuer, wellKnownAsUrls, wellKnownPrmUrls } from "@/scanner/urls";
+import { sameIssuer, wellKnownAsUrls, wellKnownPrmUrls } from "@/scanner/urls";
 
 describe("well-known locations (research R4)", () => {
   it("derives the path-aware PRM location first, then the root", () => {
@@ -9,9 +9,9 @@ describe("well-known locations (research R4)", () => {
     ]);
   });
 
-  it("drops a trailing slash, a query and a fragment", () => {
+  it("preserves the resource path including trailing slash, dropping query and fragment", () => {
     expect(wellKnownPrmUrls("https://h.example/mcp/?x=1#f")).toEqual([
-      "https://h.example/.well-known/oauth-protected-resource/mcp",
+      "https://h.example/.well-known/oauth-protected-resource/mcp/",
       "https://h.example/.well-known/oauth-protected-resource",
     ]);
   });
@@ -40,9 +40,9 @@ describe("well-known locations (research R4)", () => {
     ]);
   });
 
-  it("compares issuers without one trailing slash", () => {
-    expect(normaliseIssuer("https://a.example/")).toBe("https://a.example");
-    expect(sameIssuer("https://a.example/", "https://a.example")).toBe(true);
+  it("compares issuer strings exactly", () => {
+    expect(sameIssuer("https://a.example/", "https://a.example")).toBe(false);
+    expect(sameIssuer("https://a.example/", "https://a.example/")).toBe(true);
     expect(sameIssuer("https://a.example/x", "https://a.example/y")).toBe(false);
   });
 });

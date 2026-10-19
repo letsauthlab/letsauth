@@ -68,6 +68,8 @@ export interface Probe {
   requests: RequestRecord[];
   /** The PRM judged: the well-known document when found, else the one the challenge points at. */
   prm?: PrmInfo;
+  /** Rejected metadata retained as evidence, never used to discover an issuer. */
+  prmInvalid?: RequestRecord;
   /** Whether any PRM was found, by either route. */
   prmOutcome: Outcome;
   /** The last request made for the PRM, by either route: the decisive one when absent or in error. */
@@ -134,17 +136,30 @@ async function fetchFirst(
   urls: string[],
   fetcher: Fetcher,
   requests: RequestRecord[],
-): Promise<{ outcome: Outcome; result?: FetchResult; last?: RequestRecord }> {
+  validate?: (doc: Record<string, unknown>, url: string) => string | undefined,
+): Promise<{
+  outcome: Outcome;
+  result?: FetchResult;
+  last?: RequestRecord;
+  invalid?: RequestRecord;
+}> {
+  let invalid: RequestRecord | undefined;
   let sawError = false;
   let last: RequestRecord | undefined;
   for (const url of urls) {
     const result = await fetcher(url);
     last = toRecord(result);
     requests.push(last);
-    if (result.kind === "found") return { outcome: "found", result, last };
+    if (result.kind === "found") {
+      const issue = result.json && validate?.(result.json, url);
+      if (!issue) return { outcome: "found", result, last, invalid };
+      last.ok = false;
+      last.detail = issue;
+      invalid ??= last;
+    }
     if (result.kind === "error") sawError = true;
   }
-  return { outcome: sawError ? "error" : "absent", last };
+  return { outcome: sawError ? "error" : "absent", last, invalid };
 }
 
 export function endpointsOf(doc: Record<string, unknown>): Record<string, string> {
@@ -234,6 +249,24 @@ function prmInfoOf(result: FetchResult, location: PrmLocation): PrmInfo | undefi
   };
 }
 
+/** RFC 9728 §§2, 3.3: required HTTPS identifier, exactly bound to the discovery route. */
+export function validateResource(
+  doc: Record<string, unknown>,
+  expected: string,
+): string | undefined {
+  if (typeof doc.resource !== "string") return "resource: missing or not a string";
+  try {
+    const resource = new URL(doc.resource);
+    if (resource.protocol !== "https:" || resource.hash || resource.username || resource.password)
+      return "resource: must be an HTTPS identifier without credentials or a fragment";
+  } catch {
+    return "resource: not a valid URL";
+  }
+  return doc.resource === expected
+    ? undefined
+    : `resource: ${doc.resource}; expected exactly ${expected}`;
+}
+
 export async function probe(target: string, options: ProbeOptions): Promise<Probe> {
   const requests: RequestRecord[] = [];
   const out: Probe = {
@@ -249,7 +282,16 @@ export async function probe(target: string, options: ProbeOptions): Promise<Prob
 
   // 1. the well-known locations
   const prmUrls = wellKnownPrmUrls(target);
-  const wellKnown = await fetchFirst(prmUrls, options.fetcher, requests);
+  const endpoint = new URL(target);
+  endpoint.search = "";
+  endpoint.hash = "";
+  const wellKnown = await fetchFirst(prmUrls, options.fetcher, requests, (doc, url) =>
+    validateResource(
+      doc,
+      prmUrls.length === 2 && url === prmUrls[0] ? endpoint.href : endpoint.origin,
+    ),
+  );
+  out.prmInvalid = wellKnown.invalid;
   out.wellKnownOutcome = wellKnown.outcome;
   out.wellKnownLast = wellKnown.last;
   out.prmOutcome = wellKnown.outcome;
@@ -307,7 +349,15 @@ export async function probe(target: string, options: ProbeOptions): Promise<Prob
       requests.push(last);
       out.pointerOutcome = result.kind;
       out.pointerLast = last;
-      if (result.kind === "found") out.prm = prmInfoOf(result, "challenge");
+      if (result.kind === "found" && result.json) {
+        const issue = validateResource(result.json, out.challenge?.url ?? target);
+        if (issue) {
+          last.ok = false;
+          last.detail = issue;
+          out.prmInvalid = last;
+          out.pointerOutcome = "absent";
+        } else out.prm = prmInfoOf(result, "challenge");
+      }
     }
     if (out.prm) {
       out.prmOutcome = "found";

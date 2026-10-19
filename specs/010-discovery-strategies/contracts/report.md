@@ -27,3 +27,6 @@ Additive to `specs/004-scanner/contracts/report.md` and 008's additions; `versio
 ```
 
 A recorded report (`recorded: true`) has no `via`, empty `requests` and `discovered: null`.
+
+> Superseded by 013-scanner-conformance: the `as.scopes` positive fallback is removed.
+> When only the AS advertises scopes, the resource check is `unknown` via `prm.silent`.
