@@ -5,10 +5,14 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = resolve(__dirname, "../..");
-const tsx = join(root, "node_modules/.bin/tsx");
+// Use the loader directly: these non-watch CLI tests do not need tsx's IPC listener.
+const tsx = import.meta.resolve("tsx");
 
 function run(script: string, args: string[], cwd = root) {
-  return spawnSync(tsx, [join(root, script), ...args], { cwd, encoding: "utf8" });
+  return spawnSync(process.execPath, ["--import", tsx, join(root, script), ...args], {
+    cwd,
+    encoding: "utf8",
+  });
 }
 
 describe("scripts/validate-data.ts", () => {

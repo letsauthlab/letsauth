@@ -109,6 +109,8 @@ reviewer can open. Code, specs and relations are welcome too.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): how to add data, specs, relations and code, and what a
   pull request needs.
 - [`docs/development.md`](docs/development.md): local setup, commands, tests and screenshots.
+- [`docs/investigations.md`](docs/investigations.md): plan investigations, run owner-controlled
+  authorization checks and turn reviewed evidence into observations with `pnpm investigate`.
 - [`docs/architecture.md`](docs/architecture.md): the stack, the repository layout and the data
   flow.
 - [`.specify/memory/constitution.md`](.specify/memory/constitution.md): the principles every

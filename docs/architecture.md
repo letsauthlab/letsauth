@@ -125,13 +125,19 @@ tests/
 
 ## The scanner
 
-The scanner is the one backend and the only code that contacts third-party servers. It reads
+The scanner is the one backend. It reads
 public OAuth metadata (the protected-resource and authorization-server well-known documents and
 the `WWW-Authenticate` challenge), never a token, a body or an authorization flow, and judges each
 passively observable requirement of the current MCP Authorization revision. It runs in exactly
 one place: a Scaleway Serverless Job in an EU region, every night, from the image `Dockerfile`
 builds. A run writes observations and opens one pull request; nothing on the site triggers a
 scan. [`scanner.md`](scanner.md) has the request list, the grade and the job.
+
+Contributors can also run `pnpm investigate` locally for offline plans and owner-controlled
+active probes. Its network code lives under `src/scanner/investigation/`, is never imported by
+the site or nightly runner, and saves private evidence reports. Only manually reviewed
+observations enter the shared dataset. [`investigations.md`](investigations.md) documents this
+workflow and its limits.
 
 ## Hosting and delivery
 

@@ -16,6 +16,7 @@
     "validate:data": "tsx scripts/validate-data.ts",
     "check:append-only": "tsx scripts/check-observations-append-only.ts",
     "observe": "tsx scripts/observe.ts",
+    "investigate": "node --import tsx scripts/investigate.ts",
     "scan": "tsx scripts/scan.ts",
     "scan:nightly": "tsx scripts/scan-nightly.ts",
     "lint": "biome check .",

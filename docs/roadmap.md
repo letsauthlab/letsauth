@@ -18,3 +18,7 @@ features and the review point after each. Each feature gets its own spec under `
 
 Review after each feature: does it still pass the three honesty tests, and did it make the shared
 model better or worse?
+
+Contributor tooling: **011 Manual investigation CLI** adds offline plans, endpoint-specific owner
+proofs, targeted active checks, private evidence reports and reviewed observation recording.
+See `specs/011-investigation-cli/` and [`investigations.md`](investigations.md).
