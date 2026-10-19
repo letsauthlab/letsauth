@@ -33,8 +33,11 @@ test.describe("scanner index (US2)", () => {
     await expect(page.locator("#scanner-index")).toHaveCount(0);
     await expect(page.locator("table tr[data-server]")).toHaveCount(0);
     const where = page.locator("[aria-labelledby='where-title']");
-    await expect(where.locator("a[href='/mcp/']")).toBeVisible();
-    await expect(where.locator("a[href='/mcp/servers/']")).toBeVisible();
+    for (const name of ["MCP auth atlas", "server page"]) {
+      const link = where.getByRole("link", { name, exact: true });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", "/mcp/");
+    }
     await expect(page.locator("[data-nightly]")).toHaveCount(2);
   });
 

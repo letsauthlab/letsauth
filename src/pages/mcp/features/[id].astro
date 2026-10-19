@@ -127,7 +127,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
                 return (
                   <tr>
                     <th scope="row">
-                      <a href={r.id === revision.id ? "/mcp/" : `/mcp/${r.id}/`}>{r.id}</a>
+                      <a href={r.id === revision.id ? "/mcp/" : `/mcp/revisions/${r.id}/`}>{r.id}</a>
                       {r.status === "current" && <span class="pill">current</span>}
                     </th>
                     <td>

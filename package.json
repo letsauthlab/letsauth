@@ -9,7 +9,7 @@
   "packageManager": "pnpm@10.28.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "pnpm validate:data && astro build",
+    "build": "pnpm validate:data && astro build && pnpm check:links",
     "preview": "astro preview",
     "generate:brand": "tsx scripts/generate-brand-assets.ts",
     "generate:readme": "tsx scripts/generate-readme-assets.ts",
@@ -23,7 +23,8 @@
     "typecheck": "astro sync && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "pnpm validate:data && pnpm lint && pnpm typecheck && pnpm test && astro build"
+    "check": "pnpm validate:data && pnpm lint && pnpm typecheck && pnpm test && astro build && pnpm check:links",
+    "check:links": "tsx scripts/check-links.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
