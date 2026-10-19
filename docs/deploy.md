@@ -2,8 +2,8 @@
 
 letsauth.eu is a static site served by a Bunny CDN pull zone whose origin is a Bunny Storage
 Zone in an EU region (constitution VII). `.github/workflows/deploy.yml` runs after the CI workflow
-has passed for a push to this repository's `main`, builds that commit, reconciles `dist/` with
-the Bunny Storage API and purges the pull zone. Fork and pull-request CI runs cannot deploy.
+has passed for a push to this repository's `main`, builds that commit, uploads `dist/` with
+the existing Bunny Storage API uploader and purges the pull zone. Fork and pull-request CI runs cannot deploy.
 Both production workflows serialize deployments and compare the triggering SHA with current
 `main` before checkout or secret-bearing steps, so delayed CI cannot roll production back.
 The scanner builds each eligible main snapshot; a per-commit path filter could miss changes
@@ -43,21 +43,15 @@ call alone. Rotate both from the Bunny dashboard and update the secrets.
 ## Manual deploy
 
 `workflow_dispatch` runs the same workflow from the Actions tab, restricted to the current
-`main` commit. To deploy from a laptop, run `pnpm build`, then
-`node --import tsx scripts/deploy-storage.ts` and the purge step with the same environment variables.
+`main` commit.
 
-## Reconciliation and withdrawals
+## Known limitation: withdrawals
 
-The publisher lists remote files before mutating storage, uploads all built files, then deletes
-obsolete site files, and writes `.deployment-manifest.json` last. A failed upload does not trigger
-cleanup. The first release also cleans the historic site namespaces (including `mcp/`, `atlas/`,
-`scanner/`, `_astro/` and `pagefind/`); later releases track every published path through the
-manifest. Unrelated files outside those namespaces are preserved. Reserve the site namespaces
-for this deployment. Invalid manifests or listings abort the publish rather than guessing.
-
-Withdrawal therefore removes obsolete JSON exports as well as changing the HTML. Cache purge
-runs only after successful reconciliation. Storage updates are not atomic: interrupted uploads
-or deletions can leave a mixed release until the next successful deployment.
+The upload-and-purge deployment does not delete files absent from the new build. Removed pages
+and withdrawn JSON exports can therefore remain accessible at their old URLs. Cache purging
+alone does not remove origin files. Until the separate official Bunny Sites migration is complete,
+withdrawals require operator removal of the exact obsolete origin files followed by cache purge.
+Uploads remain non-atomic; this workflow hardening does not claim to fix publication semantics.
 
 ## Moved pages and renamed ids
 

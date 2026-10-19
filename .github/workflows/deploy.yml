@@ -59,13 +59,46 @@ jobs:
         run: pnpm install --frozen-lockfile
       - if: steps.current.outputs.deploy == 'true'
         run: pnpm build
-      - name: Publish and reconcile the storage zone
+      - name: Upload dist/ to the storage zone
         if: steps.current.outputs.deploy == 'true'
         env:
           BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
           BUNNY_STORAGE_HOST: ${{ secrets.BUNNY_STORAGE_HOST }}
-        run: node --import tsx scripts/deploy-storage.ts
+        run: |
+          set -euo pipefail
+          : "${BUNNY_STORAGE_KEY:?missing}" "${BUNNY_STORAGE_ZONE:?missing}" "${BUNNY_STORAGE_HOST:?missing}"
+          # the host is a bare hostname such as storage.bunnycdn.com; keep only that part when a
+          # scheme or a path (such as the zone name) was pasted along with it
+          host="${BUNNY_STORAGE_HOST#https://}"; host="${host#http://}"; host="${host%%/*}"
+          case "$host" in
+            *"$BUNNY_STORAGE_ZONE"*) echo "::warning::BUNNY_STORAGE_HOST contained the zone name; using host '$host'" ;;
+          esac
+          base="https://$host/$BUNNY_STORAGE_ZONE"
+
+          # Probe once before uploading: listing the zone root needs the same key as a PUT.
+          code=$(curl -sS -o /dev/null -w "%{http_code}" -H "AccessKey: $BUNNY_STORAGE_KEY" "$base/" || echo "000")
+          case "$code" in
+            200) echo "storage zone reachable: $host/$BUNNY_STORAGE_ZONE" ;;
+            401) echo "::error::Bunny storage returned 401: BUNNY_STORAGE_KEY is not the password of zone '$BUNNY_STORAGE_ZONE'"; exit 1 ;;
+            404) echo "::error::Bunny storage returned 404: zone '$BUNNY_STORAGE_ZONE' does not exist on host '$host' (check BUNNY_STORAGE_ZONE and BUNNY_STORAGE_HOST)"; exit 1 ;;
+            000) echo "::error::could not connect to https://$host (check BUNNY_STORAGE_HOST)"; exit 1 ;;
+            *)   echo "::error::Bunny storage returned $code when listing $base/"; exit 1 ;;
+          esac
+
+          cd dist
+          find . -type f | sed 's|^\./||' | sort > ../files.txt
+          echo "uploading $(wc -l < ../files.txt) files to $host/$BUNNY_STORAGE_ZONE"
+          # Storage API: one PUT per file, AccessKey header; 8 uploads in parallel.
+          export BUNNY_STORAGE_KEY base
+          xargs -a ../files.txt -P 8 -I{} sh -c '
+            code=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT \
+              -H "AccessKey: $BUNNY_STORAGE_KEY" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"{}" \
+              "$base/{}" || echo "000")
+            case "$code" in 200|201) ;; *) echo "::error::upload failed ($code): {}"; exit 1;; esac'
+          echo "uploaded $(wc -l < ../files.txt) files"
       - name: Purge the pull zone cache
         if: steps.current.outputs.deploy == 'true'
         env:

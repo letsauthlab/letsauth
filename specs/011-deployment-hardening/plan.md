@@ -1,6 +1,7 @@
 # Implementation plan
 
-Authenticate production triggers, skip stale commits, reconcile obsolete published files.
+Authenticate production triggers and skip stale commits. Retain the existing upload-and-purge
+mechanism; handle stale-file publication separately through vendor-maintained deployment tooling.
 
 Implement within the existing architecture, with regression coverage for the reviewed failure cases.
 Keep the package independently mergeable against main. Run data validation, append-only checks, lint, typecheck, unit tests and the production build. Browser checks apply only where rendering changes.
