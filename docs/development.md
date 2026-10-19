@@ -103,3 +103,7 @@ The repository is built to be worked on by agents as much as by people (constitu
 [`CLAUDE.md`](../CLAUDE.md) is the entry point for Claude Code and points at the constitution,
 the data model and these commands. Every check runs headless with one command and prints
 actionable output, and the screenshot tests let an agent verify a visual change itself.
+
+`pnpm check:links` verifies local href targets in the generated `dist/` tree without network
+requests. It runs after the build in `pnpm build` and `pnpm check`, catching missing revision,
+server-index and asset routes. It checks file targets, not fragment identifiers.
