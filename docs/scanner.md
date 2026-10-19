@@ -47,7 +47,7 @@ address are refused, whether they are a listed server's URL or an issuer found i
 
 Every status is decided by the table in `specs/004-scanner/data-model.md` (the challenge row is
 in `specs/008-discovery-challenge/data-model.md`). A document that could
-not be fetched (timeout, connection, TLS, 5xx, refused redirect) makes every check that depends
+not be fetched (timeout, connection, TLS, 429, 5xx, refused redirect) makes every check that depends
 on it `unknown`; `unsupported` is written only when a document was fetched and the field is
 absent or wrong. `partial` is written only when some but not all authorization server endpoints
 use HTTPS.
@@ -249,3 +249,11 @@ A server owner who does not want their server scanned withdraws it from the atla
 my server"); a withdrawn server is never contacted again. The scanner only ever reads what a
 server publishes for every client, the well-known documents and the challenge it sends to anyone
 without a token, and identifies itself in every request.
+
+### Transport safety
+
+Each HTTPS connection uses the public DNS addresses validated for that request, through a pinned
+lookup. The original hostname remains the HTTP host and TLS identity. Redirects repeat validation;
+no pooled connection can bypass it. HTTP 429 is uncertainty, not missing metadata, in every fetch
+mode. Timeouts and connection errors while consuming a response body are recorded as errors so
+discovery can continue to its next candidate.
