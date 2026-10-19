@@ -26,7 +26,7 @@ front page and advertises the lab; keep working notes out of it.
 - `pnpm check:append-only` — fails if an existing observation entry was edited or removed.
 - `pnpm scan <url>|<server-id>|--all [--write]` — the passive scanner (`docs/scanner.md`);
   `--write` appends observations.
-- `pnpm investigate --help` — offline plans and owner-controlled active investigation recipes
+- `pnpm investigate --help` — local manual investigations and owner-controlled active recipes
   (`docs/investigations.md`). Tokens stay in environment variables; observations require review.
 
 ## Conventions

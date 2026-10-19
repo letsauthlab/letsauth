@@ -405,4 +405,40 @@ describe("evidence and observations", () => {
       }),
     ).toThrow("does not cite");
   });
+  it("attaches an unlisted endpoint report after adding that exact server", async () => {
+    const p = challenge(target);
+    const f = fixture(p);
+    const report = await run(parsed({ recipe: "invalid-token" }), p, data, f.send, env);
+    const input = {
+      server: "new-server",
+      feature: "mcp.rs.401-on-invalid",
+      status: "unknown",
+      by: "test-reviewer",
+      evidence: "Reviewed the recorded token comparison; follow-up investigation is needed.",
+      report,
+    };
+    expect(() => observation(data, input)).toThrow();
+    const server = {
+      id: "new-server",
+      name: "New server",
+      url: target,
+      transport: "streamable-http" as const,
+      listed: "maintainer-added" as const,
+      source: "https://lab.example.com/docs",
+    };
+    const withServer = { ...data, servers: [...data.servers, server] };
+    expect(observation(withServer, input)).toMatchObject({
+      server: "new-server",
+      method: "manual",
+    });
+    for (const changed of [
+      { target: "https://other.example.com/mcp" },
+      { server: "figma" },
+      { recipe: "dcr" as const },
+    ]) {
+      expect(() =>
+        observation(withServer, { ...input, report: { ...report, ...changed } }),
+      ).toThrow("does not cite");
+    }
+  });
 });

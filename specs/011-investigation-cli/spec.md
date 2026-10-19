@@ -5,7 +5,8 @@ Help a maintainer turn unknown atlas cells into reproducible, reviewed observati
 
 ## User stories and acceptance criteria
 
-1. List recipes and generate an offline plan for a listed server or explicit HTTPS endpoint.
+1. Initialize an editable baseline configuration from a server ID or any HTTPS endpoint.
+   List recipes and optionally generate a checklist for a listed server or explicit HTTPS endpoint.
    Plans resolve feature references and citations from the shared dataset, identify prerequisites,
    and include manual procedures for OAuth acquisition and documentation/source review.
 2. Run bounded, explicit active probes: authenticated baseline, missing/invalid token, wrong
@@ -35,3 +36,7 @@ Revocation has a separate before/after workflow and measures access after an ope
 it does not assert universal immediate revocation or automatically map to an atlas feature.
 Operations may create state (DCR, initialization, explicitly configured tool calls); plans and
 documentation identify cleanup. No bulk active mode. Existing passive scanner behavior is intact.
+
+URL-based MCP reports remain usable after the exact endpoint is added as a server. Recording
+requires that server entry and matching feature/revision; unrelated endpoints and unbound AS
+registration reports cannot be attached. Plans are optional, not a prerequisite for execution.

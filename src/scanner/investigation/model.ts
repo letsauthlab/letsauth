@@ -223,7 +223,7 @@ export function plan(data: Dataset, target: string, revision?: string) {
           "Inspect the vendor's documentation or source at a pinned version. Record the exact URL/file/lines and what demonstrates this requirement. If unavailable, record unknown; a directory label is only vendor-claim.",
       })),
     limits:
-      "Offline plan only. Active execution requires owner control at the target origin. Reports require interpretation and do not set atlas statuses.",
+      "Optional checklist; use init to create a run configuration. Active execution requires owner control at the target origin. Reports require interpretation and do not set atlas statuses.",
   };
 }
 

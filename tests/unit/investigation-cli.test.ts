@@ -51,6 +51,22 @@ describe("investigation CLI", { timeout: 30_000 }, () => {
     expect(JSON.parse(readFileSync(path, "utf8")).server).toBe("figma");
     expect(cli(["plan", "figma", "--revision", "invented"]).status).toBe(1);
   });
+  it("prepares editable run configurations for a server ID and an unlisted URL", () => {
+    for (const target of ["figma", "https://new.example.com/mcp"]) {
+      const path = join(dir, target === "figma" ? "listed.json" : "new.json");
+      const result = cli(["init", target, "--out", path]);
+      expect(result.status, result.stderr).toBe(0);
+      const config = JSON.parse(readFileSync(path, "utf8"));
+      expect(config).toMatchObject({ recipe: "baseline", tokenEnv: "LETSAUTH_TOKEN" });
+      expect(config.server).toBe(target === "figma" ? "figma" : undefined);
+      if (target !== "figma") expect(config.target).toBe(target);
+      expect(statSync(path).mode & 0o777).toBe(0o600);
+      expect(cli(["init", target, "--out", path]).status).toBe(1);
+    }
+    expect(
+      cli(["init", "figma", "--revision", "invented", "--out", join(dir, "bad.json")]).status,
+    ).toBe(1);
+  });
   it("previews without mutation, appends only with --write, and preserves existing bytes", () => {
     cpSync(resolve("data"), join(dir, "data"), { recursive: true });
     const note = join(dir, "note.txt");

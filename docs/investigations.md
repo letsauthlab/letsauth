@@ -7,7 +7,34 @@ Node 22+ and `pnpm install`. `pnpm investigate --help` is the command reference.
 The existing `pnpm scan` remains the passive metadata scanner. The new command never runs in
 the nightly job, is not exposed by the website, and never publishes findings automatically.
 
-## Start with an offline plan
+## Run a local manual investigation
+
+The human handles login and browser consent using an existing OAuth client, supplies the test
+tokens, chooses the checks, and reviews the findings. The CLI executes those checks and saves
+evidence. It does not keep client credentials, refresh tokens or a persistent authenticated
+connection. The scheduled scanner continues to inspect public metadata only.
+
+Create an editable baseline configuration for a listed server or a new endpoint:
+
+```sh
+pnpm investigate init figma --out .investigations/figma.json
+pnpm investigate init https://lab.example.com/mcp --out .investigations/lab.json
+```
+
+Choose one configuration, describe your test account/scopes in `context`, and select the
+operation. Follow the owner-proof and token setup below, then run it:
+
+```sh
+pnpm investigate run .investigations/lab.json \
+  --proof .investigations/proof.json --out .investigations/before.json
+```
+
+Start with the baseline, then copy/edit the configuration for the comparison you need. Review
+the report and use `record --write` below to append your finding. `init` only writes a local
+configuration; it makes no network requests or changes to the atlas. The ownership requirement
+applies to all active recipes, even when you have a vendor account and a valid access token.
+
+## Optional investigation checklist
 
 ```sh
 pnpm investigate list
@@ -19,7 +46,8 @@ pnpm scan figma --json
 Plans resolve server IDs and requirement citations from the shared dataset. They include active
 recipes, prerequisites and questions for documentation/source review. `--revision` selects a
 recorded MCP authorization revision; the default is the dataset's current revision. A plan is
-a checklist, not an executable configuration. `list`, `plan`, `challenge` and `record` are offline.
+a checklist, not an executable configuration. `init`, `list`, `plan`, `challenge` and `record`
+make no network requests. You can skip planning and proceed directly to configuration and execution.
 
 If you do not control a public vendor endpoint, use the plan to inspect its documentation or
 source and record your findings. A directory claim is not observed behavior. Leave a requirement
@@ -86,7 +114,8 @@ pnpm investigate run .investigations/baseline.json \
   --proof .investigations/proof.json --out .investigations/before.json
 ```
 
-Add `"server": "<listed-id>"` only when testing that exact listed endpoint; omit it for a lab.
+The generated configuration includes `"server"` for a listed ID; a new URL has no server ID.
+When writing configurations yourself, add `"server": "<listed-id>"` only for that exact endpoint.
 Add `"revision": "2025-11-25"` if you need a particular authorization revision. Network protocol
 support is separately pinned to MCP Streamable HTTP **2025-11-25**. A different negotiated
 protocol is inconclusive; legacy SSE and stdio are not supported. JSON and SSE responses to
@@ -221,6 +250,28 @@ observation time explicitly. Without a report, the default is now. If the report
 revision, also pass `--revision`. All entries are `manual`: the operator chooses and justifies
 the atlas status. No existing observation is edited. Unknown IDs, client-party features and
 invalid references are rejected. Open a data PR after review; this CLI does not open one for you.
+
+## Add findings for a server that is not listed yet
+
+You can run against an explicit URL before adding it to the atlas. Before recording findings,
+create `data/servers/new-server.yaml` using the existing server schema, for example:
+
+```yaml
+id: new-server
+name: New server
+url: https://lab.example.com/mcp
+transport: streamable-http
+listed: maintainer-added
+source: https://lab.example.com/docs
+```
+
+Use the actual endpoint and listing/documentation source, then run `pnpm validate:data`. Record
+against `new-server` as usual. A `--report` from an earlier URL-based MCP investigation can be
+attached when its target exactly matches the new server URL and its feature/revision matches
+the finding. A DCR report targets an authorization server instead: include the intended listed
+`server` in its configuration before running, or record a reviewed note explaining the mapping.
+Submit the new server and its observations together in the data PR. `init` does not invent a
+public listing or infer access/auth classifications from a single successful operation.
 
 Exit codes: **0** completed (including behavior needing review), **1** invalid input or failed
 owner control, **2** inconclusive measurement. `--json` on list/plan/run supports agent use.

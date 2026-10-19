@@ -8,7 +8,7 @@
 3. Implement baseline/negative comparisons and single DCR attempts. Fresh MCP initialization
    per token, negotiated protocol/session headers, operation-level success required. Revocation
    reuses a matching successful baseline report and verifies the same token by digest.
-4. Add CLI commands `list`, `plan`, `challenge`, `run`, `record`; reuse observation validation
+4. Add CLI commands `init`, `list`, `plan`, `challenge`, `run`, `record`; reuse observation validation
    and append machinery. New file writes are exclusive and private by default.
 5. Test failure semantics, credential confinement, ownership refusal, request limits, comparison
    prerequisites, revocation pairing, citations and append-only recording. Run existing checks.

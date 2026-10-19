@@ -1,6 +1,6 @@
 import { crossCheck, type Dataset } from "../../lib/data";
 import { type Observation, observationSchema } from "../../schema";
-import { citations, digest, type Report, redact } from "./model";
+import { citations, digest, endpoint, type Report, redact } from "./model";
 
 export function observation(
   data: Dataset,
@@ -27,9 +27,17 @@ export function observation(
   const citation = citations(data, input.feature, input.revision)[0];
   if (!citation) throw new Error("feature citation is required");
   const report = input.report;
+  const server = data.servers.find((s) => s.id === input.server);
+  // URL investigations may precede adding the server to the atlas. Bind those reports to
+  // the exact resource endpoint; an AS registration endpoint cannot establish this mapping.
+  const matchesServer =
+    report &&
+    server &&
+    (report.server === input.server ||
+      (!report.server && report.recipe !== "dcr" && endpoint(server.url) === report.target));
   if (
     report &&
-    (report.server !== input.server ||
+    (!matchesServer ||
       !report.citations.some(
         (c) =>
           c.feature === input.feature &&

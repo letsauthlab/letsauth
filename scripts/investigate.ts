@@ -21,6 +21,7 @@ import {
   recipes,
   redact,
   reportSchema,
+  resolveTarget,
 } from "../src/scanner/investigation/model";
 import { observation } from "../src/scanner/investigation/record";
 import { run } from "../src/scanner/investigation/run";
@@ -30,6 +31,7 @@ import { appendObservations } from "../src/scanner/observations";
 const HELP = `Usage: pnpm investigate <command> [arguments]
 
   list [--json]
+  init <server-id|https-url> --out <config.json> [--revision <id>]
   plan <server-id|https-url> [--revision <id>] [--out <plan.json>] [--json]
   challenge <https-url> --out <proof.json>
   run <config.json> --proof <proof.json> --out <report.json> [--json]
@@ -37,7 +39,8 @@ const HELP = `Usage: pnpm investigate <command> [arguments]
          [--revision <id>] [--at <UTC-time>] [--report <report.json>]
          [--write | --out <draft.yaml>]
 
-Offline by default. Only run contacts the network; active requests require an exact endpoint
+Local manual investigations: init a configuration, supply a token, run, then review and record.
+Plans are optional checklists. Only run contacts the network; active requests require an exact endpoint
 owner challenge. Tokens come from named environment variables, never CLI arguments.
 record previews YAML; --write appends a validated manual observation to data/observations/.
 No command pushes or publishes data. Existing files are never overwritten by --out.
@@ -47,6 +50,7 @@ Recipes, configurations, cleanup and interpretation: docs/investigations.md
 
 const options = {
   list: { json: { type: "boolean" } },
+  init: { out: { type: "string" }, revision: { type: "string" } },
   plan: { json: { type: "boolean" }, revision: { type: "string" }, out: { type: "string" } },
   challenge: { out: { type: "string" } },
   run: { proof: { type: "string" }, out: { type: "string" }, json: { type: "boolean" } },
@@ -154,6 +158,24 @@ async function main(): Promise<number> {
     return 0;
   }
   const data = getDataset();
+  if (command === "init") {
+    const resolved = resolveTarget(data, target);
+    const selected = plan(data, target, flag("revision")).revision;
+    const config = configSchema.parse({
+      version: 1,
+      recipe: "baseline",
+      ...resolved,
+      revision: selected,
+      context: "Describe the test account, granted scopes and expected operation here.",
+      tokenEnv: "LETSAUTH_TOKEN",
+      request: { method: "tools/list", params: {} },
+    });
+    save(required("out"), json(config));
+    console.log(
+      `Configuration saved to ${flag("out")}. Edit context, recipe and operation; obtain a token through your OAuth client and set LETSAUTH_TOKEN.\nPrepare endpoint owner proof, then run:\n  pnpm investigate run ${flag("out")} --proof <proof.json> --out <report.json>\nSee docs/investigations.md for comparisons and recording findings.`,
+    );
+    return 0;
+  }
   if (command === "plan") {
     const result = plan(data, target, flag("revision"));
     if (flag("out")) save(required("out"), json(result));

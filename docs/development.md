@@ -28,7 +28,7 @@ set.
 | `pnpm preview` | Serves `dist/` the way the CDN will. |
 | `pnpm validate:data` | Schema and cross-reference checks over `data/`. Run after every data edit; prints `path[index].field: message`. |
 | `pnpm observe <server> <feature> <status> --by <handle> --evidence <url or note>` | Appends one validated `manual` (or `--method vendor-claim`) observation to `data/observations/<server>.yaml`. See [`atlas-maintenance.md`](atlas-maintenance.md#record-an-observation). |
-| `pnpm investigate --help` | Offline investigation plans, owner-controlled active probes, private evidence reports and reviewed manual observations. See [`investigations.md`](investigations.md). |
+| `pnpm investigate --help` | Local manual setup, owner-controlled active checks, private evidence reports and reviewed observations. See [`investigations.md`](investigations.md). |
 | `pnpm check:append-only [ref]` | Fails if an existing observation entry was edited or removed, compared with `origin/main` or the ref given. |
 | `pnpm lint` / `pnpm lint:fix` | Biome: lint and format. |
 | `pnpm typecheck` | `astro sync` and `tsc --noEmit`. |

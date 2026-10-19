@@ -15,3 +15,15 @@ entry point. Existing validator subprocess tests now use `node --import tsx`, av
 unnecessary Unix IPC socket while preserving all assertions. Active protocol/network checks
 used deterministic fixtures and mocked sockets; no third-party active probes were performed.
 No browser-visible code changed; hosted CI retains its normal browser/Lighthouse gates.
+
+## Manual workflow follow-up
+
+- [x] `init <server-id|https-url>` creates a private editable baseline configuration.
+- [x] URL-based MCP evidence can be attached after adding the exact server endpoint.
+- [x] Document manual login/token supply, optional planning and new-server recording.
+- [x] Keep the passive scanner and nightly job unchanged; no credential persistence added.
+
+Validation: all 58 investigation tests passed; TypeScript, lint (existing CSS warning), data
+validation, append-only check and production build passed. The full suite passed 419/420
+tests with one existing validator test exceeding its 5-second timeout during the concurrent
+build. Rerunning that file alone passed all 9 tests. No live active probes were made.
