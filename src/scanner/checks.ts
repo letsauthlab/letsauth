@@ -312,6 +312,21 @@ export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
   ],
 
   "mcp.prm": [
+    strategy(
+      "prm.invalid",
+      "the required resource identifier matches the discovery route",
+      (probe) =>
+        !probe.prm && probe.prmInvalid
+          ? {
+              status: probe.prmOutcome === "error" ? "unknown" : "unsupported",
+              evidence: evidence(
+                probe.prmInvalid.url,
+                probe.prmInvalid,
+                probe.prmInvalid.detail ?? "invalid resource",
+              ),
+            }
+          : undefined,
+    ),
     fromPrm(
       "prm.document",
       "a protected resource metadata document, by either route",
@@ -349,8 +364,8 @@ export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
     PRM_UNKNOWN,
   ],
 
-  // three places a server can tell what scopes it wants, read in order of how directly they
-  // speak for the server: its own metadata, its challenge, then its authorization server
+  // Only resource-specific metadata and challenges describe this resource's scopes.
+  // RFC 8414 permits the AS to omit supported scopes; its list cannot prove their absence.
   "mcp.prm.no-offline-access": [
     fromPrm(
       "prm.scopes",
@@ -379,21 +394,6 @@ export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
               `WWW-Authenticate scope includes offline_access: ${show(c.scope)}`,
             )
           : undefined,
-    ),
-    fromAs(
-      "as.scopes",
-      "scopes_supported of the authorization server, when neither the metadata nor the challenge names scopes: a server cannot request a scope its authorization server does not issue",
-      (as, rec) =>
-        as.scopesSupported && !as.scopesSupported.includes("offline_access")
-          ? {
-              status: "supported",
-              evidence: evidence(
-                as.url,
-                rec,
-                `the authorization server's scopes_supported has no offline_access: ${show(as.scopesSupported)}; the server advertises no scopes of its own`,
-              ),
-            }
-          : undefined, // the AS offers it or says nothing: whether this server asks for it is not advertised
     ),
     fromPrm("prm.silent", "nothing advertised anywhere", (prm, rec, probe) => ({
       status: "unknown",

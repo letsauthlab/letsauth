@@ -7,7 +7,7 @@
         "content-type": "application/json"
       },
       "body": {
-        "resource": "https://mcp.example.com/mcp",
+        "resource": "https://mcp.example.com",
         "authorization_servers": ["https://auth.example.com/tenant"],
         "scopes_supported": ["read", "write"]
       }

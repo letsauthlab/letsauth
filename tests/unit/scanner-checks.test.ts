@@ -411,12 +411,10 @@ describe("composable discovery strategies (010)", () => {
     expect(p.endpointNote).toBeUndefined();
   });
 
-  it("as-scopes: with no scopes in the metadata or the challenge, an authorization server without offline_access settles the SHOULD", async () => {
+  it("as-scopes: an AS list cannot prove the resource does not request offline_access", async () => {
     const { out } = await statuses("as-scopes");
-    expect(out["mcp.prm.no-offline-access"]?.status).toBe("supported");
-    expect(out["mcp.prm.no-offline-access"]?.via).toBe("as.scopes");
-    expect(out["mcp.prm.no-offline-access"]?.evidence).toMatch(/^https:\/\/auth\.example\.com\//);
-    expect(out["mcp.prm.scopes-supported"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.no-offline-access"]?.status).toBe("unknown");
+    expect(out["mcp.prm.no-offline-access"]?.via).toBe("prm.silent");
   });
 
   it("as-scopes-offline: an authorization server that offers offline_access leaves the server's choice unknown", async () => {
@@ -515,5 +513,62 @@ describe("scan() shapes the report (contracts/report.md)", () => {
     await scan({ url: f.target }, data, { fetcher, asCache });
     await scan({ url: f.target }, data, { fetcher, asCache });
     expect(fetcher.requests.filter((u) => u === AS_RFC)).toHaveLength(1);
+  });
+});
+
+describe("metadata binding regressions", () => {
+  it.each([
+    undefined,
+    17,
+    "https://other.example/mcp",
+    "http://mcp.example.com/mcp",
+    `${ENDPOINT}#fragment`,
+  ])("rejects invalid PRM resource %j and never follows its issuer", async (resource) => {
+    const f = fixture("complete");
+    const document = f.responses[PRM_PATH]?.body as Record<string, unknown>;
+    document.resource = resource;
+    const fetcher = recordingFetcher(f);
+    const p = await probe(f.target, { fetcher });
+    const checks = runChecks(p, features);
+    expect(checks.find((r) => r.feature.id === "mcp.prm")?.outcome.status).toBe("unsupported");
+    expect(p.prm).toBeUndefined();
+    expect(p.as).toBeUndefined();
+    expect(fetcher.requests).not.toContain(AS_RFC);
+    expect(p.prmInvalid?.detail).toContain("resource:");
+  });
+  it("falls back from an invalid path document to valid root-bound metadata", async () => {
+    const f = fixture("root-prm");
+    f.responses[PRM_PATH] = {
+      body: {
+        resource: "https://imposter.example",
+        authorization_servers: ["https://evil.example"],
+      },
+    };
+    const p = await probe(f.target, { fetcher: recordingFetcher(f) });
+    expect(p.prm?.location).toBe("root");
+    expect(p.issuer).toBe("https://auth.example.com/tenant");
+  });
+  it("rejects an endpoint resource identifier at the root discovery location", async () => {
+    const f = fixture("root-prm");
+    (f.responses[PRM_ROOT]?.body as Record<string, unknown>).resource = ENDPOINT;
+    const p = await probe(f.target, { fetcher: recordingFetcher(f) });
+    expect(p.prm).toBeUndefined();
+    expect(p.prmInvalid?.detail).toContain("expected exactly https://mcp.example.com");
+  });
+  it("validates challenge metadata against the endpoint, even at a different metadata host", async () => {
+    const f = fixture("challenge-pointer");
+    (f.responses[POINTER]?.body as Record<string, unknown>).resource = "https://other.example/mcp";
+    const p = await probe(f.target, { fetcher: recordingFetcher(f) });
+    expect(p.prm).toBeUndefined();
+    expect(p.as).toBeUndefined();
+    expect(p.prmInvalid?.url).toBe(POINTER);
+  });
+  it("does not award issuer-match when only a trailing slash differs", async () => {
+    const f = fixture("complete");
+    (f.responses[AS_RFC]?.body as Record<string, unknown>).issuer = "https://auth.example.com/";
+    const p = await probe(f.target, { fetcher: recordingFetcher(f) });
+    expect(
+      runChecks(p, features).find((r) => r.feature.id === "mcp.as.issuer-match")?.outcome.status,
+    ).toBe("unsupported");
   });
 });

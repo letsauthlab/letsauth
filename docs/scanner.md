@@ -63,11 +63,15 @@ example `mcp.prm.no-offline-access` reads, in order:
 1. `scopes_supported` in the protected resource metadata (`prm.scopes`);
 2. the `scope` parameter of the 401 challenge, when the metadata names no scopes
    (`challenge.scope`);
-3. the authorization server's `scopes_supported`, when neither of the two above names scopes: a
-   server cannot request a scope its authorization server does not issue, so an authorization
-   server without `offline_access` settles the SHOULD as supported; one that offers it leaves the
-   cell `unknown`, because whether this server asks for it is not advertised (`as.scopes`);
-4. otherwise `unknown`, with the reason (`prm.silent`).
+3. otherwise `unknown`, with the reason (`prm.silent`). RFC 8414 §2 allows the authorization
+   server to omit supported scopes; its list cannot establish which scopes this resource requests.
+
+Before metadata drives a check or issuer discovery, its required `resource` must be a valid
+HTTPS identifier bound to its discovery route (RFC 9728 §3.3). Path metadata identifies the
+endpoint path; root metadata identifies the origin; challenge metadata identifies the challenged
+endpoint. An invalid candidate is retained as evidence while discovery tries the remaining
+locations. Without a valid candidate, `mcp.prm` is unsupported and dependent metadata is not used.
+Issuer matching is exact, including trailing slashes (RFC 8414 §3.3).
 
 Adding a way to judge a requirement is adding a strategy to its list; adding a way to reach a
 source is adding a step to the ladder in `discovery.ts`. Both are tables a reader can check

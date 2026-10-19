@@ -38,3 +38,6 @@ Every other row keeps its 004 meaning, as a one-strategy list plus the `prm.miss
 
 `checks[].via`: the deciding strategy's id (absent on recorded reports).
 `discovered.challenge` gains `method`, `step`, `scope`. `discovered.endpointNote`: string or null.
+
+> Superseded by 013-scanner-conformance: the `as.scopes` positive fallback is removed.
+> When only the AS advertises scopes, the resource check is `unknown` via `prm.silent`.

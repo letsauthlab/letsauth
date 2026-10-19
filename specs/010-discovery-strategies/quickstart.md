@@ -12,3 +12,6 @@
 | 8 | Fallbacks always decide (US2) | unit test over `PASSIVE_CHECKS` with `prm-timeout` | no check throws |
 | 9 | Pages | `pnpm build`; open `/scanner/` and a report | "What it reads" names the ladder and eight requests; report rows are fourteen; the scanner page screenshot is refreshed by label |
 | 10 | Live | next nightly run | Airtable, Attio, Figma and Zoom have a challenge status; the five corrected servers are scanned at their new URL |
+
+> Superseded by 013-scanner-conformance: the `as.scopes` positive fallback is removed.
+> When only the AS advertises scopes, the resource check is `unknown` via `prm.silent`.
