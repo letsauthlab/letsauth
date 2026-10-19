@@ -123,8 +123,9 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 5. otherwise commits to a new branch `scanner/<date>-<hhmm>` (UTC), pushes it, and opens one pull
    request `Scanner: <date> <hh:mm> UTC` whose description is the run summary (per server the
    grade, the cells appended and the checks that could not be judged);
-6. closes the older open scanner pull requests with a "superseded by" comment and deletes their
-   branches: each run compares against `main`, so the newest pull request carries everything.
+6. keeps earlier scanner pull requests and branches open: each run compares against `main`,
+   and later results do not include every earlier unmerged observation. Review and merge pending
+   evidence in chronological order, resolving append-only list conflicts by retaining both runs.
 
 The token never appears in a command line, a remote URL or a log: git reads the auth header from
 `GIT_CONFIG_*` environment variables, pnpm and the scanner run without it, every child process's

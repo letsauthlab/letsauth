@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   branchFor,
-  closeSuperseded,
   commitMessage,
   describeError,
   redact,
@@ -116,37 +115,6 @@ describe("nightly pull request", () => {
   });
 });
 
-describe("superseded scanner pull requests", () => {
-  it("closes the older open scanner pull requests and deletes their branches, nothing else", async () => {
-    const calls: string[] = [];
-    const fetchImpl = async (url: string, init?: RequestInit): Promise<Response> => {
-      const method = init?.method ?? "GET";
-      calls.push(`${method} ${url}`);
-      if (method === "GET")
-        return Response.json([
-          { number: 15, head: { ref: "scanner/2026-10-15" } },
-          { number: 17, head: { ref: "claude/roadmap" } },
-          { number: 18, head: { ref: "scanner/2026-10-15-0908" } },
-        ]);
-      return Response.json({});
-    };
-    const closed = await closeSuperseded({
-      repo: "o/r",
-      token: "t",
-      base: "main",
-      keep: 18,
-      fetch: fetchImpl,
-    });
-    expect(closed).toEqual([15]);
-    expect(calls).toEqual([
-      "GET https://api.github.com/repos/o/r/pulls?state=open&base=main&per_page=100",
-      "POST https://api.github.com/repos/o/r/issues/15/comments",
-      "PATCH https://api.github.com/repos/o/r/pulls/15",
-      "DELETE https://api.github.com/repos/o/r/git/refs/heads/scanner/2026-10-15",
-    ]);
-  });
-});
-
 describe("redact", () => {
   it("removes the token and its basic-auth form from a failed command's message", () => {
     const token = "github_pat_example";
@@ -224,4 +192,41 @@ describe("describeError", () => {
       "listing pull requests: HTTP 401",
     );
   });
+});
+
+it("publishes successive runs without closing or deleting an earlier pending run", async () => {
+  const pending = new Map<string, { number: number; html_url: string; body: string }>();
+  const fetchImpl = async (url: string, init?: RequestInit) => {
+    const method = init?.method ?? "GET";
+    if (method === "GET") {
+      const head = new URL(url).searchParams.get("head")?.replace("o:", "") ?? "";
+      return Response.json(pending.has(head) ? [pending.get(head)] : []);
+    }
+    expect(method).toBe("POST"); // no closure, branch deletion or supersession comments
+    expect(url).toBe("https://api.github.com/repos/o/r/pulls");
+    const body = JSON.parse(String(init?.body));
+    const pr = {
+      number: pending.size + 1,
+      html_url: "https://github.com/o/r/pull/1",
+      body: body.body,
+    };
+    pending.set(body.head, pr);
+    return Response.json(pr, { status: 201 });
+  };
+  for (const [head, body] of [
+    ["scanner/older", "success evidence"],
+    ["scanner/newer", "endpoint unavailable"],
+  ]) {
+    await upsertPullRequest({
+      repo: "o/r",
+      token: "t",
+      head: head ?? "",
+      base: "main",
+      title: "Scan",
+      body: body ?? "",
+      fetch: fetchImpl,
+    });
+  }
+  expect(pending.size).toBe(2);
+  expect(pending.get("scanner/older")?.body).toBe("success evidence");
 });

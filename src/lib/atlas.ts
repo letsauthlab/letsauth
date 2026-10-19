@@ -98,7 +98,7 @@ export function matrixRows(data: Dataset): Server[] {
 function sortNewestFirst(observations: Observation[]): Observation[] {
   return [...observations].sort(
     (a, b) =>
-      b.observedAt.localeCompare(a.observedAt) ||
+      Date.parse(b.observedAt) - Date.parse(a.observedAt) ||
       methodStrength[b.method] - methodStrength[a.method],
   );
 }

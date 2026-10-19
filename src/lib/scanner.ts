@@ -72,7 +72,8 @@ export function latestScan(
   let scannedAt: string | undefined;
   const checks: CheckResult[] = passiveChecks(data, revisionId).map(({ feature, entry }) => {
     const obs = newestScannerObservation(data, server.id, feature.id, revisionId);
-    if (obs && (!scannedAt || obs.observedAt > scannedAt)) scannedAt = obs.observedAt;
+    if (obs && (!scannedAt || Date.parse(obs.observedAt) > Date.parse(scannedAt)))
+      scannedAt = obs.observedAt;
     return {
       feature: feature.id,
       name: feature.name,
@@ -114,7 +115,7 @@ export function scannerFacts(views: ScanView[]) {
   const scanned = views.filter((v) => v.scanned);
   const newest = scanned
     .map((v) => v.scannedAt ?? "")
-    .sort()
+    .sort((a, b) => Date.parse(a) - Date.parse(b))
     .at(-1);
   return { servers: views.length, scanned: scanned.length, newest };
 }
