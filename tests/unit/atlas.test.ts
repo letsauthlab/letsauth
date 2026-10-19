@@ -6,6 +6,7 @@ import {
   matrixColumns,
   matrixFor,
   matrixRows,
+  observationsFor,
   revisionDiff,
 } from "@/lib/atlas";
 import type { Dataset } from "@/lib/data";
@@ -218,4 +219,12 @@ describe("revisionDiff", () => {
     expect(diff.added.map((x) => x.id)).toEqual(["mcp.as.iss-param", "mcp.client.pkce"]);
     expect(diff.removed.map((x) => x.id)).toEqual(["mcp.rs.old-only"]);
   });
+});
+
+it("orders instants across offsets and applies method strength to equivalent instants", () => {
+  const older = obs("a", "f", "unsupported", "manual", "2026-10-18T11:00:00+02:00");
+  const newer = obs("a", "f", "supported", "passive-scan", "2026-10-18T10:00:00Z");
+  const tied = obs("a", "f", "partial", "manual", "2026-10-18T05:00:00-05:00");
+  const history = observationsFor({ ...data, observations: [older, newer, tied] }, "a", "f", NEW);
+  expect(history.map((o) => o.status)).toEqual(["supported", "partial", "unsupported"]);
 });

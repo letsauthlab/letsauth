@@ -167,3 +167,21 @@ describe("reportFromView", () => {
     expect(r.grade.letter).toBe("A");
   });
 });
+
+it("uses timestamp instants for each scanner cell, report date and index date", () => {
+  const first = checks[0]?.feature.id ?? "";
+  const second = checks[1]?.feature.id ?? "";
+  const older = "2026-10-18T11:00:00+02:00";
+  const newer = "2026-10-18T10:00:00Z";
+  const view = latestScan(
+    withObservations([
+      obs(first, "unsupported", { observedAt: older }),
+      obs(first, "supported", { observedAt: newer }),
+      obs(second, "supported", { observedAt: older }),
+    ]),
+    server,
+  );
+  expect(view.checks.find((c) => c.feature === first)?.status).toBe("supported");
+  expect(view.scannedAt).toBe(newer);
+  expect(scannerFacts([{ ...view, scannedAt: older }, view]).newest).toBe(newer);
+});

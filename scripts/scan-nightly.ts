@@ -15,7 +15,7 @@
  * Steps: shallow-clone the base branch, install, `pnpm scan --all --write --summary`, validate
  * the data and the append-only rule, and when anything under data/observations changed commit
  * to a new branch scanner/<date>-<hhmm>, push it, open one pull request whose description is the
- * run summary, and close the older open scanner pull requests it supersedes. Nothing is merged
+ * run summary. Earlier pull requests retain their evidence for review. Nothing is merged
  * without review. Exit 0 when nothing changed or the pull request is up; exit 1 when a step fails.
  *
  * The token never appears in a command line, a remote URL, the clone's config or a log line:
@@ -30,7 +30,6 @@ import { join } from "node:path";
 import { installationToken } from "../src/scanner/github-app";
 import {
   branchFor,
-  closeSuperseded,
   commitMessage,
   describeError,
   redact,
@@ -206,9 +205,6 @@ async function main(): Promise<void> {
       fetch: github,
     });
     console.log(`${pr.action} pull request #${pr.number}: ${pr.url}`);
-    const closed = await closeSuperseded({ repo, token, base, keep: pr.number, fetch: github });
-    if (closed.length > 0)
-      console.log(`closed superseded: ${closed.map((n) => `#${n}`).join(", ")}`);
   } catch (error) {
     console.error(safe(describeError(error)));
     process.exit(1);
