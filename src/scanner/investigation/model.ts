@@ -1,10 +1,9 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { currentRevision } from "../../lib/atlas";
 import type { Dataset } from "../../lib/data";
 
 export const VERSION = "letsauth-investigate/1.0.0";
-export const PROOF_PATH = "/.well-known/letsauth-investigation.json";
 export const PROTOCOL = "2025-11-25";
 
 export function endpoint(input: string): string {
@@ -27,6 +26,24 @@ const httpsEndpoint = z.string().transform((s, ctx) => {
   }
 });
 const envName = z.string().regex(/^[A-Z][A-Z0-9_]*$/);
+export const oauthOptionsSchema = z
+  .strictObject({
+    clientId: z.string().min(1).max(2048).optional(),
+    clientSecretEnv: envName.optional(),
+    clientMetadataUrl: httpsEndpoint.optional(),
+    scope: z.string().max(4000).optional(),
+    callbackPort: z.number().int().min(1024).max(65535).default(8765),
+  })
+  .superRefine((value, ctx) => {
+    if (value.clientSecretEnv && !value.clientId)
+      ctx.addIssue({ code: "custom", message: "clientSecretEnv requires clientId" });
+    if (value.clientId && value.clientMetadataUrl)
+      ctx.addIssue({
+        code: "custom",
+        message: "choose preregistered clientId or clientMetadataUrl",
+      });
+  });
+export type OAuthOptions = z.infer<typeof oauthOptionsSchema>;
 export const recipeId = z.enum([
   "baseline",
   "invalid-token",
@@ -42,8 +59,8 @@ export const recipes = {
     feature: undefined,
     title: "Authenticated MCP baseline",
     steps: [
-      "Complete the provider's normal OAuth login with an existing client (authorization code + S256 PKCE). Verify state, issuer, redirect URI and resource binding in that client.",
-      "Put the resulting short-lived access token in tokenEnv. Select a harmless operation that should succeed for this account.",
+      "Use --login for the CLI to discover OAuth metadata, register a client if supported, and open your browser for login/consent. Tokens stay in memory for this run.",
+      "Alternatively supply an existing short-lived access token through tokenEnv. Select a harmless operation that should succeed for this account.",
       "A successful operation is a prerequisite for negative comparisons; initialization alone is insufficient.",
     ],
   },
@@ -88,7 +105,7 @@ export const recipes = {
     feature: "mcp.as.dcr",
     title: "One dynamic client registration attempt",
     steps: [
-      "Read the advertised registration endpoint and registration policy. Control proof is required at that authorization server origin, not just the MCP origin.",
+      "Read the advertised registration endpoint and registration policy. Supply that endpoint explicitly.",
       "Supply deliberate client metadata with a unique client_name and a callback you control. This sends one registration request and may create a client.",
       "Record the result and remove the test client through the provider's administration UI. Client IDs/secrets are deliberately not saved; locate the client by its unique name.",
       "One rejection may mean invalid metadata, a required initial token or policy restrictions. It does not establish unsupported DCR.",
@@ -111,6 +128,7 @@ export const configSchema = z
     context: z.string().trim().min(20).max(4000),
     tokenEnv: envName.optional(),
     comparisonTokenEnv: envName.optional(),
+    oauth: oauthOptionsSchema.optional(),
     request: operation.optional(),
     registration: z
       .strictObject({
@@ -153,21 +171,6 @@ export const configSchema = z
   });
 export type Config = z.infer<typeof configSchema>;
 
-export const proofSchema = z.strictObject({
-  version: z.literal(1),
-  target: httpsEndpoint,
-  nonce: z.string().regex(/^[a-f0-9]{64}$/),
-  expiresAt: z.iso.datetime(),
-});
-export type Proof = z.infer<typeof proofSchema>;
-export function challenge(target: string, now = Date.now()): Proof {
-  return {
-    version: 1,
-    target: endpoint(target),
-    nonce: randomBytes(32).toString("hex"),
-    expiresAt: new Date(now + 3_600_000).toISOString(),
-  };
-}
 export function digest(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
@@ -223,7 +226,7 @@ export function plan(data: Dataset, target: string, revision?: string) {
           "Inspect the vendor's documentation or source at a pinned version. Record the exact URL/file/lines and what demonstrates this requirement. If unavailable, record unknown; a directory label is only vendor-claim.",
       })),
     limits:
-      "Optional checklist; use init to create a run configuration. Active execution requires owner control at the target origin. Reports require interpretation and do not set atlas statuses.",
+      "Optional checklist; use init to create a run configuration. Run locally against endpoints you are permitted to test. Reports require interpretation and do not set atlas statuses.",
   };
 }
 

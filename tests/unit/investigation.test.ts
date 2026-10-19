@@ -1,19 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { getDataset } from "../../src/lib/data";
 import {
-  challenge,
   configSchema,
   digest,
   endpoint,
-  PROOF_PATH,
   PROTOCOL,
-  type Proof,
   plan,
   redact,
   reportSchema,
 } from "../../src/scanner/investigation/model";
 import { observation } from "../../src/scanner/investigation/record";
-import { run, verifyControl } from "../../src/scanner/investigation/run";
+import { run } from "../../src/scanner/investigation/run";
 import {
   authSummary,
   object,
@@ -40,13 +37,12 @@ const baseConfig = {
 const parsed = (overrides: Record<string, unknown> = {}) =>
   configSchema.parse({ ...baseConfig, ...overrides });
 
-function fixture(proof: Proof, alter?: (r: Request) => Response | undefined) {
+function fixture(alter?: (r: Request) => Response | undefined) {
   const requests: Request[] = [];
   const send: Transport = async (r) => {
     requests.push(structuredClone(r));
     const changed = alter?.(r);
     if (changed) return changed;
-    if (r.url === new URL(PROOF_PATH, proof.target).href) return { status: 200, json: proof };
     if (r.method === "DELETE") return { status: 204 };
     const body = object(r.body) ? r.body : {};
     if (body.method === "initialize")
@@ -96,30 +92,12 @@ describe("investigation plans and strict contracts", () => {
   });
 });
 
-describe("owner control", () => {
-  it("sends no credentials/protocol messages when control cannot be verified", async () => {
-    const p = challenge(target);
-    const f = fixture(p, () => ({ status: 200, json: { ...p, nonce: "a".repeat(64) } }));
-    await expect(run(parsed(), p, data, f.send, env)).rejects.toThrow("owner control");
-    expect(f.requests).toEqual([{ method: "GET", url: new URL(PROOF_PATH, target).href }]);
-  });
-  it("rejects expired, distant and different-endpoint proof before networking", async () => {
-    const p = challenge(target);
-    const f = fixture(p);
-    for (const proof of [
-      { ...p, expiresAt: new Date(Date.now() - 1).toISOString() },
-      { ...p, expiresAt: new Date(Date.now() + 7_200_000).toISOString() },
-      { ...p, target: `${target}/other` },
-    ])
-      await expect(verifyControl(proof, target, f.send)).rejects.toThrow();
-    expect(f.requests).toHaveLength(0);
-  });
+describe("local run prerequisites", () => {
   it("validates all token prerequisites before any network request", async () => {
-    const p = challenge(target);
-    const f = fixture(p);
-    await expect(run(parsed(), p, data, f.send, {})).rejects.toThrow("environment variable");
+    const f = fixture();
+    await expect(run(parsed(), data, f.send, {})).rejects.toThrow("environment variable");
     await expect(
-      run(parsed({ recipe: "scope", comparisonTokenEnv: "OTHER_TOKEN" }), p, data, f.send, {
+      run(parsed({ recipe: "scope", comparisonTokenEnv: "OTHER_TOKEN" }), data, f.send, {
         ...env,
         OTHER_TOKEN: valid,
       }),
@@ -145,20 +123,24 @@ describe("owner control", () => {
 
 describe("MCP measurements", () => {
   it("initializes, sends the configured operation and cleans up each session independently", async () => {
-    const p = challenge(target);
-    const f = fixture(p);
+    const f = fixture();
     const report = await run(
       parsed({
         recipe: "audience",
         comparisonTokenEnv: "OTHER_TOKEN",
         context: `Different audience, baseline ${valid}, comparison ${other}`,
       }),
-      p,
       data,
       f.send,
       env,
     );
     expect(report.conclusion).toBe("review-required");
+    expect(f.requests[0]).toMatchObject({
+      method: "POST",
+      url: target,
+      body: { method: "initialize" },
+    });
+    expect(f.requests.every((r) => r.url === target)).toBe(true);
     expect(report.samples.filter((s) => s.stage === "operation").map((s) => s.outcome)).toEqual([
       "accepted",
       "accepted",
@@ -176,20 +158,18 @@ describe("MCP measurements", () => {
     expect(JSON.stringify(report)).not.toContain("session-");
   });
   it("does not run negative cases when the baseline fails", async () => {
-    const p = challenge(target);
-    const f = fixture(p, (r) => (r.method === "POST" ? { status: 401 } : undefined));
-    const report = await run(parsed({ recipe: "invalid-token" }), p, data, f.send, env);
+    const f = fixture((r) => (r.method === "POST" ? { status: 401 } : undefined));
+    const report = await run(parsed({ recipe: "invalid-token" }), data, f.send, env);
     expect(report.conclusion).toBe("inconclusive");
-    expect(f.requests).toHaveLength(2);
+    expect(f.requests).toHaveLength(1);
   });
   it("records missing and random invalid token denials after an accepted baseline", async () => {
-    const p = challenge(target);
-    const f = fixture(p, (r) =>
+    const f = fixture((r) =>
       r.method === "POST" && r.headers?.Authorization !== `Bearer ${valid}`
         ? { status: 401, authError: "invalid_token" }
         : undefined,
     );
-    const report = await run(parsed({ recipe: "invalid-token" }), p, data, f.send, env);
+    const report = await run(parsed({ recipe: "invalid-token" }), data, f.send, env);
     expect(report.conclusion).toBe("review-required");
     expect(report.samples.filter((s) => s.outcome === "http-denied").map((s) => s.label)).toEqual([
       "missing-token",
@@ -209,25 +189,22 @@ describe("MCP measurements", () => {
     { status: 500 },
     { status: null, error: "timeout" as const },
   ])("keeps broken operations inconclusive: %j", async (response) => {
-    const p = challenge(target);
-    const f = fixture(p, (r) =>
+    const f = fixture((r) =>
       object(r.body) && r.body.method === "tools/list" ? response : undefined,
     );
-    const report = await run(parsed({ recipe: "invalid-token" }), p, data, f.send, env);
+    const report = await run(parsed({ recipe: "invalid-token" }), data, f.send, env);
     expect(report.conclusion).toBe("inconclusive");
     expect(report.samples.every((s) => s.label === "baseline")).toBe(true);
     expect(JSON.stringify(report)).not.toContain(valid);
   });
   it("does not treat a tool-level error as successful authorization", async () => {
-    const p = challenge(target);
-    const f = fixture(p, (r) =>
+    const f = fixture((r) =>
       object(r.body) && r.body.method === "tools/call"
         ? { status: 200, json: { jsonrpc: "2.0", id: 2, result: { content: [], isError: true } } }
         : undefined,
     );
     const report = await run(
       parsed({ request: { method: "tools/call", params: { name: "read-test" } } }),
-      p,
       data,
       f.send,
       env,
@@ -236,8 +213,7 @@ describe("MCP measurements", () => {
     expect(report.conclusion).toBe("inconclusive");
   });
   it("requires the supported protocol version instead of guessing", async () => {
-    const p = challenge(target);
-    const f = fixture(p, (r) =>
+    const f = fixture((r) =>
       object(r.body) && r.body.method === "initialize"
         ? {
             status: 200,
@@ -245,18 +221,16 @@ describe("MCP measurements", () => {
           }
         : undefined,
     );
-    expect((await run(parsed(), p, data, f.send, env)).conclusion).toBe("inconclusive");
+    expect((await run(parsed(), data, f.send, env)).conclusion).toBe("inconclusive");
   });
   it("captures scope challenge semantics without arbitrary values", async () => {
-    const p = challenge(target);
-    const f = fixture(p, (r) =>
+    const f = fixture((r) =>
       r.headers?.Authorization === `Bearer ${other}`
         ? { status: 403, authError: "insufficient_scope", hasScopeChallenge: true }
         : undefined,
     );
     const report = await run(
       parsed({ recipe: "scope", comparisonTokenEnv: "OTHER_TOKEN" }),
-      p,
       data,
       f.send,
       env,
@@ -273,8 +247,7 @@ describe("MCP measurements", () => {
 describe("DCR and revocation", () => {
   it("creates only one client, confines credentials to AS, and omits returned secrets", async () => {
     const url = "https://issuer.example.com/register";
-    const p = challenge(url);
-    const f = fixture(p, (r) =>
+    const f = fixture((r) =>
       r.method === "POST"
         ? {
             status: 201,
@@ -296,16 +269,15 @@ describe("DCR and revocation", () => {
         redirect_uris: ["https://lab.example.com/callback"],
       },
     });
-    const report = await run(c, p, data, f.send, {});
-    expect(f.requests).toHaveLength(2);
+    const report = await run(c, data, f.send, {});
+    expect(f.requests).toHaveLength(1);
     expect(f.requests.every((r) => !r.headers?.Authorization)).toBe(true);
     expect(report.samples[0]?.outcome).toBe("registered");
     expect(JSON.stringify(report)).not.toContain("private-");
   });
   it("does not treat DCR denial as unsupported", async () => {
     const url = "https://issuer.example.com/register";
-    const p = challenge(url);
-    const f = fixture(p, (r) => (r.method === "POST" ? { status: 403 } : undefined));
+    const f = fixture((r) => (r.method === "POST" ? { status: 403 } : undefined));
     const c = configSchema.parse({
       version: 1,
       recipe: "dcr",
@@ -316,30 +288,28 @@ describe("DCR and revocation", () => {
         redirect_uris: ["https://lab.example.com/callback"],
       },
     });
-    const report = await run(c, p, data, f.send, {});
+    const report = await run(c, data, f.send, {});
     expect(report.samples[0]?.outcome).toBe("registration-rejected");
     expect(JSON.stringify(report)).not.toContain("unsupported");
   });
   it("pairs a revocation run with the same successful baseline token and operation", async () => {
-    const p = challenge(target);
-    const f = fixture(p);
-    const before = await run(parsed(), p, data, f.send, env);
+    const f = fixture();
+    const before = await run(parsed(), data, f.send, env);
     const c = parsed({
       recipe: "revocation",
       baseline: "before.json",
       revokedAt: new Date().toISOString(),
     });
-    const after = await run(c, p, data, f.send, env, before);
+    const after = await run(c, data, f.send, env, before);
     expect(after.baselineDigest).toBe(digest(before));
     expect(after.samples[0]?.label).toBe("after-revocation");
-    const mismatched = fixture(p);
-    await expect(run(c, p, data, mismatched.send, { GOOD_TOKEN: other }, before)).rejects.toThrow(
+    const mismatched = fixture();
+    await expect(run(c, data, mismatched.send, { GOOD_TOKEN: other }, before)).rejects.toThrow(
       "matching baseline",
     );
     await expect(
       run(
         { ...c, request: { method: "resources/list", params: {} } },
-        p,
         data,
         mismatched.send,
         env,
@@ -390,9 +360,8 @@ describe("evidence and observations", () => {
     ).toThrow("redact");
   });
   it("refuses attaching an unrelated report to a manual finding", async () => {
-    const p = challenge(target);
-    const f = fixture(p);
-    const r = await run(parsed(), p, data, f.send, env);
+    const f = fixture();
+    const r = await run(parsed(), data, f.send, env);
     expect(reportSchema.safeParse({ ...r, rawToken: valid }).success).toBe(false);
     expect(() =>
       observation(data, {
@@ -406,9 +375,8 @@ describe("evidence and observations", () => {
     ).toThrow("does not cite");
   });
   it("attaches an unlisted endpoint report after adding that exact server", async () => {
-    const p = challenge(target);
-    const f = fixture(p);
-    const report = await run(parsed({ recipe: "invalid-token" }), p, data, f.send, env);
+    const f = fixture();
+    const report = await run(parsed({ recipe: "invalid-token" }), data, f.send, env);
     const input = {
       server: "new-server",
       feature: "mcp.rs.401-on-invalid",

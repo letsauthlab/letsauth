@@ -13,47 +13,58 @@ import { stringify } from "yaml";
 import { ZodError } from "zod";
 import { getDataset } from "../src/lib/data";
 import {
-  challenge,
   configSchema,
-  PROOF_PATH,
+  oauthOptionsSchema,
   plan,
-  proofSchema,
   recipes,
   redact,
   reportSchema,
   resolveTarget,
 } from "../src/scanner/investigation/model";
+import { login } from "../src/scanner/investigation/oauth";
 import { observation } from "../src/scanner/investigation/record";
-import { run } from "../src/scanner/investigation/run";
+import { run, token, validateRun } from "../src/scanner/investigation/run";
 import { nodeTransport } from "../src/scanner/investigation/transport";
 import { appendObservations } from "../src/scanner/observations";
 
 const HELP = `Usage: pnpm investigate <command> [arguments]
 
   list [--json]
+  check <server-id|https-url> --out <report.json> [--recipe baseline|invalid-token]
+        [--scope <scopes>] [--client-id <id>] [--client-secret-env <name>]
+        [--client-metadata-url <url>] [--callback-port <port>] [--json]
   init <server-id|https-url> --out <config.json> [--revision <id>]
   plan <server-id|https-url> [--revision <id>] [--out <plan.json>] [--json]
-  challenge <https-url> --out <proof.json>
-  run <config.json> --proof <proof.json> --out <report.json> [--json]
+  run <config.json> --out <report.json> [--login] [--json]
   record <server> <feature> <status> --by <handle> --evidence-file <note.txt>
          [--revision <id>] [--at <UTC-time>] [--report <report.json>]
          [--write | --out <draft.yaml>]
 
-Local manual investigations: init a configuration, supply a token, run, then review and record.
-Plans are optional checklists. Only run contacts the network; active requests require an exact endpoint
-owner challenge. Tokens come from named environment variables, never CLI arguments.
+check opens interactive OAuth login, then runs a local check. You complete browser consent.
+For advanced checks, init/edit a configuration and run --login (or supply tokenEnv yourself).
+Plans are optional checklists. Only check/run contact the network. Use accounts/endpoints you
+are permitted to test. No domain ownership proof or persistent credential store is required.
 record previews YAML; --write appends a validated manual observation to data/observations/.
 No command pushes or publishes data. Existing files are never overwritten by --out.
-Exit codes: 0 completed/review required; 1 input/control failure; 2 inconclusive investigation.
+Exit codes: 0 completed/review required; 1 input/login failure; 2 inconclusive investigation.
 Recipes, configurations, cleanup and interpretation: docs/investigations.md
 `;
 
 const options = {
   list: { json: { type: "boolean" } },
+  check: {
+    out: { type: "string" },
+    recipe: { type: "string" },
+    json: { type: "boolean" },
+    scope: { type: "string" },
+    "client-id": { type: "string" },
+    "client-secret-env": { type: "string" },
+    "client-metadata-url": { type: "string" },
+    "callback-port": { type: "string" },
+  },
   init: { out: { type: "string" }, revision: { type: "string" } },
   plan: { json: { type: "boolean" }, revision: { type: "string" }, out: { type: "string" } },
-  challenge: { out: { type: "string" } },
-  run: { proof: { type: "string" }, out: { type: "string" }, json: { type: "boolean" } },
+  run: { out: { type: "string" }, json: { type: "boolean" }, login: { type: "boolean" } },
   record: {
     by: { type: "string" },
     "evidence-file": { type: "string" },
@@ -149,14 +160,6 @@ async function main(): Promise<number> {
     return 0;
   }
   const target = pos[0] as string;
-  if (command === "challenge") {
-    const proof = challenge(target);
-    save(required("out"), json(proof));
-    console.log(
-      `Serve the exact contents of ${flag("out")} at ${new URL(PROOF_PATH, proof.target).href}\nExpires ${proof.expiresAt}. Keep this file for --proof; remove the hosted file after the investigation.`,
-    );
-    return 0;
-  }
   const data = getDataset();
   if (command === "init") {
     const resolved = resolveTarget(data, target);
@@ -172,7 +175,7 @@ async function main(): Promise<number> {
     });
     save(required("out"), json(config));
     console.log(
-      `Configuration saved to ${flag("out")}. Edit context, recipe and operation; obtain a token through your OAuth client and set LETSAUTH_TOKEN.\nPrepare endpoint owner proof, then run:\n  pnpm investigate run ${flag("out")} --proof <proof.json> --out <report.json>\nSee docs/investigations.md for comparisons and recording findings.`,
+      `Configuration saved to ${flag("out")}. Edit context, recipe and operation.\nRun with interactive OAuth login:\n  pnpm investigate run ${flag("out")} --login --out <report.json>\nSee docs/investigations.md for comparisons and recording findings.`,
     );
     return 0;
   }
@@ -186,15 +189,54 @@ async function main(): Promise<number> {
     );
     return 0;
   }
-  if (command === "run") {
-    const config = configSchema.parse(JSON.parse(read(target)));
-    const proof = proofSchema.parse(JSON.parse(read(required("proof"))));
+  if (command === "run" || command === "check") {
+    const interactive = command === "check" || values.login === true;
+    if (
+      command === "check" &&
+      flag("recipe") &&
+      !["baseline", "invalid-token"].includes(required("recipe"))
+    )
+      throw new Error(
+        "check supports baseline or invalid-token; use init and run for comparison recipes",
+      );
+    const config = configSchema.parse(
+      command === "run"
+        ? JSON.parse(read(target))
+        : {
+            version: 1,
+            recipe: flag("recipe") ?? "baseline",
+            ...resolveTarget(data, target),
+            tokenEnv: "LETSAUTH_TOKEN",
+            request: { method: "tools/list", params: {} },
+            context: "Local human-operated investigation using interactive OAuth and tools/list.",
+            oauth: {
+              clientId: flag("client-id"),
+              clientSecretEnv: flag("client-secret-env"),
+              clientMetadataUrl: flag("client-metadata-url"),
+              scope: flag("scope"),
+              callbackPort: flag("callback-port") ? Number(required("callback-port")) : undefined,
+            },
+          },
+    );
+    validateRun(config, data);
+    if (interactive && (config.recipe === "dcr" || config.recipe === "revocation"))
+      throw new Error(
+        "--login is for MCP baselines/comparisons; DCR and paired revocation use supplied tokens",
+      );
+    // Validate comparison credentials before initiating browser consent or registering a client.
+    token(process.env, config.comparisonTokenEnv);
     const baseline = config.baseline
       ? reportSchema.parse(JSON.parse(read(resolve(dirname(resolve(target)), config.baseline))))
       : undefined;
     const file = output(required("out"));
+    const runEnv = { ...process.env };
     try {
-      const result = await run(config, proof, data, nodeTransport(), process.env, baseline);
+      if (interactive && config.tokenEnv)
+        runEnv[config.tokenEnv] = await login(
+          config.target,
+          oauthOptionsSchema.parse(config.oauth ?? {}),
+        );
+      const result = await run(config, data, nodeTransport(), runEnv, baseline);
       file.write(json(result));
       console.log(
         values.json
@@ -203,6 +245,7 @@ async function main(): Promise<number> {
       );
       return result.conclusion === "inconclusive" ? 2 : 0;
     } finally {
+      if (config.tokenEnv) delete runEnv[config.tokenEnv];
       file.close();
     }
   }

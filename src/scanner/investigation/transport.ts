@@ -10,6 +10,8 @@ export interface Request {
   headers?: Record<string, string>;
   body?: unknown;
   rpcId?: number;
+  /** OAuth only: form bodies and discovery challenge headers stay in process memory. */
+  oauth?: boolean;
 }
 export interface Response {
   status: number | null;
@@ -17,6 +19,7 @@ export interface Response {
   session?: string;
   authError?: "invalid_token" | "insufficient_scope" | "invalid_request";
   hasScopeChallenge?: boolean;
+  wwwAuthenticate?: string;
   error?: "network" | "timeout" | "too-large" | "redirect" | "invalid-response" | "refused";
 }
 export type Transport = (input: Request) => Promise<Response>;
@@ -86,7 +89,10 @@ export function authSummary(
  */
 export function nodeTransport(timeoutMs = 10_000, maxBytes = 262_144): Transport {
   return async (input) => {
-    const url = new URL(endpoint(input.url));
+    const url = new URL(input.url);
+    const checked = new URL(url);
+    if (input.oauth) checked.search = "";
+    endpoint(checked.href);
     if (
       isIP(url.hostname) ||
       url.hostname.includes(":") ||
@@ -94,7 +100,12 @@ export function nodeTransport(timeoutMs = 10_000, maxBytes = 262_144): Transport
       /\.(?:localhost|local|internal|lan|home\.arpa)$/i.test(url.hostname)
     )
       throw new Error("a public DNS hostname is required");
-    const body = input.body === undefined ? undefined : JSON.stringify(input.body);
+    const body =
+      input.body === undefined
+        ? undefined
+        : input.oauth && typeof input.body === "string"
+          ? input.body
+          : JSON.stringify(input.body);
     if (body && Buffer.byteLength(body) > maxBytes)
       throw new Error("request body exceeds byte limit");
     return new Promise<Response>((resolve) => {
@@ -125,7 +136,9 @@ export function nodeTransport(timeoutMs = 10_000, maxBytes = 262_144): Transport
             ...(body === undefined
               ? {}
               : {
-                  "Content-Type": "application/json",
+                  "Content-Type": input.oauth
+                    ? (input.headers?.["content-type"] ?? "application/json")
+                    : "application/json",
                   "Content-Length": String(Buffer.byteLength(body)),
                 }),
           },
@@ -139,14 +152,15 @@ export function nodeTransport(timeoutMs = 10_000, maxBytes = 262_144): Transport
           }
           const summary = authSummary(res.headers["www-authenticate"]);
           const base: Response = { status, ...summary };
+          if (input.oauth && res.headers["www-authenticate"])
+            base.wwwAuthenticate = res.headers["www-authenticate"];
           const session = res.headers["mcp-session-id"];
           if (typeof session === "string" && /^[\x21-\x7e]{1,1024}$/.test(session))
             base.session = session;
           // Error/notification bodies cannot provide operation success and may contain secrets.
           if (
             status === null ||
-            status < 200 ||
-            status >= 300 ||
+            (!input.oauth && (status < 200 || status >= 300)) ||
             status === 202 ||
             input.method === "DELETE"
           ) {
@@ -155,6 +169,11 @@ export function nodeTransport(timeoutMs = 10_000, maxBytes = 262_144): Transport
             return;
           }
           const type = res.headers["content-type"]?.split(";")[0]?.trim().toLowerCase();
+          if (input.oauth && status >= 400 && type !== "application/json") {
+            res.destroy();
+            finish(base);
+            return;
+          }
           if (type !== "application/json" && type !== "text/event-stream") {
             res.destroy();
             finish({ ...base, error: "invalid-response" });

@@ -1,125 +1,111 @@
 # Investigating authorization behavior
 
-`pnpm investigate` helps a contributor plan a manual investigation, run a small set of controlled
-probes, save evidence and record a reviewed observation. Run it from the repository root with
-Node 22+ and `pnpm install`. `pnpm investigate --help` is the command reference.
+`pnpm investigate` runs local, human-operated checks and records reviewed atlas findings.
+Use Node 22+ and `pnpm install` in the repository root. The scheduled `pnpm scan` stays passive.
 
-The existing `pnpm scan` remains the passive metadata scanner. The new command never runs in
-the nightly job, is not exposed by the website, and never publishes findings automatically.
-
-## Run a local manual investigation
-
-The human handles login and browser consent using an existing OAuth client, supplies the test
-tokens, chooses the checks, and reviews the findings. The CLI executes those checks and saves
-evidence. It does not keep client credentials, refresh tokens or a persistent authenticated
-connection. The scheduled scanner continues to inspect public metadata only.
-
-Create an editable baseline configuration for a listed server or a new endpoint:
+## Start with one command
 
 ```sh
-pnpm investigate init figma --out .investigations/figma.json
-pnpm investigate init https://lab.example.com/mcp --out .investigations/lab.json
+pnpm investigate check figma --recipe invalid-token --out .investigations/figma.json
+# Or a server that is not in the atlas yet:
+pnpm investigate check https://provider.example/mcp --recipe invalid-token \
+  --out .investigations/provider.json
 ```
 
-Choose one configuration, describe your test account/scopes in `context`, and select the
-operation. Follow the owner-proof and token setup below, then run it:
+The CLI discovers the provider's OAuth metadata, uses supplied client information or registers
+a client where supported, and opens your browser. **You log in and consent.** The CLI receives
+the redirect on `http://127.0.0.1:8765/callback`, validates state and issuer, exchanges the code
+using S256 PKCE, and uses the access token to run the check. No copying a token is needed.
+The terminal also prints the authorization URL if opening the browser fails.
+
+For `invalid-token`, the CLI first verifies an authenticated `tools/list`, then repeats the
+operation without a token and with an invalid token. The default recipe is `baseline`, which
+only establishes authenticated access. `check` supports these two recipes; configurations
+below expose other operations and comparisons. Review each report before recording a finding.
+
+No domain proof, hosted challenge file, investigation plan or provider-domain access is
+required. Run checks only against accounts/endpoints you are permitted to test. The CLI stays
+local; it does not schedule investigations or publish results.
+
+## Provider-specific client setup
+
+The CLI uses the official `@modelcontextprotocol/client` OAuth helpers. It supports a
+preregistered client, a supplied Client ID Metadata Document URL when the AS supports it,
+or Dynamic Client Registration when advertised. A provider may require client approval or
+preregistration; an ordinary user account does not remove that provider requirement.
 
 ```sh
-pnpm investigate run .investigations/lab.json \
-  --proof .investigations/proof.json --out .investigations/before.json
+pnpm investigate check https://provider.example/mcp --client-id YOUR_CLIENT_ID \
+  --scope 'tools:read' --out .investigations/baseline.json
 ```
 
-Start with the baseline, then copy/edit the configuration for the comparison you need. Review
-the report and use `record --write` below to append your finding. `init` only writes a local
-configuration; it makes no network requests or changes to the atlas. The ownership requirement
-applies to all active recipes, even when you have a vendor account and a valid access token.
+Configure the client with redirect URI `http://127.0.0.1:8765/callback`. Use
+`--callback-port 8766` to select another local port (and register that redirect URI). A
+confidential client can use `--client-secret-env LETSAUTH_CLIENT_SECRET`; the value comes from
+your environment, never a command-line argument. Alternatively, supply
+`--client-metadata-url https://your-client.example/oauth.json`; its metadata must authorize the
+same callback. This is your OAuth client's metadata, not a file on the MCP provider's domain.
 
-## Optional investigation checklist
+Explicit `--scope` overrides the challenge scope; otherwise the SDK uses the advertised scope
+selection. The browser shows the requested consent. The callback listener binds only to
+127.0.0.1, times out after five minutes, and closes after success or failure. Run the CLI on the
+machine with your browser, or arrange a local port forward for a remote development environment.
+
+Tokens, client secrets, PKCE verifier and registration details stay in process memory and are
+not written to reports or a credential store. A later run logs in again (the browser/provider
+may reuse its existing session). DCR creates a test client; the CLI prints its unique name for
+cleanup through the provider UI. Supply a preregistered client to avoid creating one per run.
+
+## Configure other checks
+
+For a different MCP operation or a token comparison, start with an editable configuration:
 
 ```sh
-pnpm investigate list
-pnpm investigate plan figma --out .investigations/figma-plan.json
-pnpm investigate plan https://lab.example.com/mcp --json
-pnpm scan figma --json
+pnpm investigate init figma --out .investigations/check.json
+pnpm investigate run .investigations/check.json --login --out .investigations/report.json
 ```
 
-Plans resolve server IDs and requirement citations from the shared dataset. They include active
-recipes, prerequisites and questions for documentation/source review. `--revision` selects a
-recorded MCP authorization revision; the default is the dataset's current revision. A plan is
-a checklist, not an executable configuration. `init`, `list`, `plan`, `challenge` and `record`
-make no network requests. You can skip planning and proceed directly to configuration and execution.
-
-If you do not control a public vendor endpoint, use the plan to inspect its documentation or
-source and record your findings. A directory claim is not observed behavior. Leave a requirement
-`unknown` when there is insufficient evidence. There is no ownership-bypass switch.
-
-## Prove control of the endpoint
-
-The constitution requires owner control for active probes. Generate a random challenge:
-
-```sh
-pnpm investigate challenge https://lab.example.com/mcp \
-  --out .investigations/proof.json
-```
-
-Serve that exact JSON at `https://lab.example.com/.well-known/letsauth-investigation.json` with
-HTTP 200 and `Content-Type: application/json`. The proof binds the exact endpoint URL and expires
-in one hour. Keep the local file for `--proof`, and remove the hosted file after testing. Hosting
-the file authorizes the local operator's configured probes on that endpoint for that interval.
-Use a dedicated test account/tenant and inspect the operation before running it.
-
-Each run checks the proof before sending credentials or protocol messages. DCR requires a new
-proof for the registration endpoint **on the authorization server's origin**. Control of an MCP
-server does not establish control of its third-party identity provider. This is an operator
-guardrail, not identity certification or a public authorization service.
-
-Only public DNS names over HTTPS/443 are supported. Credentials, query strings and fragments in
-endpoint URLs are rejected. DNS is checked in socket lookup and pinned to the returned public
-address. Private, loopback and translation/tunnelling addresses are refused. Redirects are never
-followed, even within an origin. Each request has a 10-second total deadline and 256 KiB response
-limit; no retries or bulk active mode. Oversized streams and network failures stay inconclusive.
-
-## Obtain credentials and establish a baseline
-
-Use the provider's existing OAuth client to log in and consent. Check its authorization-code
-flow uses S256 PKCE, state, the correct issuer, redirect URI and resource. If investigating the
-flow itself, record the client version, requested/granted scopes, issuer and resource, and a
-redacted sequence of outcomes. The CLI does not open a browser, redeem authorization codes,
-store refresh tokens or implement a separate OAuth client. Opaque tokens are supported.
-
-Load a short-lived test access token into an environment variable through your local secret
-manager or a hidden shell prompt (Bash example):
-
-```sh
-read -r -s -p 'Test access token: ' LETSAUTH_TOKEN; printf '\n'
-export LETSAUTH_TOKEN
-```
-
-Do not put the token in a configuration file, shell argument, evidence note or Git. Configure
-the **name** of the environment variable. Save `.investigations/baseline.json`:
+`init` accepts a server ID or any supported HTTPS URL. Edit `recipe`, `context` and `request`.
+Optional `oauth` fields configure the login: `clientId`, `clientSecretEnv`, `clientMetadataUrl`,
+`scope`, and `callbackPort`. `--login` obtains the baseline token and uses it in memory for
+`tokenEnv`; it never sets or overwrites your shell environment.
 
 ```json
 {
   "version": 1,
-  "recipe": "baseline",
-  "target": "https://lab.example.com/mcp",
-  "context": "Test tenant, normal OAuth login; this account may list tools.",
+  "recipe": "invalid-token",
+  "target": "https://provider.example/mcp",
+  "context": "Test account authorized to list tools; investigating invalid bearer handling.",
   "tokenEnv": "LETSAUTH_TOKEN",
+  "oauth": { "scope": "tools:read" },
   "request": { "method": "tools/list", "params": {} }
 }
 ```
 
+For scope/audience comparisons you currently supply the second, deliberately different token
+through `comparisonTokenEnv`. `--login` acquires only the baseline token. Choose the baseline's
+OAuth client/scopes to match the controlled comparison; do not let two different client
+registrations confound the comparison. Revocation testing reuses a previously supplied token,
+so `--login` is rejected for that recipe. DCR tests have their own registration configuration.
+
+If you already have a token, omit `--login` and supply the named environment variable. In Bash:
+
 ```sh
-pnpm investigate run .investigations/baseline.json \
-  --proof .investigations/proof.json --out .investigations/before.json
+read -r -s -p 'Test access token: ' LETSAUTH_TOKEN; printf '\n'
+export LETSAUTH_TOKEN
+pnpm investigate run .investigations/check.json --out .investigations/report.json
 ```
 
-The generated configuration includes `"server"` for a listed ID; a new URL has no server ID.
-When writing configurations yourself, add `"server": "<listed-id>"` only for that exact endpoint.
-Add `"revision": "2025-11-25"` if you need a particular authorization revision. Network protocol
-support is separately pinned to MCP Streamable HTTP **2025-11-25**. A different negotiated
-protocol is inconclusive; legacy SSE and stdio are not supported. JSON and SSE responses to
-Streamable HTTP POSTs are supported, with matching JSON-RPC IDs. Interrupted SSE is not retried.
+The generated configuration includes `server` for a listed ID; a new URL has no server ID.
+Add `revision` when assessing a specific recorded authorization revision. The measurement
+transport is pinned to MCP Streamable HTTP **2025-11-25**, with JSON and SSE responses. Legacy
+SSE/stdio and a different negotiated protocol remain inconclusive/unsupported by this runner.
+
+Requests use public HTTPS/443 endpoints, pinned DNS resolution, no redirects, a 10-second
+request deadline and a 256 KiB response limit. OAuth discovery/registration/token endpoints may
+be on the provider's separate authorization-server origin; resource tokens are sent only to
+the configured MCP endpoint. Measurements never silently reauthenticate or refresh a rejected
+token, because doing so would change the condition being tested. No bulk active mode.
 
 Each token gets a fresh initialization, initialized notification and the configured operation.
 Session and protocol headers are carried only within that session; an assigned session is
@@ -184,7 +170,7 @@ refresh-token reuse are separate manual investigations. Continued access can ref
 lifetime or propagation rather than a violation. See [RFC 7009](https://www.rfc-editor.org/rfc/rfc7009).
 There is currently no dedicated atlas feature for this recipe, so no automatic feature mapping.
 
-For DCR, use a separate configuration and proof:
+For a standalone DCR measurement, use a separate configuration:
 
 ```json
 {
@@ -274,6 +260,14 @@ Submit the new server and its observations together in the data PR. `init` does 
 public listing or infer access/auth classifications from a single successful operation.
 
 Exit codes: **0** completed (including behavior needing review), **1** invalid input or failed
-owner control, **2** inconclusive measurement. `--json` on list/plan/run supports agent use.
+login, **2** inconclusive measurement. `--json` on list/plan/check/run supports structured output;
+interactive login instructions go to stderr.
 Use a new output filename for each run, retain paired reports for revocation, unset token
-environment variables when finished, remove owner proof and clean up created clients/test state.
+environment variables when finished, and clean up created clients/test state.
+
+## Optional recipe checklist
+
+`pnpm investigate list` lists the built-in recipes. `pnpm investigate plan <server-id|url>`
+combines those recipes with the repository's feature definitions and specification citations.
+It is just a checklist: no network access, no generated test logic, and no prerequisite for
+`check` or `run`. Use it when you want guidance for a broader manual investigation.

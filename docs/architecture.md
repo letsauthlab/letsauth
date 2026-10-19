@@ -133,7 +133,7 @@ one place: a Scaleway Serverless Job in an EU region, every night, from the imag
 builds. A run writes observations and opens one pull request; nothing on the site triggers a
 scan. [`scanner.md`](scanner.md) has the request list, the grade and the job.
 
-Contributors can also run `pnpm investigate` locally for manual investigations and owner-controlled
+Contributors can also run `pnpm investigate` locally for manual investigations and human-operated
 active probes. Its network code lives under `src/scanner/investigation/`, is never imported by
 the site or nightly runner, and saves private evidence reports. Only manually reviewed
 observations enter the shared dataset. [`investigations.md`](investigations.md) documents this

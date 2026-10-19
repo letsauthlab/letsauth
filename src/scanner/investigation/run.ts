@@ -5,10 +5,7 @@ import {
   citations,
   configSchema,
   digest,
-  PROOF_PATH,
   PROTOCOL,
-  type Proof,
-  proofSchema,
   type Report,
   recipes,
   redact,
@@ -24,28 +21,6 @@ export function token(env: NodeJS.ProcessEnv, name: string | undefined): string 
   if (!value || value.length < 8 || value.length > 8192 || !/^[A-Za-z0-9._~+/-]+=*$/.test(value))
     throw new Error("required token environment variable is missing or not a valid bearer value");
   return value;
-}
-
-export async function verifyControl(
-  proof: Proof,
-  target: string,
-  send: Transport,
-  now = Date.now(),
-): Promise<void> {
-  const remaining = Date.parse(proof.expiresAt) - now;
-  if (proof.target !== target || remaining <= 0 || remaining > 3_600_000)
-    throw new Error("owner proof must match the exact target and expire within one hour");
-  const response = await send({ url: new URL(PROOF_PATH, target).href, method: "GET" });
-  const remote = proofSchema.safeParse(response.json);
-  if (
-    response.error ||
-    response.status !== 200 ||
-    !remote.success ||
-    digest(remote.data) !== digest(proof)
-  )
-    throw new Error(
-      "owner control could not be verified at the fixed well-known URL; no active requests sent",
-    );
 }
 
 function sample(label: string, stage: string, r: Response, id?: number): Sample {
@@ -179,20 +154,10 @@ export function validateBaseline(
   return b;
 }
 
-export async function run(
-  config: Config,
-  proofInput: Proof,
-  data: Dataset,
-  send: Transport,
-  env: NodeJS.ProcessEnv = process.env,
-  baseline?: Report,
-): Promise<Report> {
-  const c = configSchema.parse(config);
-  const proof = proofSchema.parse(proofInput);
-  const started = Date.now();
+export function validateRun(c: Config, data: Dataset): void {
   if (Buffer.byteLength(JSON.stringify(c.request ?? c.registration)) > 260_000)
     throw new Error("configured operation/registration exceeds the request byte limit");
-  const refs = citations(data, recipes[c.recipe].feature, c.revision);
+  citations(data, recipes[c.recipe].feature, c.revision);
   if (c.server) {
     const server = data.servers.find((s) => s.id === c.server);
     if (!server || server.withdrawn || server.transport !== "streamable-http")
@@ -202,6 +167,19 @@ export async function run(
         "target differs from the listed server URL; omit server for an independent lab endpoint",
       );
   }
+}
+
+export async function run(
+  config: Config,
+  data: Dataset,
+  send: Transport,
+  env: NodeJS.ProcessEnv = process.env,
+  baseline?: Report,
+): Promise<Report> {
+  const c = configSchema.parse(config);
+  validateRun(c, data);
+  const started = Date.now();
+  const refs = citations(data, recipes[c.recipe].feature, c.revision);
   const bearer = token(env, c.tokenEnv);
   const comparison = token(env, c.comparisonTokenEnv);
   if (comparison && comparison === bearer)
@@ -210,10 +188,8 @@ export async function run(
     c.recipe === "revocation"
       ? validateBaseline(c, baseline, bearer as string, started)
       : undefined;
-  await verifyControl(proof, c.target, send, started);
   const active: Transport = async (input) => {
-    if (input.url !== c.target || Date.now() >= Date.parse(proof.expiresAt))
-      return { status: null, error: "refused" };
+    if (input.url !== c.target) return { status: null, error: "refused" };
     return send(input);
   };
   const samples: Sample[] = [];

@@ -26,8 +26,8 @@ front page and advertises the lab; keep working notes out of it.
 - `pnpm check:append-only` — fails if an existing observation entry was edited or removed.
 - `pnpm scan <url>|<server-id>|--all [--write]` — the passive scanner (`docs/scanner.md`);
   `--write` appends observations.
-- `pnpm investigate --help` — local manual investigations and owner-controlled active recipes
-  (`docs/investigations.md`). Tokens stay in environment variables; observations require review.
+- `pnpm investigate --help` — local manual investigations and human-operated active recipes
+  (`docs/investigations.md`). OAuth tokens stay in memory; supplied tokens use environment variables. Observations require review.
 
 ## Conventions
 
@@ -38,8 +38,8 @@ front page and advertises the lab; keep working notes out of it.
   revision and section, and the diagram, the step list and the token views are all rendered from
   the one definition. A toggle is its own static page; one toggle at a time.
 - `src/scanner/` is the only code that may contact a server, through `pnpm scan` (run
-  by the scheduled job or a contributor) or contributor-only `pnpm investigate run` with owner
-  proof; the site build never imports anything that fetches. Investigation recipes never run nightly.
+  by the scheduled job or a contributor) or contributor-only `pnpm investigate check` / `run`;
+  the site build never imports anything that fetches. Investigation recipes never run nightly.
   There is no on-demand scanning for visitors. Seed data is `vendor-claim` or `manual`; scanner
   cells arrive by pull request.
 - One token system: `src/styles/tokens.css`. Components use tokens, never literal colours.

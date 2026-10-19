@@ -1,42 +1,37 @@
-# Manual investigation CLI
+# Local manual investigation CLI
 
 Help a maintainer turn unknown atlas cells into reproducible, reviewed observations.
-`pnpm investigate` is a local contributor tool; it is never imported by the site or nightly job.
+The scheduled scanner remains passive. The contributor runs this CLI locally against listed
+servers or explicit third-party MCP URLs, using accounts/endpoints they are permitted to test.
+Domain ownership is not required; there is no hosted ownership challenge.
 
 ## User stories and acceptance criteria
 
-1. Initialize an editable baseline configuration from a server ID or any HTTPS endpoint.
-   List recipes and optionally generate a checklist for a listed server or explicit HTTPS endpoint.
-   Plans resolve feature references and citations from the shared dataset, identify prerequisites,
-   and include manual procedures for OAuth acquisition and documentation/source review.
-2. Run bounded, explicit active probes: authenticated baseline, missing/invalid token, wrong
-   audience, insufficient scope, access after manual revocation, and one DCR attempt.
-   Token comparisons require a successful baseline. Reports describe observations, never infer
-   full conformance from one sample. Transport errors, malformed responses and protocol errors
-   remain inconclusive. No automatic atlas status is assigned.
-3. Before sending credentials or protocol messages, verify an expiring, endpoint-bound owner
-   challenge at the endpoint's origin. Registration requires control of the AS origin itself.
-   Never follow redirects, discover additional active targets, retry, or run active probes nightly.
-4. Capture a versioned JSON evidence report with timestamps, recipe, citations, configuration
-   digest, request stages, HTTP status and bounded semantic outcomes. Never persist response
-   bodies, credential values, session IDs, raw headers or DCR client secrets.
-5. Preview a manual observation from a reviewed evidence note; writing requires `--write`.
-   Validate schema and cross-references before appending. Explicit feature, revision, status,
-   observer and evidence are required/resolved. Reports do not automatically become verdicts.
-6. Provide machine-readable output, strict arguments, useful help, deterministic network-free
-   tests and exit codes (0 completed, 1 invalid input/control failure, 2 inconclusive probe).
+1. `check <server-id|url>` handles OAuth discovery, client registration when available, browser
+   launch, loopback callback and PKCE code exchange, then runs a baseline or invalid-token check.
+   The human completes browser login and consent. Support preregistered clients and supplied
+   CIMD URLs; explain provider registration restrictions without pretending account access is enough.
+2. `init` and `run --login` support configurable operations/recipes. Existing access tokens can
+   still be supplied through named environment variables. Scope/audience comparisons currently
+   require a deliberately acquired second token. Revocation requires the same prior token.
+3. OAuth uses the official MCP client SDK. Validate state, issuer and resource binding; pin
+   discovery state across the callback; require S256. The loopback listener has a timeout and
+   closes on all outcomes. Tokens/client secrets are memory-only, never CLI arguments or reports.
+4. Run bounded explicit baseline, invalid-token, audience, scope, revocation and DCR checks.
+   Compare only after operation-level baseline success. Network/protocol errors are inconclusive.
+   Measurement requests never refresh, reauthenticate or silently change a comparison token.
+5. Capture versioned evidence with timestamps, recipe/citations, digests, request stages,
+   statuses and bounded outcomes. No raw bodies, tokens, session IDs or credential error text.
+6. `record` validates and previews manual observations; only `--write` appends. The operator
+   chooses a status and evidence. URL-based MCP reports can be attached after listing the exact
+   endpoint. No unrelated-server or unbound AS-report mapping; observations stay append-only.
+7. `list` and `plan` are optional guidance from fixed recipes and shared dataset citations.
+   They never fetch or generate executable code. No plan/config required for `check`.
 
 ## Scope boundaries
 
-Streamable HTTP with JSON and SSE responses; no legacy SSE or stdio client. OAuth login, consent,
-token acquisition and revocation are guided manual steps with an existing client/provider UI.
-The CLI never stores a login session or implements a second OAuth client. Scope and audience
-tokens must be acquired with controlled differences; decoding a JWT is not verification.
-Revocation has a separate before/after workflow and measures access after an operator action;
-it does not assert universal immediate revocation or automatically map to an atlas feature.
-Operations may create state (DCR, initialization, explicitly configured tool calls); plans and
-documentation identify cleanup. No bulk active mode. Existing passive scanner behavior is intact.
-
-URL-based MCP reports remain usable after the exact endpoint is added as a server. Recording
-requires that server entry and matching feature/revision; unrelated endpoints and unbound AS
-registration reports cannot be attached. Plans are optional, not a prerequisite for execution.
+Local Streamable HTTP investigation only, with JSON/SSE responses and protocol 2025-11-25.
+No scheduler integration, hosted scanner, login service or persistent credential vault.
+Provider restrictions may require preregistration. DCR creates a client and requires cleanup.
+Source/documentation review remains necessary for properties not observable from requests.
+All measurements require interpretation; none automatically assert universal conformance.

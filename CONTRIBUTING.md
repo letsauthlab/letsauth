@@ -58,7 +58,7 @@ What every code change keeps true:
 - Every feature, cell and grade cites a spec revision and section; the build fails on a dangling
   citation.
 - `src/scanner/` is the only code that contacts a server, through passive `pnpm scan` or local
-  owner-controlled `pnpm investigate run` (see `docs/investigations.md`). The site build never
+  human-operated `pnpm investigate check` / `run` (see `docs/investigations.md`). The site build never
   imports anything that fetches, and active investigations never run in the nightly job.
 - `pnpm check` passes before a push. It runs data validation, lint, typecheck, unit tests and
   the build.

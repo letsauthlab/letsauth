@@ -32,6 +32,7 @@
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
+    "@modelcontextprotocol/client": "2.3.1",
     "astro": "^7.3.8",
     "astro-pagefind": "^2.0.1",
     "svelte": "^5.57.2",

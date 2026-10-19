@@ -44,6 +44,31 @@ afterEach(() => {
 });
 
 describe("active HTTPS transport", () => {
+  it("sends OAuth form bodies unchanged and returns challenge headers only in OAuth mode", async () => {
+    const body = "code=private-code&code_verifier=private-verifier";
+    const pending = nodeTransport()({
+      url: "https://issuer.example.com/token?tenant=demo",
+      method: "POST",
+      oauth: true,
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body,
+    });
+    expect(req.end).toHaveBeenCalledWith(body);
+    expect(requestOptions.headers).toMatchObject({
+      "Content-Type": "application/x-www-form-urlencoded",
+    });
+    const res = respond(400, {
+      "content-type": "application/json",
+      "www-authenticate": 'Bearer scope="tools:read"',
+    });
+    res.emit("data", Buffer.from('{"error":"invalid_grant","error_description":"private"}'));
+    res.emit("end");
+    expect(await pending).toMatchObject({
+      status: 400,
+      json: { error: "invalid_grant" },
+      wwwAuthenticate: 'Bearer scope="tools:read"',
+    });
+  });
   it("validates DNS in socket lookup and returns exactly the pinned public address", async () => {
     const pending = nodeTransport()({ url: "https://lab.example.com/mcp", method: "GET" });
     const cb = vi.fn();

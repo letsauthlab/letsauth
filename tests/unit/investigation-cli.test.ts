@@ -34,15 +34,28 @@ describe("investigation CLI", { timeout: 30_000 }, () => {
     expect(Object.keys(JSON.parse(cli(["list", "--json"]).stdout))).toContain("revocation");
     expect(cli(["list", "--write"]).status).toBe(1);
     expect(cli(["list", "extra"]).status).toBe(1);
+    expect(cli(["challenge", "https://example.com/mcp"]).status).toBe(1);
+    expect(cli(["run", "unused.json", "--proof", "unused.json"]).stderr).toContain(
+      "Unknown option",
+    );
   });
-  it("creates a private owner proof and never overwrites an existing file", () => {
-    const path = join(dir, "proof.json");
-    expect(cli(["challenge", "https://lab.example.com/mcp", "--out", path]).status).toBe(0);
-    expect(statSync(path).mode & 0o777).toBe(0o600);
-    const text = readFileSync(path, "utf8");
-    expect(JSON.parse(text).nonce).toMatch(/^[a-f0-9]{64}$/);
-    expect(cli(["challenge", "https://lab.example.com/mcp", "--out", path]).status).toBe(1);
-    expect(readFileSync(path, "utf8")).toBe(text);
+  it("starts direct URL checks without a config and cleans output on failed login setup", () => {
+    const out = join(dir, "report.json");
+    const result = cli([
+      "check",
+      "https://new.example.com/mcp",
+      "--client-id",
+      "test",
+      "--client-secret-env",
+      "MISSING_TEST_CLIENT_SECRET_UNIQUE",
+      "--out",
+      out,
+    ]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Client secret environment variable");
+    expect(existsSync(out)).toBe(false);
+    expect(cli(["check", "figma", "--callback-port", "NaN", "--out", out]).status).toBe(1);
+    expect(existsSync(out)).toBe(false);
   });
   it("writes an offline plan and validates revision selection", () => {
     const path = join(dir, "plan.json");
@@ -101,15 +114,13 @@ describe("investigation CLI", { timeout: 30_000 }, () => {
   });
   it("fails closed on malformed config and missing token before creating a report", () => {
     const config = join(dir, "config.json");
-    const proof = join(dir, "proof.json");
     const report = join(dir, "report.json");
     writeFileSync(config, '{"token":"secret-raw-value","recipe":"oops"}');
-    const args = ["run", config, "--proof", proof, "--out", report];
+    const args = ["run", config, "--out", report];
     const invalid = cli(args);
     expect(invalid.status).toBe(1);
     expect(invalid.stderr).not.toContain("secret-raw-value");
     expect(existsSync(report)).toBe(false);
-    expect(cli(["challenge", "https://lab.example.com/mcp", "--out", proof]).status).toBe(0);
     writeFileSync(
       config,
       JSON.stringify({
