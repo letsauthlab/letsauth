@@ -2,8 +2,12 @@
 
 letsauth.eu is a static site served by a Bunny CDN pull zone whose origin is a Bunny Storage
 Zone in an EU region (constitution VII). `.github/workflows/deploy.yml` runs after the CI workflow
-has passed on `main` (a red commit is never deployed), builds that commit, uploads `dist/` with
-the Bunny Storage API (one HTTP `PUT` per file) and purges the pull zone. No third-party deploy action is involved.
+has passed for a push to this repository's `main`, builds that commit, reconciles `dist/` with
+the Bunny Storage API and purges the pull zone. Fork and pull-request CI runs cannot deploy.
+Both production workflows serialize deployments and compare the triggering SHA with current
+`main` before checkout or secret-bearing steps, so delayed CI cannot roll production back.
+The scanner builds each eligible main snapshot; a per-commit path filter could miss changes
+from a skipped older deployment.
 
 ## One-time setup in Bunny
 
@@ -38,8 +42,22 @@ call alone. Rotate both from the Bunny dashboard and update the secrets.
 
 ## Manual deploy
 
-`workflow_dispatch` runs the same workflow from the Actions tab. To deploy from a laptop, run
-`pnpm build` and the two shell steps in the workflow with the same environment variables.
+`workflow_dispatch` runs the same workflow from the Actions tab, restricted to the current
+`main` commit. To deploy from a laptop, run `pnpm build`, then
+`node --import tsx scripts/deploy-storage.ts` and the purge step with the same environment variables.
+
+## Reconciliation and withdrawals
+
+The publisher lists remote files before mutating storage, uploads all built files, then deletes
+obsolete site files, and writes `.deployment-manifest.json` last. A failed upload does not trigger
+cleanup. The first release also cleans the historic site namespaces (including `mcp/`, `atlas/`,
+`scanner/`, `_astro/` and `pagefind/`); later releases track every published path through the
+manifest. Unrelated files outside those namespaces are preserved. Reserve the site namespaces
+for this deployment. Invalid manifests or listings abort the publish rather than guessing.
+
+Withdrawal therefore removes obsolete JSON exports as well as changing the HTML. Cache purge
+runs only after successful reconciliation. Storage updates are not atomic: interrupted uploads
+or deletions can leave a mixed release until the next successful deployment.
 
 ## Moved pages and renamed ids
 

@@ -12,67 +12,62 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Build and upload to Bunny
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
     env:
       PUBLIC_PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
     steps:
-      - uses: actions/checkout@v7
+      - name: Verify this is still the current main commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          current=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$current" = "$EXPECTED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping stale deployment of $EXPECTED_SHA; main is $current"
+          fi
+      - if: steps.current.outputs.deploy == 'true'
+        uses: actions/checkout@v7
         with:
           # deploy exactly the commit CI tested
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
+      - if: steps.current.outputs.deploy == 'true'
+        uses: pnpm/action-setup@v6
+      - if: steps.current.outputs.deploy == 'true'
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - name: Upload dist/ to the storage zone
+      - if: steps.current.outputs.deploy == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.current.outputs.deploy == 'true'
+        run: pnpm build
+      - name: Publish and reconcile the storage zone
+        if: steps.current.outputs.deploy == 'true'
         env:
           BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
           BUNNY_STORAGE_HOST: ${{ secrets.BUNNY_STORAGE_HOST }}
-        run: |
-          set -euo pipefail
-          : "${BUNNY_STORAGE_KEY:?missing}" "${BUNNY_STORAGE_ZONE:?missing}" "${BUNNY_STORAGE_HOST:?missing}"
-          # the host is a bare hostname such as storage.bunnycdn.com; keep only that part when a
-          # scheme or a path (such as the zone name) was pasted along with it
-          host="${BUNNY_STORAGE_HOST#https://}"; host="${host#http://}"; host="${host%%/*}"
-          case "$host" in
-            *"$BUNNY_STORAGE_ZONE"*) echo "::warning::BUNNY_STORAGE_HOST contained the zone name; using host '$host'" ;;
-          esac
-          base="https://$host/$BUNNY_STORAGE_ZONE"
-
-          # Probe once before uploading: listing the zone root needs the same key as a PUT.
-          code=$(curl -sS -o /dev/null -w "%{http_code}" -H "AccessKey: $BUNNY_STORAGE_KEY" "$base/" || echo "000")
-          case "$code" in
-            200) echo "storage zone reachable: $host/$BUNNY_STORAGE_ZONE" ;;
-            401) echo "::error::Bunny storage returned 401: BUNNY_STORAGE_KEY is not the password of zone '$BUNNY_STORAGE_ZONE'"; exit 1 ;;
-            404) echo "::error::Bunny storage returned 404: zone '$BUNNY_STORAGE_ZONE' does not exist on host '$host' (check BUNNY_STORAGE_ZONE and BUNNY_STORAGE_HOST)"; exit 1 ;;
-            000) echo "::error::could not connect to https://$host (check BUNNY_STORAGE_HOST)"; exit 1 ;;
-            *)   echo "::error::Bunny storage returned $code when listing $base/"; exit 1 ;;
-          esac
-
-          cd dist
-          find . -type f | sed 's|^\./||' | sort > ../files.txt
-          echo "uploading $(wc -l < ../files.txt) files to $host/$BUNNY_STORAGE_ZONE"
-          # Storage API: one PUT per file, AccessKey header; 8 uploads in parallel.
-          export BUNNY_STORAGE_KEY base
-          xargs -a ../files.txt -P 8 -I{} sh -c '
-            code=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT \
-              -H "AccessKey: $BUNNY_STORAGE_KEY" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary @"{}" \
-              "$base/{}" || echo "000")
-            case "$code" in 200|201) ;; *) echo "::error::upload failed ($code): {}"; exit 1;; esac'
-          echo "uploaded $(wc -l < ../files.txt) files"
+        run: node --import tsx scripts/deploy-storage.ts
       - name: Purge the pull zone cache
+        if: steps.current.outputs.deploy == 'true'
         env:
           BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
           BUNNY_PULL_ZONE_ID: ${{ secrets.BUNNY_PULL_ZONE_ID }}
