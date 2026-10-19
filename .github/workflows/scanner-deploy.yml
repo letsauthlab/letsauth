@@ -3,7 +3,7 @@ name: Scanner deploy
 # Builds the scanner image and deploys it to Scaleway (constitution VII): the image goes to the
 # Scaleway Container Registry and the Serverless Job definition that runs the nightly scan is
 # pointed at it. Runs after the CI workflow has passed on main (never on a red commit, like the
-# site deploy) when that commit touches the scanner, or by hand. The scan itself never runs on
+# site deploy) for the latest main snapshot, or by hand from main. The scan itself never runs on
 # GitHub; see docs/scanner.md.
 on:
   workflow_run:
@@ -22,7 +22,11 @@ permissions:
 jobs:
   deploy:
     name: Build the image and update the Scaleway job
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -32,28 +36,26 @@ jobs:
       # deploy exactly the commit CI tested
       SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ env.SHA }}
-          fetch-depth: 2
-      - name: Skip unless the commit touches the scanner
-        id: changed
+      - name: Verify this is still the current main commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            echo "deploy=true" >> "$GITHUB_OUTPUT"; exit 0
-          fi
-          # a merge or squash commit's first parent is the previous main, so this diff is the
-          # whole pull request; run the workflow by hand after a direct multi-commit push
-          if git diff --name-only HEAD^1 HEAD -- Dockerfile .dockerignore package.json pnpm-lock.yaml \
-               src/scanner scripts/scan.ts scripts/scan-nightly.ts .github/workflows/scanner-deploy.yml \
-             | grep -q .; then
+          current=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$current" = "$EXPECTED_SHA" ]; then
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=false" >> "$GITHUB_OUTPUT"
-            echo "nothing scanner-related changed in ${SHA}; not deploying"
+            echo "Skipping stale deployment of $EXPECTED_SHA; main is $current"
           fi
-      - if: steps.changed.outputs.deploy == 'true'
+      - if: steps.current.outputs.deploy == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 2
+      - if: steps.current.outputs.deploy == 'true'
         name: Check the configuration
         env:
           NAMESPACE: ${{ vars.SCW_REGISTRY_NAMESPACE }}
@@ -63,17 +65,17 @@ jobs:
           : "${NAMESPACE:?set the repository variable SCW_REGISTRY_NAMESPACE}"
           : "${JOB:?set the repository variable SCW_JOB_DEFINITION_ID}"
           : "${SECRET_KEY:?set the repository secret SCW_SECRET_KEY}"
-      - if: steps.changed.outputs.deploy == 'true'
+      - if: steps.current.outputs.deploy == 'true'
         name: Log in to the Scaleway Container Registry
         run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login "rg.${SCW_REGION}.scw.cloud" -u nologin --password-stdin
-      - if: steps.changed.outputs.deploy == 'true'
+      - if: steps.current.outputs.deploy == 'true'
         name: Build and push the image
         run: |
           set -euo pipefail
           docker build -t "$IMAGE:${SHA}" -t "$IMAGE:latest" .
           docker push "$IMAGE:${SHA}"
           docker push "$IMAGE:latest"
-      - if: steps.changed.outputs.deploy == 'true'
+      - if: steps.current.outputs.deploy == 'true'
         name: Point the Serverless Job at the new image
         uses: scaleway/action-scw@v0
         with:

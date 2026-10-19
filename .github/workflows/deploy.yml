@@ -12,28 +12,55 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Build and upload to Bunny
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
     env:
       PUBLIC_PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
     steps:
-      - uses: actions/checkout@v7
+      - name: Verify this is still the current main commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          current=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$current" = "$EXPECTED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping stale deployment of $EXPECTED_SHA; main is $current"
+          fi
+      - if: steps.current.outputs.deploy == 'true'
+        uses: actions/checkout@v7
         with:
           # deploy exactly the commit CI tested
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
+      - if: steps.current.outputs.deploy == 'true'
+        uses: pnpm/action-setup@v6
+      - if: steps.current.outputs.deploy == 'true'
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - if: steps.current.outputs.deploy == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.current.outputs.deploy == 'true'
+        run: pnpm build
       - name: Upload dist/ to the storage zone
+        if: steps.current.outputs.deploy == 'true'
         env:
           BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
@@ -73,6 +100,7 @@ jobs:
             case "$code" in 200|201) ;; *) echo "::error::upload failed ($code): {}"; exit 1;; esac'
           echo "uploaded $(wc -l < ../files.txt) files"
       - name: Purge the pull zone cache
+        if: steps.current.outputs.deploy == 'true'
         env:
           BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
           BUNNY_PULL_ZONE_ID: ${{ secrets.BUNNY_PULL_ZONE_ID }}

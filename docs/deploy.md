@@ -2,8 +2,12 @@
 
 letsauth.eu is a static site served by a Bunny CDN pull zone whose origin is a Bunny Storage
 Zone in an EU region (constitution VII). `.github/workflows/deploy.yml` runs after the CI workflow
-has passed on `main` (a red commit is never deployed), builds that commit, uploads `dist/` with
-the Bunny Storage API (one HTTP `PUT` per file) and purges the pull zone. No third-party deploy action is involved.
+has passed for a push to this repository's `main`, builds that commit, uploads `dist/` with
+the existing Bunny Storage API uploader and purges the pull zone. Fork and pull-request CI runs cannot deploy.
+Both production workflows serialize deployments and compare the triggering SHA with current
+`main` before checkout or secret-bearing steps, so delayed CI cannot roll production back.
+The scanner builds each eligible main snapshot; a per-commit path filter could miss changes
+from a skipped older deployment.
 
 ## One-time setup in Bunny
 
@@ -38,8 +42,16 @@ call alone. Rotate both from the Bunny dashboard and update the secrets.
 
 ## Manual deploy
 
-`workflow_dispatch` runs the same workflow from the Actions tab. To deploy from a laptop, run
-`pnpm build` and the two shell steps in the workflow with the same environment variables.
+`workflow_dispatch` runs the same workflow from the Actions tab, restricted to the current
+`main` commit.
+
+## Known limitation: withdrawals
+
+The upload-and-purge deployment does not delete files absent from the new build. Removed pages
+and withdrawn JSON exports can therefore remain accessible at their old URLs. Cache purging
+alone does not remove origin files. Until the separate official Bunny Sites migration is complete,
+withdrawals require operator removal of the exact obsolete origin files followed by cache purge.
+Uploads remain non-atomic; this workflow hardening does not claim to fix publication semantics.
 
 ## Moved pages and renamed ids
 
