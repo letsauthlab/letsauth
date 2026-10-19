@@ -1,4 +1,5 @@
-import type { Guard } from "./guard";
+import type { Guard, Resolver } from "./guard";
+import { pinnedRequest } from "./transport";
 import { USER_AGENT } from "./version";
 
 /**
@@ -23,7 +24,8 @@ export type FetchError =
   | "not-json"
   | "too-large"
   | "refused"
-  | "server-error";
+  | "server-error"
+  | "rate-limit";
 
 /**
  * json mode — found: 2xx and a JSON object. absent: a definite answer without one (4xx, or 2xx
@@ -70,6 +72,8 @@ export interface NodeFetcherOptions {
   maxRedirects?: number;
   /** Re-run on every redirect target; the initial URL is guarded by the caller. */
   guard?: Guard;
+  /** DNS answers are validated and pinned to the actual TLS connection. */
+  resolve?: Resolver;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -87,6 +91,7 @@ function classify(err: unknown): { error: FetchError; detail: string } {
   if (e?.name === "TimeoutError" || e?.name === "AbortError")
     return { error: "timeout", detail: "timed out" };
   const code = e?.cause?.code ?? e?.code ?? "";
+  if (code === "REFUSED") return { error: "refused", detail: e.message ?? "refused" };
   if (/CERT|TLS|SSL|EPROTO|UNABLE_TO_VERIFY|DEPTH_ZERO|SELF_SIGNED|HOSTNAME_MISMATCH/i.test(code)) {
     return { error: "tls", detail: code };
   }
@@ -111,7 +116,7 @@ async function readCapped(res: Response, maxBytes: number): Promise<string | und
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
 
-/** Node 22's global fetch, dressed for the scanner. */
+/** A guarded, DNS-pinned HTTPS transport with bounded response reads. */
 export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
   const timeoutMs = options.timeoutMs ?? 10_000;
   const maxBytes = options.maxBytes ?? 1_048_576;
@@ -132,12 +137,15 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
     for (let hop = 0; ; hop += 1) {
       let res: Response;
       try {
-        res = await fetch(url, {
-          method,
-          redirect: "manual",
-          headers,
-          signal: AbortSignal.timeout(timeoutMs),
-        });
+        res = await pinnedRequest(
+          url,
+          {
+            method,
+            headers,
+            signal: AbortSignal.timeout(timeoutMs),
+          },
+          options.resolve,
+        );
       } catch (err) {
         return tag({ url, kind: "error", status: null, ...classify(err) });
       }
@@ -190,14 +198,14 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
         url = next.href;
         continue;
       }
-      if (status >= 500) {
+      if (status === 429 || status >= 500) {
         await res.body?.cancel().catch(() => {});
         return tag({
           url,
           kind: "error",
           status,
           contentType,
-          error: "server-error",
+          error: status === 429 ? "rate-limit" : "server-error",
           detail: `HTTP ${status}`,
         });
       }
@@ -210,7 +218,12 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
         await res.body?.cancel().catch(() => {});
         return { url, kind: "absent", status, contentType };
       }
-      const text = await readCapped(res, maxBytes);
+      let text: string | undefined;
+      try {
+        text = await readCapped(res, maxBytes);
+      } catch (err) {
+        return { url, kind: "error", status, contentType, ...classify(err) };
+      }
       if (text === undefined)
         return {
           url,
@@ -312,13 +325,13 @@ export function recordingFetcher(fixture: Fixture): RecordingFetcher {
         detail: `not followed to ${r.headers?.location ?? "?"}`,
       });
     }
-    if (status >= 500)
+    if (status === 429 || status >= 500)
       return tag({
         url,
         kind: "error",
         status,
         contentType,
-        error: "server-error",
+        error: status === 429 ? "rate-limit" : "server-error",
         detail: `HTTP ${status}`,
       });
     if (mode !== "json")
