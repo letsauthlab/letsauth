@@ -23,8 +23,10 @@
     "typecheck": "astro sync && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "pnpm validate:data && pnpm lint && pnpm typecheck && pnpm test && astro build && pnpm check:links",
-    "check:links": "tsx scripts/check-links.ts"
+    "check": "pnpm validate:data && pnpm lint && pnpm check:prose && pnpm typecheck && pnpm test && astro build && pnpm check:links && pnpm check:budgets",
+    "check:budgets": "tsx scripts/check-budgets.ts",
+    "check:links": "tsx scripts/check-links.ts",
+    "check:prose": "tsx scripts/check-prose.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
