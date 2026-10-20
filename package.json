@@ -24,7 +24,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check": "pnpm validate:data && pnpm lint && pnpm typecheck && pnpm test && astro build && pnpm check:links",
-    "check:links": "tsx scripts/check-links.ts"
+    "check:links": "tsx scripts/check-links.ts",
+    "edge-rules": "tsx scripts/bunny-edge-rules.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

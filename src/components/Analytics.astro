@@ -1,0 +1,26 @@
+---
+// Plausible through the site's own address; src/lib/analytics.ts has the rules.
+import { PLAUSIBLE_EVENT_PATH } from "@/lib/analytics";
+
+interface Props {
+  domain: string;
+  notFound?: boolean;
+}
+
+const { domain, notFound = false } = Astro.props;
+const host = (Astro.site ?? new URL("https://letsauth.eu")).hostname;
+---
+
+<meta
+  name="analytics"
+  data-domain={domain}
+  data-endpoint={PLAUSIBLE_EVENT_PATH}
+  data-host={host}
+  data-not-found={notFound ? "" : undefined}
+/>
+<script>
+  import { readConfig, startAnalytics } from "@/lib/analytics";
+
+  const config = readConfig(document.querySelector<HTMLElement>('meta[name="analytics"]'));
+  if (config) startAnalytics(window, config);
+</script>

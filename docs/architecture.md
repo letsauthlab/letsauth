@@ -141,7 +141,9 @@ scan. [`scanner.md`](scanner.md) has the request list, the grade and the job.
 - The scanner image goes to Scaleway's container registry through
   `.github/workflows/scanner-deploy.yml`, also only after a green CI run.
 - Analytics is Plausible (EU), emitted only when `PUBLIC_PLAUSIBLE_DOMAIN` is set. No cookies
-  that require consent, no other third-party script.
+  that require consent and no third-party script: `src/lib/analytics.ts` posts to `/r/e.json`
+  on letsauth.eu, which a Bunny edge rule forwards to plausible.io. A prerendered page counts
+  only once it is shown. [`deploy.md`](deploy.md) has the proxy setup.
 
 ## Workflow
 

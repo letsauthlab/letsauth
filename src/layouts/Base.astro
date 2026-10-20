@@ -5,6 +5,7 @@ import "@/styles/global.css";
 import fontDisplay from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
 import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
+import Analytics from "@/components/Analytics.astro";
 import BrandLogo from "@/components/BrandLogo.astro";
 import { LAB, LEGAL_LINKS, OPERATOR, REPO } from "@/lib/site";
 
@@ -125,11 +126,7 @@ const nav = [
         if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    {
-      plausibleDomain && (
-        <script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" />
-      )
-    }
+    {plausibleDomain && <Analytics domain={plausibleDomain} notFound={here === "/404.html"} />}
     <slot name="head" />
   </head>
   <body>
