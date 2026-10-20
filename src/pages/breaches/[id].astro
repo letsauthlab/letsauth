@@ -37,7 +37,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
       <p class="lede">{v.summary}</p>
     </header>
 
-    <section class="card facts" aria-label="Facts">
+    <section class="card" aria-label="Facts">
       <dl class="kv">
         <dt>Class</dt>
         <dd><span class="pill accent" data-class={v.class}>{VULNERABILITY_CLASS_LABEL[v.class]}</span></dd>
