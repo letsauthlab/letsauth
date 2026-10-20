@@ -27,7 +27,8 @@
     "check:budgets": "tsx scripts/check-budgets.ts",
     "check:contrast": "tsx scripts/check-contrast.ts",
     "check:links": "tsx scripts/check-links.ts",
-    "check:prose": "tsx scripts/check-prose.ts"
+    "check:prose": "tsx scripts/check-prose.ts",
+    "edge-rules": "tsx scripts/bunny-edge-rules.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

@@ -59,6 +59,26 @@ jobs:
         run: pnpm install --frozen-lockfile
       - if: steps.current.outputs.deploy == 'true'
         run: pnpm build
+      # Before the upload, so the new pages never post to a path the zone does not forward yet.
+      # Opt-in: set the variable BUNNY_SYNC_EDGE_RULES to "true" once `pnpm edge-rules` output
+      # has been reviewed. Analytics posts to the proxy path, so it needs the sync.
+      - name: Sync Bunny edge rules (Plausible proxy)
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          SYNC: ${{ vars.BUNNY_SYNC_EDGE_RULES }}
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+          BUNNY_PULL_ZONE_ID: ${{ secrets.BUNNY_PULL_ZONE_ID }}
+        run: |
+          set -euo pipefail
+          if [ "$SYNC" != "true" ]; then
+            if [ -n "${PUBLIC_PLAUSIBLE_DOMAIN:-}" ]; then
+              echo "::error::PLAUSIBLE_DOMAIN is set but BUNNY_SYNC_EDGE_RULES is not true; without the proxy rule every visit would go uncounted"
+              exit 1
+            fi
+            echo "edge-rule sync is off"
+            exit 0
+          fi
+          pnpm edge-rules --apply
       - name: Upload dist/ to the storage zone
         if: steps.current.outputs.deploy == 'true'
         env:
