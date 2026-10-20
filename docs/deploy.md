@@ -36,9 +36,35 @@ Set these in the repository's `production` environment (Settings → Environment
 | `BUNNY_PULL_ZONE_ID` | secret | Numeric id of the pull zone. |
 | `BUNNY_API_KEY` | secret | Account API key (Account → API), used only for the purge call. |
 | `PLAUSIBLE_DOMAIN` | variable | `letsauth.eu`. When unset, no analytics script is emitted. |
+| `BUNNY_SYNC_EDGE_RULES` | variable | `true` to sync the managed edge rules on every deploy. Required when `PLAUSIBLE_DOMAIN` is set. |
 
 The storage key only grants access to that one zone; the account API key is used for the purge
 call alone. Rotate both from the Bunny dashboard and update the secrets.
+
+## Plausible through letsauth.eu
+
+Pages do not load Plausible's script. `src/lib/analytics.ts`, bundled into each page, posts
+events to `/r/e.json` on letsauth.eu, and a pull zone edge rule forwards that path to
+`https://plausible.io/api/event` with the visitor's IP in `X-Forwarded-For` (without it,
+Plausible sees every visit come from the CDN and its bot filter drops them). The path is neutral
+on purpose: blocklists match `/js/script.js` and `/analytics/`, and it has an extension because
+Bunny answers an extensionless path with a 301 before an edge rule applies
+([Plausible's proxy guide](https://plausible.io/docs/proxy/introduction)).
+
+The rules live in `scripts/lib/bunny-edge-rules.ts`. `pnpm edge-rules` prints them;
+`pnpm edge-rules --apply` (with `BUNNY_API_KEY` and `BUNNY_PULL_ZONE_ID`) syncs them. The deploy
+workflow runs the sync before the upload once `BUNNY_SYNC_EDGE_RULES` is `true`, and fails while
+`PLAUSIBLE_DOMAIN` is set without it, because the pages would post to a path nothing forwards.
+Only rules whose description starts with `[repo] ` are created, updated or deleted; rules made
+by hand in the dashboard, such as the redirects below, are left alone.
+
+The script reports only on the production host, never under automation (Playwright,
+Lighthouse), and not in a browser where `localStorage.plausible_ignore` is `"true"`. It sends a
+pageview when a page is shown: a page prerendered by speculation rules waits for
+`prerenderingchange`, so it counts once if opened and never if not. A page restored from the
+back/forward cache counts again, as with Plausible's own script. It also sends
+`Outbound Link: Click`, `File Download` (the JSON exports) and `404` with a `path` property;
+add those three as custom event goals in the Plausible site settings to see them.
 
 ## Manual deploy
 

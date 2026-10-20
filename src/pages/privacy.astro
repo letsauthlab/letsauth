@@ -62,6 +62,13 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
     <li><strong>Country</strong>, looked up from the IP address, which is then discarded.</li>
   </ul>
   <p>
+    It also records when a link to another site or a data export is followed (the link
+    address), and when a page is not found (its address). Your browser sends these counts to
+    letsauth.eu, and Bunny.net forwards them to Plausible with your IP address, which Plausible
+    uses as described below and does not store. A page your browser loads ahead of time, in case
+    you open it next, is counted only if you do open it.
+  </p>
+  <p>
     To count unique visitors per day without a cookie, Plausible combines the IP address and
     browser identification with a salt that changes every 24 hours and keeps only the resulting
     hash; the salt is deleted, so a visitor cannot be recognised the next day or across sites.
