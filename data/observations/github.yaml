@@ -298,3 +298,143 @@
   observedAt: 2026-10-17T01:18:47Z
   observedBy: scanner@0.3.0
   evidence: https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; all 3 endpoints use https
+- server: github
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp — HTTP 200; resource: https://api.githubcopilot.com/mcp"
+- server: github
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp — HTTP 200; authorization_servers: [https://github.com/login/oauth]"
+- server: github
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [repo, read:org, read:user, user:email, read:packages, write:packages, read:project, project, gist, notifications]"
+- server: github
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location
+- server: github
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.githubcopilot.com/mcp — HTTP 401; WWW-Authenticate resource_metadata: https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp"
+- server: github
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://api.githubcopilot.com/mcp — HTTP 401; WWW-Authenticate: Bearer error="invalid_request", error_description="No access token was provided in this request", resource_metadata="https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp", no scope parameter'
+- server: github
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [repo, read:org, read:user, user:email, read:packages, write:packages, read:project, project, gist, notifications]"
+- server: github
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; issuer: https://github.com/login/oauth equals the issuer the PRM named"
+- server: github
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; issuer: https://github.com/login/oauth"
+- server: github
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; client_id_metadata_document_supported: absent"
+- server: github
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; registration_endpoint: absent"
+- server: github
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: github
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: github
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://github.com/.well-known/oauth-authorization-server/login/oauth — HTTP 200; all 3 endpoints use https
