@@ -117,6 +117,9 @@ builds on, profiles or replaces, in the row of its publishing body.
 
 ## Record an observation
 
+For investigation plans, controlled active checks and a preview-before-append workflow, use
+`pnpm investigate --help`; [`investigations.md`](investigations.md) covers the recipes and evidence.
+
 Append to `data/observations/<server-id>.yaml`; never edit or remove an entry. The newest
 `observedAt` wins; equal timestamps are broken by method strength (`active-scan` over
 `passive-scan` over `manual` over `vendor-claim`). Use `unknown` to record that you looked and

@@ -1,13 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: template (unversioned) → 1.0.0 (initial ratification)
-- Modified principles: none (all seven are new)
-- Added sections: Honesty Tests; Technology Constraints; Development Workflow; Governance
-- Removed sections: none (template placeholders [SECTION_2_NAME] and [SECTION_3_NAME] replaced by
-  Honesty Tests, Technology Constraints and Development Workflow)
-- Templates: .specify/templates/plan-template.md Constitution Check gate is generic and needs no change;
-  spec-template.md and tasks-template.md unchanged
-- Follow-up TODOs: none. Remove this comment when the amendment is merged.
+- Version change: 1.0.0 → 2.0.0
+- Principle III: distinguish passive scheduled scans from local human-operated investigations.
+- Local investigations may use authorized third-party accounts; no endpoint ownership challenge.
+- Contributor documentation and spec 011 updated in this PR. Templates need no changes.
 -->
 # letsauth.eu Constitution
 
@@ -42,9 +38,12 @@ silently re-interpreted against a newer revision. Dates on observations are mand
 The site does not rank vendors, products or servers by anything other than data in the model, and
 the data says how it was obtained. Observations carry a method (manual, vendor-claim,
 passive-scan, active-scan) and evidence. Scanning third-party systems is passive by default:
-public metadata only, no credentials, no authorization flows. Active probes run only against
-systems whose owner has proven control. Unknown is a valid, explicit value; the absence of data
-is never rendered as a failure.
+public metadata only, no credentials, no authorization flows. Scheduled scanning remains passive.
+Active investigations run only through the local contributor CLI, under human control, against endpoints the operator is permitted to test. They may use
+third-party MCP providers and the operator's authorized accounts; proving ownership of the
+provider's domain is not required. Browser login and consent remain with the human; the CLI may
+automate OAuth discovery, registration and token exchange for that local run. Unknown is a valid,
+explicit value; the absence of data is never rendered as a failure.
 
 ### IV. Static First, Open Data
 
@@ -128,4 +127,4 @@ Report in the PR description. MAJOR for a changed or removed principle, MINOR fo
 principle or section, PATCH for wording. Every plan's Constitution Check lists each principle and
 states how the feature complies or justifies the deviation in its Complexity Tracking table.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-13
+**Version**: 2.0.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-19

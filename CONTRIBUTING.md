@@ -57,8 +57,9 @@ What every code change keeps true:
   both themes are checked.
 - Every feature, cell and grade cites a spec revision and section; the build fails on a dangling
   citation.
-- `src/scanner/` is the only code that contacts a server, and only through `pnpm scan`. The site
-  build never imports anything that fetches.
+- `src/scanner/` is the only code that contacts a server, through passive `pnpm scan` or local
+  human-operated `pnpm investigate check` / `run` (see `docs/investigations.md`). The site build never
+  imports anything that fetches, and active investigations never run in the nightly job.
 - `pnpm check` passes before a push. It runs data validation, lint, typecheck, unit tests and
   the build.
 
