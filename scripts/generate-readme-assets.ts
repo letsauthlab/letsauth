@@ -108,7 +108,7 @@ const counts = {
   relations: mapRelations(data).length,
 };
 
-const DISPLAY = `'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif`;
+const DISPLAY = `Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif`;
 const BODY = `Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif`;
 const MONO = `'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace`;
 

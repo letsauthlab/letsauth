@@ -1,8 +1,7 @@
 ---
 import "@/styles/global.css";
-// The three fonts every page paints with, preloaded so text does not reflow when they swap in
+// The two fonts every page paints with, preloaded so text does not reflow when they swap in
 // (the fontsource CSS declares them with font-display: swap; Vite gives both the same hashed URL).
-import fontDisplay from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
 import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
 import BrandLogo from "@/components/BrandLogo.astro";
@@ -108,12 +107,13 @@ const nav = [
     <meta property="og:url" content={canonical.href} />
     <meta property="og:image" content={new URL("/og.png", site).href} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)" />
+    {/* --ground in sRGB: oklch(98.5% 0.003 250) and oklch(21% 0.008 255) (pnpm check:contrast --hex) */}
+    <meta name="theme-color" content="#f9fafc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16191c" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {
-      [fontBody, fontDisplay, fontMono].map((href) => (
+      [fontBody, fontMono].map((href) => (
         <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
       ))
     }
@@ -625,7 +625,9 @@ const nav = [
       font-size: var(--text-xs);
     }
     .site-nav a {
-      padding: 0.45em 0.35em;
+      /* 13px labels (the type floor) and the wider gutter leave five links little room at
+         320px; space-between hands any spare width back as gaps. */
+      padding: 0.45em 0.15em;
     }
     .site-main {
       padding-block: var(--space-6) var(--space-8);

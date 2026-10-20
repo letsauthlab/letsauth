@@ -29,7 +29,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-body);
   line-height: var(--leading-body);
   font-feature-settings: "kern", "liga", "calt", "ss01";
   -webkit-font-smoothing: antialiased;
@@ -93,8 +93,8 @@ a:hover {
 
 :focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  outline-offset: 3px;
+  border-radius: var(--radius-focus);
 }
 
 ::selection {

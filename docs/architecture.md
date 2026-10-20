@@ -113,8 +113,9 @@ tests/
   and the scan report. Every page reads fully without JavaScript, and no page ships more than
   150 kB of compressed JavaScript.
 - **One design token system** in `src/styles/tokens.css`. Colours are OKLCH pairs resolved with
-  `light-dark()`; `data-theme` only flips `color-scheme`. Type is Bricolage Grotesque for
-  headlines, Geist for text, Geist Mono for ids and code, all self-hosted.
+  `light-dark()`; `data-theme` only flips `color-scheme`. Type is Geist for headlines and
+  text, Geist Mono for ids and code, both self-hosted. `docs/design.md` lists the tokens, their
+  contrast and the motion catalogue.
 - **Status glyphs** are one component, `StatusCell`: observed statuses are filled chips, a recorded
   `unknown` is a dashed ring, a derived status (no observation) a faint dot. The distinction is
   the honesty of the atlas and is kept everywhere.

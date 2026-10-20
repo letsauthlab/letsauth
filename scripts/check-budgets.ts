@@ -40,7 +40,7 @@ const LIMITS = {
     enforce: false,
     label: "Inline SVG per page",
   },
-  fontsPreloaded: { max: 60 * KB, enforce: false, label: "Preloaded fonts" },
+  fontsPreloaded: { max: 60 * KB, enforce: true, label: "Preloaded fonts" },
 } satisfies Record<string, Limit>;
 
 const dist = resolve(process.argv[2] ?? "dist");

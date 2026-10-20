@@ -41,8 +41,7 @@ front page and advertises the lab; keep working notes out of it.
   cells arrive by pull request.
 - One token system: `src/styles/tokens.css`. Components use tokens, never literal colours.
   Colours are OKLCH pairs resolved with `light-dark()`; `data-theme` only flips `color-scheme`.
-  Type is Bricolage Grotesque for headlines, Geist for text and interface, Geist Mono for ids
-  and code. Shared surfaces (`.card`, `.button`, `.pill`, `.level`, `.kv`, `.field`, `.crumbs`,
+  Type is Geist for headlines, text and interface, Geist Mono for ids and code. Shared surfaces (`.card`, `.button`, `.pill`, `.level`, `.kv`, `.field`, `.crumbs`,
   `.eyebrow`) live in `src/styles/global.css`; reuse them before adding page-local styles.
 - One page skeleton: every page is a left-aligned `.wrap` column that opens with
   `header.page-head` (eyebrow, h1, `.lede`, optional `.page-head__meta` line, optional

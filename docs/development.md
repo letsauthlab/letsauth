@@ -35,7 +35,8 @@ set.
 | `pnpm test:e2e` | Playwright against `astro preview`; run `pnpm build` first. |
 | `pnpm check:prose [--fail]` | Lists copy in `src/pages`, `src/components`, `README.md` and `docs/*.md` that breaks the mechanical voice rules (banned words, em dash). Warns only until the content pass; `--fail` makes hits fail. |
 | `pnpm check:budgets [dir]` | Byte budgets over `dist/` (gzip level 6): CSS, JavaScript, HTML, inline SVG and preloaded fonts per page, plus each island. Run `pnpm build` first. |
-| `pnpm check` | validate:data, lint, check:prose, typecheck, unit tests, build, check:links, check:budgets. Must pass before a push. |
+| `pnpm check:contrast [--markdown] [--hex]` | WCAG contrast of the colour pairs in `src/styles/tokens.css`, light and dark; fails under 4.5:1 for text and 3:1 for glyphs and outlines. `--markdown` prints the table in `docs/design.md`, `--hex` the sRGB value of each token. |
+| `pnpm check` | validate:data, lint, check:prose, check:contrast, typecheck, unit tests, build, check:links, check:budgets. Must pass before a push. |
 | `pnpm scan <url>\|<server-id>\|--all [--write]` | The passive scanner. The only command that contacts a third-party server; `--write` appends observations. See [`scanner.md`](scanner.md). |
 
 ## Tests
@@ -51,14 +52,16 @@ set.
   above 95 on the listed pages, and no more than 150 kB of script per page. Run them locally with
   `pnpm build && pnpm exec lhci autorun --config=lighthouserc.json`.
 - **Byte budgets** (`pnpm check:budgets`) print one row per page and the size of each island,
-  then a summary. Only the constitution's line fails the run today: no page over 150 kB of
-  compressed JavaScript. The tighter targets of the redesign plan
+  then a summary. Two limits fail the run today: the constitution's 150 kB of compressed
+  JavaScript per page, and 60 kB of preloaded fonts per page. The other targets of the redesign plan
   (`specs/016-visual-redesign/plan.md`, section 7) are listed as reported; each one has an
   `enforce` flag in `LIMITS` at the top of `scripts/check-budgets.ts`, and the package that meets
   a target flips it.
 - **Prose lint** (`pnpm check:prose`) reports the voice rules a script can check, from section 8
   of the same plan. It prints `file:line: rule: text` and exits 0. Set `FAIL` in
   `scripts/check-prose.ts` to make it a gate.
+- **Contrast** (`pnpm check:contrast`) recomputes every colour pair in `docs/design.md` from the
+  OKLCH values in `tokens.css` and fails when one is under its minimum.
 
 ## Screenshot baselines
 
