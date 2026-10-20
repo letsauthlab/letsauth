@@ -368,3 +368,143 @@
   observedAt: 2026-10-18T01:18:14Z
   observedBy: scanner@0.3.0
   evidence: https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; all 5 endpoints use https
+- server: zapier
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; resource: https://mcp.zapier.com/api/mcp/mcp"
+- server: zapier
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; authorization_servers: [https://mcp.zapier.com]"
+- server: zapier
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; scopes_supported: [openid, profile, email]"
+- server: zapier
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; found at the path-aware location
+- server: zapier
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.zapier.com/api/mcp/mcp — HTTP 401; WWW-Authenticate: Bearer realm="Zapier MCP", error="invalid_token", no resource_metadata parameter'
+- server: zapier
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.zapier.com/api/mcp/mcp — HTTP 401; WWW-Authenticate: Bearer realm="Zapier MCP", error="invalid_token", no scope parameter'
+- server: zapier
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; scopes_supported without offline_access: [openid, profile, email]"
+- server: zapier
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.zapier.com equals the issuer the PRM named"
+- server: zapier
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.zapier.com"
+- server: zapier
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: absent"
+- server: zapier
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://mcp.zapier.com/api/v1/oauth/register"
+- server: zapier
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: absent"
+- server: zapier
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: zapier
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; all 5 endpoints use https

@@ -298,3 +298,143 @@
   observedAt: 2026-10-17T01:18:47Z
   observedBy: scanner@0.3.0
   evidence: https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; all 8 endpoints use https
+- server: vercel
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.vercel.com/.well-known/oauth-protected-resource — HTTP 200; resource: https://mcp.vercel.com/"
+- server: vercel
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.vercel.com/.well-known/oauth-protected-resource — HTTP 200; authorization_servers: [https://vercel.com]"
+- server: vercel
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.vercel.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported: [openid]"
+- server: vercel
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.vercel.com/.well-known/oauth-protected-resource — HTTP 200; not at either well-known location (root HTTP 200, root HTTP 200)
+- server: vercel
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.vercel.com/ — HTTP 401; WWW-Authenticate resource_metadata: https://mcp.vercel.com/.well-known/oauth-protected-resource"
+- server: vercel
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.vercel.com/ — HTTP 401; WWW-Authenticate: Bearer error="invalid_token", error_description="No authorization provided", resource_metadata="https://mcp.vercel.com/.well-known/oauth-protected-resource", no scope parameter'
+- server: vercel
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.vercel.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported without offline_access: [openid]"
+- server: vercel
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://vercel.com equals the issuer the PRM named"
+- server: vercel
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://vercel.com"
+- server: vercel
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: absent"
+- server: vercel
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://api.vercel.com/login/oauth/register"
+- server: vercel
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: absent"
+- server: vercel
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: vercel
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; all 8 endpoints use https

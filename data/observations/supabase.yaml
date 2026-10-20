@@ -298,3 +298,143 @@
   observedAt: 2026-10-17T01:18:47Z
   observedBy: scanner@0.3.0
   evidence: https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: supabase
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; resource: https://mcp.supabase.com/mcp"
+- server: supabase
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; authorization_servers: [https://api.supabase.com]"
+- server: supabase
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [organizations:read, projects:read, projects:write, database:write, database:read, analytics:read, secrets:read, edge_functions:read, edge_functions:write, environment:read, environment:write, storage:re…"
+- server: supabase
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location
+- server: supabase
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/mcp — HTTP 401; WWW-Authenticate resource_metadata: https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp"
+- server: supabase
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.supabase.com/mcp — HTTP 401; WWW-Authenticate: Bearer resource_metadata="https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp", no scope parameter'
+- server: supabase
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [organizations:read, projects:read, projects:write, database:write, database:read, analytics:read, secrets:read, edge_functions:read, edge_functions:write, environment:read, enviro…"
+- server: supabase
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://api.supabase.com equals the issuer the PRM named"
+- server: supabase
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://api.supabase.com"
+- server: supabase
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: absent"
+- server: supabase
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://api.supabase.com/platform/oauth/apps/register"
+- server: supabase
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: supabase
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256, plain]"
+- server: supabase
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https

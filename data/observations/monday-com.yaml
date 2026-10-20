@@ -338,3 +338,143 @@
   observedAt: 2026-10-17T01:18:47Z
   observedBy: scanner@0.3.0
   evidence: https://auth.monday.com/.well-known/oauth-authorization-server/mcp — HTTP 200; all 5 endpoints use https
+- server: monday-com
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; resource: https://mcp.monday.com/mcp; expected exactly https://mcp.monday.com"
+- server: monday-com
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; not at either well-known location (path-aware HTTP 404, root HTTP 200)
+- server: monday-com
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.monday.com/users/sign_in — HTTP 401; WWW-Authenticate: absent, no resource_metadata parameter"
+- server: monday-com
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.monday.com/users/sign_in — HTTP 401; WWW-Authenticate: absent, no scope parameter"
+- server: monday-com
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)
+- server: monday-com
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.monday.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (challenge without resource_metadata)

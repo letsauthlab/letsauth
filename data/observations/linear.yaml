@@ -288,3 +288,143 @@
   observedAt: 2026-10-17T01:18:47Z
   observedBy: scanner@0.3.0
   evidence: https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; all 4 endpoints use https
+- server: linear
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-protected-resource/mcp — HTTP 200; resource: https://mcp.linear.app/mcp"
+- server: linear
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-protected-resource/mcp — HTTP 200; authorization_servers: [https://mcp.linear.app]"
+- server: linear
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [read, write]"
+- server: linear
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.linear.app/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location
+- server: linear
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/mcp — HTTP 401; WWW-Authenticate resource_metadata: https://mcp.linear.app/.well-known/oauth-protected-resource/mcp"
+- server: linear
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/mcp — HTTP 401; WWW-Authenticate scope: [read, write]"
+- server: linear
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [read, write]"
+- server: linear
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.linear.app equals the issuer the PRM named"
+- server: linear
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.linear.app"
+- server: linear
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: true"
+- server: linear
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://mcp.linear.app/register"
+- server: linear
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: linear
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: linear
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-20T01:18:42Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.linear.app/.well-known/oauth-authorization-server — HTTP 200; all 4 endpoints use https
