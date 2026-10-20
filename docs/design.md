@@ -154,6 +154,7 @@ in `--font-body`, so the swap does not move text.
 | `--h1` | `clamp(2rem, 1.5rem + 2vw, 3.1rem)` | data page headings |
 | `--h2` | `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)` | section headings |
 | `--h3` | 1.2rem | sub-sections |
+| `--lede` | `clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem)` | the lede under a page heading |
 | `--tracking-tight`, `--tracking-snug` | -0.03em, -0.015em | headings |
 
 Headings are weight 600 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
@@ -175,6 +176,33 @@ The spacing scale has a 4px base, `--space-1` (0.25rem) to `--space-9` (7rem). `
 Rules are 1px `--rule`; accent rails (findings, notices, the current step) are 2px. There are no
 shadows: elevation is `--ground-2` and a rule. Focus is a 2px solid `--signal` outline, offset
 3px.
+
+### Shared surfaces
+
+`src/styles/global.css` declares the cascade layers
+`reset, tokens, base, layout, components, product, utilities, print` (`tokens.css` is imported
+into `tokens`). Astro's scoped component and page styles are unlayered, so they win over every
+layer without extra specificity; a layout that styles slotted content puts those rules in
+`layout`. The shared surfaces, all in `components` unless noted:
+
+| Class | What it is |
+| --- | --- |
+| `.eyebrow`, `.lede`, `.facts`, `.page-head`, `.page-foot`, `.crumbs` (`layout`) | the page skeleton |
+| `.panel` | `--ground-2`, 10px radius, no border: a block of a different kind (an aside, an address) |
+| `.rows` (`.rows__head`, `.rows__title`, `.rows__meta`, `.rows.numbered`) | a list as hairline rows, title left, meta right |
+| `.plate` | the frame of a data view: 1px `--rule`, 14px radius, `--ground-2` |
+| `.explainer` | dashed `--rule-strong` outline: the part the reader operates |
+| `.button`, `.button.quiet`, `.button.small` | one filled action per view; every other one quiet |
+| `.chip`, `.chip.signal`, `.chip.threat` | a short label in a pill outline |
+| `.level`, `.level-MUST` and the others | mono level text; outlined only inside a table |
+| `.kv`, `.steps`, `.callout`, `.notice`, `.notice.caution`, `.field` | key/value grid, numbered rows, outlined remark, warning rail, form control |
+| `.transcript`, `.timeline` | the scanner's request ladder, dated entries on a rail |
+
+Deprecated until WP10: `.card` and `.cards` (now flat `--ground-2` panels; move to `.panel` or
+`.rows`), `.pill` and `.pill.accent` (aliases of `.chip` and `.chip.signal`) and
+`.button.primary` (a plain `.button` is the filled one).
+
+The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
 
 ## 5. Motion
 

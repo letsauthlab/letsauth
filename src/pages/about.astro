@@ -87,14 +87,14 @@ const principles = [
   </p>
 
   <h2>What we build</h2>
-  <ul class="cards" role="list">
+  <ul class="rows" role="list">
     {
       products.map((p) => (
-        <li class="card">
-          <h3 class="product__head">
-            {p.href ? <a href={p.href}>{p.name}</a> : <span>{p.name}</span>}
-            <span class:list={["pill", { accent: p.status === "Live" }]}>{p.status}</span>
-          </h3>
+        <li>
+          <div class="rows__head">
+            <h3 class="rows__title">{p.href ? <a href={p.href}>{p.name}</a> : p.name}</h3>
+            <span class:list={["chip", { signal: p.status === "Live" }]}>{p.status}</span>
+          </div>
           <p>{p.text}</p>
         </li>
       ))
@@ -106,11 +106,11 @@ const principles = [
   </p>
 
   <h2>How we work</h2>
-  <ul class="cards principles" role="list">
+  <ul class="rows" role="list">
     {
       principles.map((p) => (
-        <li class="card">
-          <h3>{p.name}</h3>
+        <li>
+          <h3 class="rows__title">{p.name}</h3>
           <p set:html={p.text} />
         </li>
       ))
@@ -134,7 +134,7 @@ const principles = [
   </p>
 
   <Fragment slot="aside">
-    <div class="card">
+    <div class="panel">
       <p class="eyebrow">Contact</p>
       <p class="contact">
         <a href={OPERATOR.site} rel="noopener">{OPERATOR.name}</a><br />
@@ -146,25 +146,9 @@ const principles = [
 </Document>
 
 <style>
-  .product__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
-  .product__head a {
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .product__head a:hover {
-    color: var(--accent);
-  }
-  .principles {
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  }
   .contact {
     margin: 0;
-    font-size: var(--text-sm);
+    font-size: var(--small);
     line-height: 1.8;
   }
   .contact a {
@@ -172,6 +156,6 @@ const principles = [
     text-decoration: none;
   }
   .contact a:hover {
-    color: var(--accent);
+    color: var(--signal);
   }
 </style>

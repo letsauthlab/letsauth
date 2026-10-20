@@ -75,7 +75,7 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
         <li class="stack__row">
           <div class="stack__what">
             <span class="stack__label">{s.what}</span>
-            <span class:list={["pill", { accent: s.where === "eu" }]}>{WHERE[s.where]}</span>
+            <span class:list={["chip", { signal: s.where === "eu" }]}>{WHERE[s.where]}</span>
           </div>
           <div class="stack__detail">
             <strong>{s.who}</strong>
@@ -109,22 +109,15 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
     padding: 0;
     margin: 0 0 var(--space-4);
     list-style: none;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm), var(--inset-highlight);
-    overflow: hidden;
+    border-top: 1px solid var(--rule);
   }
   .stack__row {
     display: grid;
     grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr);
     gap: var(--space-2) var(--space-5);
     margin: 0;
-    padding: var(--space-4);
-    border-bottom: 1px solid var(--line-soft);
-  }
-  .stack__row:last-child {
-    border-bottom: 0;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--rule);
   }
   .stack__what {
     display: flex;
@@ -133,20 +126,18 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
     gap: var(--space-2);
   }
   .stack__label {
-    font-size: var(--text-2xs);
+    font-size: var(--tiny);
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    color: var(--ink-muted);
+    color: var(--ink-2);
   }
   .stack__detail {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    font-size: var(--text-sm);
+    font-size: var(--small);
   }
   .stack__detail span {
-    color: var(--ink-muted);
+    color: var(--ink-2);
   }
   @media (max-width: 40rem) {
     .stack__row {

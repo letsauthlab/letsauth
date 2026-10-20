@@ -67,6 +67,7 @@
   --h1: clamp(2rem, 1.5rem + 2vw, 3.1rem);
   --h2: clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem);
   --h3: 1.2rem;
+  --lede: clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem);
   --leading-tight: 1.05;
   --leading-snug: 1.3;
   --leading-body: 1.7;
@@ -87,7 +88,9 @@
   --gutter: clamp(1.25rem, 4vw, 3rem);
   --measure: 66ch;
   --page-max: 78rem;
-  --header-h: 3.75rem;
+  /* what sticky content must clear at the top of the viewport: nothing, since the header
+     scrolls away with the page (016 WP2) */
+  --header-h: 0rem;
 
   /* shape: one radius for controls and panels, a larger one for the diagram plate */
   --radius: 10px;
@@ -126,7 +129,7 @@
   --text-xs: var(--tiny);
   --text-sm: var(--small);
   --text-md: 1rem;
-  --text-lg: clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem);
+  --text-lg: var(--lede);
   --text-xl: var(--h2);
   --text-2xl: var(--h1);
   --radius-sm: 6px;
@@ -161,13 +164,6 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-}
-
-/* The full wordmark occupies its own row above navigation on phones. */
-@media (max-width: 40rem) {
-  :root {
-    --header-h: 6.25rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

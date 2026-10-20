@@ -46,9 +46,9 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
         )}
       </p>
       <p class="page-head__meta">
-        <a class="button small" href={`/mcp/servers/${server.id}/`}>Atlas page</a>
-        {!server.withdrawn && <a class="button small" href={`/mcp/servers/${server.id}/scan.json`}>JSON</a>}
-        <a class="button small" href={`${repo}/blob/main/data/observations/${server.id}.yaml`} rel="noopener">Data file</a>
+        <a class="button small quiet" href={`/mcp/servers/${server.id}/`}>Atlas page</a>
+        {!server.withdrawn && <a class="button small quiet" href={`/mcp/servers/${server.id}/scan.json`}>JSON</a>}
+        <a class="button small quiet" href={`${repo}/blob/main/data/observations/${server.id}.yaml`} rel="noopener">Data file</a>
       </p>
     </header>
 

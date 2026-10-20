@@ -22,7 +22,7 @@ onMount(() => {
   bar.setAttribute("aria-label", "Step through the chain");
   const prev = document.createElement("button");
   prev.type = "button";
-  prev.className = "button small";
+  prev.className = "button small quiet";
   prev.textContent = "Previous";
   const next = document.createElement("button");
   next.type = "button";

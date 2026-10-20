@@ -213,13 +213,13 @@ const classes = [
                 )}
               </p>
               <p class="actions">
-                <a class="button small" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
+                <a class="button small quiet" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
                   Contribute a correction
                 </a>
-                <a class="button small" href={`${issueBase}&title=${encodeURIComponent(`Withdraw ${server.name}`)}&server=${server.id}&kind=withdraw`} rel="noopener">
+                <a class="button small quiet" href={`${issueBase}&title=${encodeURIComponent(`Withdraw ${server.name}`)}&server=${server.id}&kind=withdraw`} rel="noopener">
                   Withdraw this server
                 </a>
-                <a class="button small" href={`/mcp/servers/${server.id}.json`}>JSON</a>
+                <a class="button small quiet" href={`/mcp/servers/${server.id}.json`}>JSON</a>
               </p>
             </section>
           </div>
