@@ -432,37 +432,6 @@
     padding: var(--space-4) var(--space-5);
   }
 
-  /*
-   * a quiet disclosure: one small button with a caret that opens a panel below it, as the
-   * matrix and the standards map fold their filters (follow-up 4)
-   */
-  .disclosure > summary {
-    list-style: none;
-  }
-  .disclosure > summary::-webkit-details-marker {
-    display: none;
-  }
-  .disclosure > summary::after {
-    content: "";
-    width: 0.4em;
-    height: 0.4em;
-    margin: -0.2em 0 0 0.15em;
-    border: solid currentColor;
-    border-width: 0 1.5px 1.5px 0;
-    rotate: 45deg;
-  }
-  .disclosure[open] {
-    order: 2;
-    flex-basis: 100%;
-  }
-  .disclosure[open] > summary::after {
-    margin-top: 0.2em;
-    rotate: -135deg;
-  }
-  .disclosure[open] > summary + * {
-    margin: var(--space-3) 0 0;
-  }
-
   /* the live count and the apply/reset pair in a filter toolbar */
   .actions {
     display: flex;

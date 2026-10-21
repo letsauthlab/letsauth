@@ -97,7 +97,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   </header>
 
   <div class="matrix-bar">
-    <details class="disclosure filters" id="matrix-filter-panel">
+    <details class="filters" id="matrix-filter-panel">
       <summary class="button small quiet">Filter and group</summary>
       <form id="matrix-filters" class="toolbar explainer" method="get" action={hrefFor(revisionId)}>
         <div class="field search">
@@ -287,6 +287,32 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     align-items: center;
     gap: var(--space-3) var(--space-5);
     margin: var(--space-6) 0 var(--space-4);
+  }
+  .filters > summary {
+    list-style: none;
+  }
+  .filters > summary::-webkit-details-marker {
+    display: none;
+  }
+  .filters > summary::after {
+    content: "";
+    width: 0.4em;
+    height: 0.4em;
+    margin: -0.2em 0 0 0.15em;
+    border: solid currentColor;
+    border-width: 0 1.5px 1.5px 0;
+    rotate: 45deg;
+  }
+  .filters[open] {
+    order: 2;
+    flex-basis: 100%;
+  }
+  .filters[open] > summary::after {
+    margin-top: 0.2em;
+    rotate: -135deg;
+  }
+  .filters[open] > .toolbar {
+    margin: var(--space-3) 0 0;
   }
   .matrix-bar__count {
     margin: 0 0 0 auto;

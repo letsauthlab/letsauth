@@ -1,15 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
-  COL_GAP,
+  buildForest,
   dependencyDepths,
-  LANE_LABEL_W,
+  type Layout,
   layoutGraph,
-  layoutStacked,
-  NODE_W,
-  PAD,
-  STACK_W,
+  type TreeNode,
   wrapLabel,
 } from "@/lib/graph";
+import { BODY_ORDER } from "@/lib/standards";
 import type { Relation, Spec } from "@/schema";
 
 function spec(id: string, body: Spec["body"], date = "2020-01-01"): Spec {
@@ -68,7 +66,10 @@ describe("dependencyDepths", () => {
 });
 
 describe("layoutGraph", () => {
-  const layout = layoutGraph(specs, relations);
+  let layout: Layout;
+  beforeAll(async () => {
+    layout = await layoutGraph(specs, relations);
+  });
   const node = (id: string) => {
     const n = layout.nodes.find((p) => p.spec.id === id);
     if (!n) throw new Error(`node ${id} not placed`);
@@ -79,27 +80,31 @@ describe("layoutGraph", () => {
     expect(layout.nodes.map((n) => n.spec.id).sort()).toEqual(specs.map((s) => s.id).sort());
   });
 
-  it("puts a spec one column right of what it builds on", () => {
-    const col = (id: string) => (node(id).x - PAD - LANE_LABEL_W) / (NODE_W + COL_GAP);
-    expect(col("oauth")).toBe(0);
-    expect(col("pkce")).toBe(1);
-    expect(col("mcp")).toBe(2);
+  it("puts a spec in a column right of what it builds on", () => {
+    expect(node("pkce").x).toBeGreaterThan(node("oauth").x);
+    expect(node("oidc").x).toBeGreaterThan(node("oauth").x);
+    expect(node("mcp").x).toBeGreaterThan(node("pkce").x);
+    expect(node("mcp").x).toBeGreaterThan(node("oidc").x);
     expect(layout.columns).toBe(3);
   });
 
-  it("groups nodes into body lanes in BODY_ORDER with no overlap", () => {
-    expect(layout.lanes.map((l) => l.body)).toEqual([
-      "ietf-oauth",
-      "openid",
-      "mcp",
-      "a2a",
-      "vendor",
-    ]);
-    for (const n of layout.nodes) {
-      const lane = layout.lanes.find((l) => l.body === n.spec.body);
-      expect(lane).toBeDefined();
-      expect(n.y).toBeGreaterThanOrEqual(lane?.y ?? Number.NaN);
-      expect(n.y + n.h).toBeLessThanOrEqual((lane?.y ?? 0) + (lane?.height ?? 0));
+  it("groups each column by body in BODY_ORDER, behind one band per run, with no overlap", () => {
+    for (const band of layout.bands) {
+      const inside = layout.nodes.filter(
+        (n) =>
+          n.x >= band.x &&
+          n.x + n.w <= band.x + band.width &&
+          n.y >= band.y &&
+          n.y + n.h <= band.y + band.height,
+      );
+      expect(inside.length).toBeGreaterThan(0);
+      for (const n of inside) expect(n.spec.body).toBe(band.body);
+    }
+    const columns = new Set(layout.nodes.map((n) => n.x));
+    for (const x of columns) {
+      const column = layout.nodes.filter((n) => n.x === x).sort((a, b) => a.y - b.y);
+      const order = column.map((n) => BODY_ORDER.indexOf(n.spec.body));
+      expect(order).toEqual([...order].sort((a, b) => a - b));
     }
     for (const a of layout.nodes) {
       for (const b of layout.nodes) {
@@ -120,62 +125,63 @@ describe("layoutGraph", () => {
   it("starts and ends each edge on a node border and marks symmetric ones", () => {
     expect(layout.edges).toHaveLength(relations.length);
     for (const e of layout.edges) {
-      const m = e.d.match(/^M([\d.]+),([\d.]+) C.* ([\d.]+),([\d.]+)$/);
-      expect(m, e.d).not.toBeNull();
-      const [, x0, y0, x3, y3] = m?.map(Number) ?? [];
+      const numbers = e.d.match(/[\d.]+/g)?.map(Number) ?? [];
+      const [x0, y0] = numbers;
+      const x3 = numbers[numbers.length - 2];
+      const y3 = numbers[numbers.length - 1];
       const onBorder = (p: { x?: number; y?: number }, n: typeof e.from) =>
-        (p.x === n.x || p.x === n.x + n.w) && (p.y ?? -1) >= n.y && (p.y ?? -1) <= n.y + n.h;
-      expect(onBorder({ x: x0, y: y0 }, e.from)).toBe(true);
-      expect(onBorder({ x: x3, y: y3 }, e.to)).toBe(true);
+        ((p.x === n.x || p.x === n.x + n.w) && (p.y ?? -1) >= n.y && (p.y ?? -1) <= n.y + n.h) ||
+        ((p.y === n.y || p.y === n.y + n.h) && (p.x ?? -1) >= n.x && (p.x ?? -1) <= n.x + n.w);
+      expect(onBorder({ x: x0, y: y0 }, e.from), e.d).toBe(true);
+      expect(onBorder({ x: x3, y: y3 }, e.to), e.d).toBe(true);
       expect(e.symmetric).toBe(e.relation.type === "competes-with");
       expect(e.mid.x).toBeGreaterThan(0);
     }
   });
 
-  it("is deterministic", () => {
-    const again = layoutGraph([...specs].reverse(), [...relations].reverse());
+  it("routes dependencies as polylines and cross links as curves", () => {
+    const dep = layout.edges.find((e) => e.relation.type === "builds-on");
+    const ref = layout.edges.find((e) => e.relation.type === "references");
+    expect(dep?.d).toMatch(/^M[\d.]+,[\d.]+( L[\d.]+,[\d.]+)+$/);
+    expect(ref?.d).toContain(" C");
+  });
+
+  it("is deterministic", async () => {
+    const again = await layoutGraph([...specs].reverse(), [...relations].reverse());
     expect(JSON.stringify(again.nodes.map((n) => [n.spec.id, n.x, n.y]))).toBe(
       JSON.stringify(layout.nodes.map((n) => [n.spec.id, n.x, n.y])),
     );
   });
 });
 
-describe("layoutStacked", () => {
-  const layout = layoutStacked(specs, relations);
-  const node = (id: string) => {
-    const n = layout.nodes.find((p) => p.spec.id === id);
-    if (!n) throw new Error(`node ${id} not placed`);
+describe("buildForest", () => {
+  const forest = buildForest(specs, relations);
+  const flat = (nodes: TreeNode[]): TreeNode[] => nodes.flatMap((n) => [n, ...flat(n.children)]);
+  const all = flat(forest.trees);
+  const find = (id: string) => {
+    const n = all.find((t) => t.spec.id === id);
+    if (!n) throw new Error(`${id} not in the forest`);
     return n;
   };
 
-  it("places every spec once in one column, lanes in BODY_ORDER", () => {
-    expect(layout.nodes.map((n) => n.spec.id).sort()).toEqual(specs.map((s) => s.id).sort());
-    expect(new Set(layout.nodes.map((n) => n.x))).toEqual(new Set([PAD]));
-    expect(layout.lanes.map((l) => l.body)).toEqual([
-      "ietf-oauth",
-      "openid",
-      "mcp",
-      "a2a",
-      "vendor",
-    ]);
-    const ys = layout.nodes.map((n) => n.y);
-    expect(new Set(ys).size).toBe(ys.length);
+  it("roots the trees at specs that nothing builds on, and lists the rest once", () => {
+    expect(forest.trees.map((t) => t.spec.id)).toEqual(["oauth"]);
+    expect(forest.standalone.map((s) => s.id)).toEqual(["a2a", "island"]);
+    expect(all.map((n) => n.spec.id).sort()).toEqual(["mcp", "oauth", "oidc", "pkce"]);
   });
 
-  it("orders a lane by dependency depth, so a builds-on chain reads downwards", () => {
-    expect(node("oauth").y).toBeLessThan(node("pkce").y);
+  it("nests a spec under its deepest parent and names the others", () => {
+    expect(find("pkce").depth).toBe(1);
+    expect(find("pkce").parentType).toBe("builds-on");
+    const mcp = find("mcp");
+    expect(mcp.depth).toBe(2);
+    expect(find("pkce").children.map((c) => c.spec.id)).toContain("mcp");
+    expect(mcp.alsoParents.map((p) => [p.spec.id, p.type])).toEqual([["oidc", "profiles"]]);
   });
 
-  it("keeps every arc inside the drawing's width, on the nodes' right edge", () => {
-    expect(layout.width).toBe(STACK_W);
-    expect(layout.edges).toHaveLength(relations.length);
-    for (const e of layout.edges) {
-      const numbers = e.d.match(/[\d.]+/g)?.map(Number) ?? [];
-      const xs = numbers.filter((_, i) => i % 2 === 0);
-      expect(xs[0]).toBe(e.from.x + e.from.w);
-      expect(xs.at(-1)).toBe(e.to.x + e.to.w);
-      expect(e.mid.x).toBeLessThan(STACK_W - PAD / 2);
-    }
+  it("ignores cross links for the shape", () => {
+    expect(all.some((n) => n.spec.id === "a2a")).toBe(false);
+    expect(find("mcp").children).toEqual([]);
   });
 });
 

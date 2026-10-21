@@ -1,16 +1,15 @@
 ---
-import MaturityTag from "@/components/MaturityTag.astro";
 import StandardsMap from "@/components/StandardsMap.astro";
 import StandardsMapIsland from "@/components/StandardsMap.svelte";
+import StandardsOutline from "@/components/StandardsOutline.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
-import { layoutGraph, layoutStacked } from "@/lib/graph";
-import { BODY_LABEL, FAMILY_LABEL, RELATION_LABEL } from "@/lib/labels";
+import { buildForest, layoutGraph } from "@/lib/graph";
 import {
-  currentRevisionOf,
+  buildsOnSpine,
   mapRelations,
-  RELATION_TYPES,
   recentlyRevised,
+  relationsOf,
   specNodes,
   specsByBody,
   withdrawnSpecs,
@@ -19,13 +18,14 @@ import {
 const data = getDataset();
 const nodes = specNodes(data);
 const relations = mapRelations(data);
-const layout = layoutGraph(nodes, relations);
-const stacked = layoutStacked(nodes, relations);
-const groups = specsByBody(nodes);
+const layout = await layoutGraph(nodes, relations);
+const forest = buildForest(nodes, relations);
+const spine = buildsOnSpine(nodes, relations);
 const withdrawn = withdrawnSpecs(data);
-const recent = recentlyRevised(data, 5);
-const bodies = groups.map((g) => g.body);
-const usedTypes = RELATION_TYPES.filter((t) => relations.some((r) => r.type === t));
+const recent = new Map(recentlyRevised(data, 5).map((r) => [r.spec.id, r.revision.date]));
+const recentIds = new Set(recent.keys());
+const bodies = specsByBody(nodes).map((g) => g.body);
+const groupsOf = (id: string) => relationsOf(data, id);
 const repo = "https://github.com/letsauthlab/letsauth";
 ---
 
@@ -44,120 +44,19 @@ const repo = "https://github.com/letsauthlab/letsauth";
         as recorded in the atlas data files. It covers OAuth extensions, workload identity drafts,
         agent protocols, credential formats and EU acts.
       </p>
-      <div class="page-head__meta map-bar">
-        <details class="disclosure" id="map-filter-panel">
-          <summary class="button small quiet">Filter</summary>
-          <form id="map-filters" class="filters explainer" method="get" action="/standards/">
-            <fieldset>
-              <legend>Relation types</legend>
-              {
-                usedTypes.map((t) => (
-                  <label class="check">
-                    <input type="checkbox" name="type" value={t} />
-                    {RELATION_LABEL[t].forward}
-                  </label>
-                ))
-              }
-            </fieldset>
-            <fieldset>
-              <legend>Publishing bodies</legend>
-              {
-                bodies.map((b) => (
-                  <label class="check">
-                    <input type="checkbox" name="body" value={b} />
-                    {BODY_LABEL[b]}
-                  </label>
-                ))
-              }
-            </fieldset>
-            <div class="actions">
-              <button type="submit" class="button small">Apply</button>
-              <button type="reset" class="button small quiet">Reset</button>
-            </div>
-          </form>
-        </details>
-        <p id="map-count" class="count" aria-live="polite">
-          {nodes.length} of {nodes.length} specifications, {relations.length} of{" "}
-          {relations.length} relations
-        </p>
-        <noscript>
-          <p class="note" data-noscript-note>
-            Filtering needs JavaScript. The full map and list are shown below.
-          </p>
-        </noscript>
-      </div>
     </header>
 
-    <StandardsMap layout={layout} stacked={stacked} />
-    <StandardsMapIsland client:idle />
-
-    <section id="spec-list" class="list" aria-labelledby="list-title">
-      <h2 id="list-title">Every specification on the map</h2>
-      <p class="recent">
-        <span>Recently revised:</span>
-        {
-          recent.map(({ spec, revision }, i) => (
-            <span>
-              {i > 0 && <span aria-hidden="true">/ </span>}
-              <a href={`/standards/${spec.id}/`}>{spec.name}</a>{" "}
-              <time datetime={revision.date}>{revision.date}</time>
-            </span>
-          ))
-        }
-      </p>
-      {
-        groups.map((g) => (
-          <section class="body-group" data-body-group={g.body} aria-labelledby={`body-${g.body}`}>
-            <h3 id={`body-${g.body}`}>
-              {BODY_LABEL[g.body]} <span class="n">{g.specs.length}</span>
-            </h3>
-            <ul class="rows">
-              {g.specs.map((spec) => {
-                const current = currentRevisionOf(spec);
-                return (
-                  <li data-spec={spec.id} data-body={spec.body}>
-                    <span class="who">
-                      <a href={`/standards/${spec.id}/`}>{spec.name}</a>
-                      <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
-                    </span>
-                    <span class="meta">
-                      {FAMILY_LABEL[spec.family]} / <code>{current.id}</code>{" "}
-                      <time datetime={current.date}>{current.date}</time> /{" "}
-                      <a href={spec.url} rel="noopener">
-                        Document
-                      </a>
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))
-      }
-      {
-        withdrawn.length > 0 && (
-          <section class="body-group" aria-labelledby="body-withdrawn">
-            <h3 id="body-withdrawn">
-              Withdrawn <span class="n">{withdrawn.length}</span>
-            </h3>
-            <p class="note">
-              Withdrawn documents leave the map but keep their page and their relations.
-            </p>
-            <ul class="rows">
-              {withdrawn.map((spec) => (
-                <li data-withdrawn={spec.id}>
-                  <span class="who">
-                    <a href={`/standards/${spec.id}/`}>{spec.name}</a>
-                    <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
-                  </span>
-                  <span class="meta">{BODY_LABEL[spec.body]}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )
-      }
-    </section>
+    <div id="standards">
+      <StandardsMap layout={layout} bodies={bodies} groupsOf={groupsOf} recent={recent} />
+      <StandardsMapIsland client:idle />
+      <StandardsOutline
+        forest={forest}
+        groupsOf={groupsOf}
+        spine={spine}
+        withdrawn={withdrawn}
+        recent={recentIds}
+      />
+    </div>
 
     <footer class="page-foot prose">
       <h2>Contribute</h2>
@@ -178,128 +77,3 @@ const repo = "https://github.com/letsauthlab/letsauth";
   </div>
 </Base>
 
-<style>
-  .recent {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-    max-width: none;
-    margin: 0 0 var(--space-6);
-    font-size: var(--small);
-    color: var(--ink-2);
-  }
-  .recent time {
-    font-family: var(--font-mono);
-    font-size: var(--tiny);
-  }
-  /* the head ends on the filter button and the live count; the map follows directly */
-  .map-bar .count {
-    margin: 0;
-  }
-  /* opened, the panel takes the full width under the button and the count follows it */
-  .map-bar:has(.disclosure[open]) .count {
-    order: 3;
-  }
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4) var(--space-6);
-  }
-  fieldset {
-    border: 0;
-    padding: 0;
-    margin: 0;
-    min-width: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    align-items: center;
-  }
-  legend {
-    font-size: var(--tiny);
-    font-weight: 500;
-    color: var(--ink-2);
-    padding: 0;
-    margin-bottom: var(--space-2);
-    width: 100%;
-  }
-  .check {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--small);
-    cursor: pointer;
-  }
-  .check input {
-    accent-color: var(--signal);
-    width: 1rem;
-    height: 1rem;
-    margin: 0;
-  }
-  .actions {
-    width: 100%;
-  }
-  .note {
-    margin: 0;
-  }
-  .list h2 {
-    font-size: var(--h2);
-  }
-  /* the list is long and below the fold: skip its layout until it scrolls near (plan 016, 7) */
-  .body-group {
-    margin-bottom: var(--space-6);
-    content-visibility: auto;
-    contain-intrinsic-size: auto 16rem;
-  }
-  .body-group h3 {
-    font-size: var(--small);
-    font-weight: 600;
-    letter-spacing: 0;
-    color: var(--ink-2);
-    margin: 0 0 var(--space-2);
-  }
-  .body-group .note {
-    margin-bottom: var(--space-3);
-  }
-  .body-group .rows {
-    margin: 0;
-  }
-  .body-group li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-1) var(--space-4);
-    padding: var(--space-3) 0;
-  }
-  .who {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-1) var(--space-3);
-    min-width: 0;
-  }
-  .who a {
-    font-weight: 600;
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .who a:hover {
-    color: var(--signal);
-  }
-  .meta {
-    color: var(--ink-2);
-    font-size: var(--tiny);
-    font-variant-numeric: tabular-nums;
-  }
-  .meta code,
-  .meta time {
-    font-family: var(--font-mono);
-    font-size: var(--tiny);
-    background: none;
-    padding: 0;
-  }
-  .meta a {
-    color: var(--ink-2);
-  }
-</style>
