@@ -228,13 +228,13 @@ package of the redesign that builds it. Anything not in this table does not anim
 | # | Where | What | Means | Reduced motion | WP |
 | --- | --- | --- | --- | --- | --- |
 | M1 | Every page | Cross-document view transition, root crossfade 220ms | continuity | none (as today) | WP2 |
-| M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate, map, chain head) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
+| M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate, map; on the explorer, the scenario title into the page h1) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
 | M3 | Home facts, server page facts | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
 | M4 | Standards map, decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, halo fades after, once on load | "follow this path" | path shown complete | WP5, WP8 |
 | M5 | Explorer chain | The current step's arrow draws in (300ms), the body fades up 8px (220ms); later steps dim once stepping starts | "you are here" | arrow and body shown, dimming applied without transition | WP6 |
 | M6 | Explorer chain | Optional play: steps advance every 2.5 s after the reader presses Play; any click, key or scroll pauses; never starts by itself | guided reading | Play button hidden | WP6 |
 | M7 | Explorer token view | On step change, claims that differ from the previous hop get a 2px `--signal` rail that fades to `--rule` over 480ms | "this is what changed in the token" | rail shown without fade | WP6 |
-| M8 | Explorer toggle pages | Changed and removed steps get the same rail treatment on page load (one pass, staggered 40ms per step, max 400ms total) | "the toggle touched these" | shown at once | WP6 |
+| M8 | Explorer toggle pages | Changed and removed steps get their rail in the toggle's ink on page load, from transparent over 480ms (one pass, staggered 40ms per step, max 400ms total) | "the toggle touched these" | shown at once | WP6 |
 | M9 | Matrix | Row and column crosshair on hover/focus of a cell (`--signal-soft` background, 120ms) | orientation in a large grid | instant | WP4 |
 | M10 | Matrix | Cell dialog: backdrop fades, panel moves up 8px, 220ms, using `@starting-style` | "a detail opened" | appears | WP4 |
 | M11 | Matrix filters | Count text changes with no animation; hidden rows collapse instantly (today's behaviour) | n/a | n/a | WP4 |
