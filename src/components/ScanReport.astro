@@ -1,0 +1,334 @@
+---
+/**
+ * The scan report (research R10): the grade, the request ladder as a transcript (M12), then the
+ * checks as rows with a StatusCell each. Static HTML; the only script prints the ladder line by
+ * line once, and the page reads the same without it.
+ */
+import StatusCell from "@/components/StatusCell.astro";
+import type { LadderLine } from "@/lib/scanner";
+import type { Report } from "@/scanner/report";
+
+interface Props {
+  report: Report;
+  /** The requests behind the evidence, in ladder order (`requestLadder`). */
+  ladder: LadderLine[];
+  /** The newest scanner observation date, for recorded reports. */
+  scannedAt?: string;
+}
+
+const { report, ladder, scannedAt } = Astro.props;
+
+const PARTY_LABEL: Record<string, string> = {
+  "mcp-server": "MCP server",
+  "authorization-server": "Authorization server",
+};
+const parties = ["mcp-server", "authorization-server"] as const;
+const notScanned = !report.checks.some((c) => c.observedAt);
+const gradeWord = report.grade.letter ? `Grade ${report.grade.letter}` : report.grade.label;
+
+function splitEvidence(text: string): { url?: string; note: string } {
+  const m = text.match(/^(https:\/\/\S+)\s*(.*)$/s);
+  if (!m) return { note: text };
+  return { url: m[1], note: (m[2] ?? "").replace(/^\u2014\s*/, "") };
+}
+---
+
+<section class="report" data-report aria-label="Scan report">
+  <div class="grade" data-grade-label={report.grade.label}>
+    <span class={`letter letter-${report.grade.letter ?? "none"}`} aria-hidden="true">
+      {report.grade.letter ?? "–"}
+    </span>
+    <div class="grade__text">
+      <p class="grade__word" data-grade-letter={report.grade.letter ?? undefined}>{gradeWord}</p>
+      {
+        notScanned ? (
+          <p class="grade__note" id="not-scanned">
+            No passive scan recorded yet for this server. The nightly run adds one when it can
+            read the server's metadata; until then the atlas page shows what documentation says.
+          </p>
+        ) : (
+          <ul class="grade__reasons">
+            {report.grade.reasons.map((reason) => <li>{reason}</li>)}
+          </ul>
+        )
+      }
+    </div>
+  </div>
+
+  {
+    ladder.length > 0 && (
+      <section class="explainer ladder" aria-labelledby="ladder-title" data-ladder>
+        <h2 id="ladder-title">What the scanner asked</h2>
+        <p class="ladder__lede">
+          The requests behind the evidence below, in the order the scanner makes them, each with
+          the newest answer this report records. None carries a credential or a message.
+        </p>
+        <ol class="transcript" data-transcript>
+          {ladder.map((line, i) => (
+            <li style={`--i: ${i}`} data-request>
+              <span class="transcript__method">{line.method}</span>
+              <span class="transcript__url">{line.url}</span>
+              <span class="transcript__status">{line.answer}</span>
+              <span class="transcript__note">read {line.read.join(", ")}</span>
+            </li>
+          ))}
+          <li class="verdict" style={`--i: ${ladder.length}`} data-verdict>
+            <span class="transcript__method" aria-hidden="true">=</span>
+            <span class="transcript__url">{gradeWord}</span>
+          </li>
+        </ol>
+      </section>
+    )
+  }
+
+  {
+    parties.map((party) => {
+      const rows = report.checks.filter((c) => c.party === party);
+      return (
+        rows.length > 0 && (
+          <section class="checks" aria-labelledby={`checks-${party}`}>
+            <h2 id={`checks-${party}`}>{PARTY_LABEL[party]} requirements</h2>
+            <ul class="rows">
+              {rows.map((c) => {
+                const ev = splitEvidence(c.evidence);
+                const observed = Boolean(c.observedAt);
+                return (
+                  <li data-check={c.feature} data-status={c.status}>
+                    <div class="rows__head">
+                      <h3 class="rows__title">
+                        <a href={`/mcp/features/${c.feature}/`}>{c.name}</a>
+                      </h3>
+                      <StatusCell status={c.status} derived={!observed} variant="label" />
+                    </div>
+                    <p class="check__meta">
+                      <span class={`level level-${c.level}`} title={c.levelNote}>
+                        {c.level}
+                      </span>
+                      <code>{c.feature}</code>
+                      <a href={c.citation} rel="noopener">
+                        {c.section}
+                      </a>
+                      {c.observedAt ? (
+                        <time datetime={c.observedAt}>{c.observedAt.slice(0, 10)}</time>
+                      ) : (
+                        <span>not observed</span>
+                      )}
+                    </p>
+                    <p class="evidence">
+                      {ev.url ? (
+                        <>
+                          <a href={ev.url} rel="noopener">
+                            source
+                          </a>
+                          {ev.note && <span> {ev.note}</span>}
+                        </>
+                      ) : ev.note ? (
+                        ev.note
+                      ) : (
+                        "No scanner observation."
+                      )}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )
+      );
+    })
+  }
+
+  <p class="foot">
+    Judged against MCP Authorization {report.revision.revision}
+    {
+      scannedAt && (
+        <>
+          · newest scanner observation <time datetime={scannedAt}>{scannedAt.slice(0, 10)}</time>
+        </>
+      )
+    }
+    · method passive scan · {report.scanner}
+  </p>
+</section>
+
+<script>
+  import { reducedMotion } from "@/lib/motion";
+
+  // M12: the ladder prints line by line, once, when it scrolls into view; the grade comes last.
+  // The static list is the end state, so without JavaScript or with reduced motion it simply shows.
+  for (const ladder of document.querySelectorAll<HTMLElement>("[data-ladder]")) {
+    if (reducedMotion() || !("IntersectionObserver" in window)) continue;
+    ladder.dataset.armed = "";
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        ladder.dataset.play = "";
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -10% 0px" },
+    );
+    observer.observe(ladder);
+  }
+</script>
+
+<style>
+  .report {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .report h2 {
+    font-size: var(--h3);
+    margin: 0 0 var(--space-3);
+  }
+
+  .grade {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-4) var(--space-5);
+    align-items: start;
+  }
+  /* The letter is always accompanied by its word and reasons; colour is a second channel. */
+  .letter {
+    --c: var(--ink-2);
+    display: inline-grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 2.25rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--c);
+    border: 1px solid var(--c);
+  }
+  .letter-A {
+    --c: var(--ok);
+  }
+  .letter-B {
+    --c: var(--signal);
+  }
+  .letter-C {
+    --c: var(--caution);
+  }
+  .letter-F {
+    --c: var(--threat);
+  }
+  .letter-none {
+    border-style: dashed;
+  }
+  .grade__word {
+    font-weight: 600;
+    font-size: var(--h3);
+    margin: 0 0 var(--space-2);
+  }
+  .grade__reasons {
+    margin: 0;
+    padding-left: 1.2em;
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .grade__reasons li {
+    margin-bottom: var(--space-1);
+  }
+  .grade__note {
+    margin: 0;
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+
+  .ladder__lede {
+    margin: 0 0 var(--space-4);
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .ladder .transcript {
+    margin: 0;
+  }
+  /* Method, address and answer on one line; what was read under the address. Long addresses
+     break rather than scroll, so the ladder never widens the page. */
+  .ladder .transcript > li {
+    display: grid;
+    grid-template-columns: 4.5ch minmax(0, 1fr) auto;
+    gap: 0 var(--space-3);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .transcript__url {
+    overflow-wrap: anywhere;
+  }
+  .transcript__status {
+    white-space: nowrap;
+  }
+  .ladder .transcript__note {
+    grid-column: 2 / -1;
+  }
+  .ladder .transcript > li.verdict {
+    margin-top: var(--space-2);
+    font-weight: 600;
+  }
+
+  /* M12. The hidden start exists only once the script armed the ladder. */
+  @media (prefers-reduced-motion: no-preference) {
+    .ladder[data-armed]:not([data-play]) .transcript > li {
+      opacity: 0;
+    }
+    .ladder[data-play] .transcript > li {
+      animation: ladder-line var(--dur) var(--ease) both;
+      animation-delay: calc(var(--i) * 60ms);
+    }
+  }
+  @keyframes ladder-line {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+  }
+
+  .checks .rows {
+    margin: 0;
+  }
+  .checks .rows__title {
+    font-size: 1rem;
+  }
+  .check__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+  }
+  .check__meta code {
+    font-size: var(--tiny);
+    overflow-wrap: anywhere;
+  }
+  .check__meta a {
+    color: var(--ink-2);
+  }
+  .rows .evidence {
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .foot {
+    font-size: var(--tiny);
+    color: var(--ink-2);
+    margin: 0;
+    max-width: none;
+  }
+
+  /* On a phone the answer moves under the address, and the two frames give back their padding. */
+  @media (max-width: 40rem) {
+    .ladder {
+      padding: var(--space-3);
+    }
+    .ladder .transcript {
+      padding: var(--space-3);
+    }
+    .ladder .transcript > li {
+      grid-template-columns: 4.5ch minmax(0, 1fr);
+    }
+    .transcript__status {
+      grid-column: 2;
+    }
+  }
+</style>
