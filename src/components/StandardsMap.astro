@@ -400,7 +400,10 @@ const filterCss = [
     margin: 0;
     flex: none;
   }
-  .toggle:has(input:not(:checked)) .toggle__label,
+  /* an unchecked toggle reads quieter: its sample fades, its label drops to the second ink */
+  .toggle:has(input:not(:checked)) .toggle__label {
+    color: var(--ink-2);
+  }
   .toggle:has(input:not(:checked)) .sample {
     opacity: 0.45;
   }
