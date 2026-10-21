@@ -49,7 +49,10 @@ The sRGB column is for places that cannot read a token, such as the `theme-color
 | not applicable | `--status-not-applicable` | `--rule-strong` | dash | faint |
 
 A filled chip draws its glyph in `--status-on`, which is `--on-signal`. `unknown` is never
-styled as a failure.
+styled as a failure. `StatusCell` draws each form on one element from its background and border;
+the three observed statuses add a one-path SVG for the check, half disc or cross. No mask,
+pseudo-element or transform: the matrix renders about nine hundred of them, and each of those
+showed up in its blocking time.
 
 Requirement levels: `--level-must` is `--threat`, `--level-should` `--caution`, `--level-may`
 `--boundary`, `--level-deprecated` `--ink-2` (with strikethrough). Explorer toggle kinds:
@@ -203,6 +206,12 @@ Deprecated until WP10: `.card` and `.cards` (now flat `--ground-2` panels; move 
 `.button.primary` (a plain `.button` is the filled one).
 
 The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
+
+Product surfaces go in `product`. The matrix (`MatrixTable`, `StatusCell`, `ObservationDetail`)
+keeps its styles there through `<style is:global>` instead of scoped styles, because a scoped
+style puts an attribute on each of the table's thousands of elements. Their class names are
+prefixed (`.matrix`, `.status-cell`, `.status-label`, `.obs`) so they cannot meet another
+component's.
 
 ## 5. Motion
 

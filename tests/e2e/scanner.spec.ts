@@ -106,7 +106,7 @@ test.describe("scan report page (US2)", () => {
     await expect(page.locator("[data-report] [data-grade-label]")).toHaveCount(1);
     const row = rows.first();
     await expect(row.locator(".level")).toHaveCount(1);
-    await expect(row.locator(".status")).toHaveCount(1);
+    await expect(row.locator(".status-cell")).toHaveCount(1);
     await expect(row.locator(".evidence")).toHaveCount(1);
     await expect(page.locator("#not-scanned")).toHaveCount(0);
   });

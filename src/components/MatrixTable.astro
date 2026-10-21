@@ -33,76 +33,86 @@ for (const f of columns) {
 const changedIds = new Map(diff?.changed.map((c) => [c.feature.id, c]) ?? []);
 const addedIds = new Set(diff?.added.map((f) => f.id) ?? []);
 const changesHref = diff ? `/mcp/changes/${diff.from.id}/${diff.to.id}/` : undefined;
+const columnTitle = (name: string, party: string, level: string) => `${name}, ${party}, ${level}`;
 const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
 ---
 
 <div class="matrix-scroll" tabindex="0" role="region" aria-label="Support matrix, scrolls horizontally">
-  <table class="matrix" id="matrix" data-matrix-revision={revision.id}>
-    <caption class="visually-hidden">
-      Support for each feature of MCP Authorization {revision.id} by server. Rows are servers in
-      alphabetical order; columns are features grouped by category.
-    </caption>
-    <thead>
-      <tr class="groups">
-        <td></td>
-        {
-          groups.map((g) => (
-            <th scope="colgroup" colspan={g.count} data-category={g.category}>
-              <span>{CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}</span>
-            </th>
-          ))
-        }
-      </tr>
-      <tr class="features">
-        <th scope="col" class="server-head">
-          <span class="server-head__label">Server</span>
-          <span class="server-head__hint">
-            {rows.length} listed, A to Z
-            {scans && (
-              <>
-                {" · "}
-                <a href="/mcp/scanner/">nightly scan grade</a>
-              </>
-            )}
-          </span>
-        </th>
-        {
-          columns.map((f) => {
-            const entry = featureInRevision(f, revision.id);
-            const level = entry?.level ?? "MUST";
-            const changed = changedIds.get(f.id);
-            const added = addedIds.has(f.id);
-            return (
-              <th
-                scope="col"
-                data-feature={f.id}
-                data-level={level}
-                data-category={f.category}
-                data-party={f.party}
-                title={`${f.name} — ${PARTY_LABEL[f.party]} — ${level}`}
-              >
-                <div class="feature-head">
-                  <span class="feature-marks">
-                    {changed && changesHref && (
-                      <a
-                        class="changed"
-                        href={changesHref}
-                        title={`Level changed from ${changed.from} to ${changed.to} in ${revision.id}`}
-                      >
-                        <span class="visually-hidden">Level changed in {revision.id}</span>
-                      </a>
-                    )}
-                    {added && changesHref && (
-                      <a class="changed new" href={changesHref} title={`New in ${revision.id}`}>
-                        <span class="visually-hidden">New in {revision.id}</span>
-                      </a>
-                    )}
-                  </span>
-                  <a class="feature-link" href={`/mcp/features/${f.id}/`}>
-                    <span class="feature-short">{shortLabel(f.id)}</span>
-                    <span class="visually-hidden">{f.name}</span>
-                  </a>
-                  <span class="feature-tags">
+  <div class="matrix-clip">
+    <table
+      class="matrix"
+      id="matrix"
+      data-matrix-revision={revision.id}
+      style={`--cols: ${columns.length}`}
+    >
+      <caption class="visually-hidden">
+        Support for each feature of MCP Authorization {revision.id} by server. Rows are servers in
+        alphabetical order; columns are features grouped by category.
+      </caption>
+      <colgroup>
+        <col class="matrix__server-col" />
+        <col class="matrix__feature-col" span={columns.length} />
+      </colgroup>
+      <thead>
+        <tr class="groups">
+          <td></td>
+          {
+            groups.map((g) => (
+              <th scope="colgroup" colspan={g.count} data-category={g.category}>
+                <span>{CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}</span>
+              </th>
+            ))
+          }
+        </tr>
+        <tr class="features">
+          <th scope="col" class="server-head">
+            <span class="server-head__label">Server</span>
+            <span class="server-head__hint">
+              {rows.length} listed, A to Z
+              {scans && (
+                <>
+                  {" · "}
+                  <a href="/mcp/scanner/">nightly scan grade</a>
+                </>
+              )}
+            </span>
+          </th>
+          {
+            columns.map((f) => {
+              const entry = featureInRevision(f, revision.id);
+              const level = entry?.level ?? "MUST";
+              const changed = changedIds.get(f.id);
+              const added = addedIds.has(f.id);
+              return (
+                <th
+                  scope="col"
+                  data-feature={f.id}
+                  data-level={level}
+                  data-category={f.category}
+                  data-party={f.party}
+                  title={columnTitle(f.name, PARTY_LABEL[f.party], level)}
+                >
+                  <div class="feature-head">
+                    <span class="feature-marks">
+                      {changed && changesHref && (
+                        <a
+                          class="changed"
+                          href={changesHref}
+                          title={`Level changed from ${changed.from} to ${changed.to} in ${revision.id}`}
+                        >
+                          <span class="visually-hidden">Level changed in {revision.id}</span>
+                        </a>
+                      )}
+                      {added && changesHref && (
+                        <a class="changed new" href={changesHref} title={`New in ${revision.id}`}>
+                          <span class="visually-hidden">New in {revision.id}</span>
+                        </a>
+                      )}
+                    </span>
+                    <a class="feature-link" href={`/mcp/features/${f.id}/`}>
+                      <span class="feature-short">{shortLabel(f.id)}</span>
+                      <span class="visually-hidden">{f.name}</span>
+                    </a>
                     <span class:list={["level", `level-${level}`]} aria-label={`Level ${level}`}>
                       {level}
                     </span>
@@ -110,409 +120,468 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                       <span aria-hidden="true">{PARTY_SHORT[f.party]}</span>
                       <span class="visually-hidden">{PARTY_LABEL[f.party]}</span>
                     </span>
+                  </div>
+                </th>
+              );
+            })
+          }
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((server) => {
+            const access = accessOf(server);
+            const auth = authOf(server);
+            const scan = scans?.get(server.id);
+            const word = scan
+              ? scan.grade.letter
+                ? `grade ${scan.grade.letter}`
+                : scan.grade.label.toLowerCase()
+              : "";
+            return (
+              <tr
+                data-server={server.id}
+                data-name={server.name.toLowerCase()}
+                data-access={access.value}
+                data-auth={auth.value}
+              >
+                <th scope="row" class="server-cell">
+                  <span class="server-cell__row">
+                    <a class="server-link" href={`/mcp/servers/${server.id}/`}>{server.name}</a>
+                    {scan && (
+                      <a
+                        class="grade-link"
+                        href={`/mcp/servers/${server.id}/scan/`}
+                        data-grade={scan.grade.letter ?? scan.grade.label}
+                        aria-label={`${server.name}, nightly scan: ${word}. Open the report`}
+                      >
+                        <GradeBadge grade={scan.grade} variant="cell" />
+                      </a>
+                    )}
                   </span>
-                </div>
-              </th>
+                  <span class="classes">
+                    <span
+                      class:list={["class", "chip", { derived: access.derived }]}
+                      title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
+                    >
+                      <span class="visually-hidden">Access: </span>
+                      {ACCESS_LABEL[access.value].toLowerCase()}
+                    </span>
+                    <span
+                      class:list={["class", "chip", { derived: auth.derived }]}
+                      title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
+                    >
+                      <span class="visually-hidden">Auth: </span>
+                      {AUTH_LABEL[auth.value].toLowerCase()}
+                    </span>
+                  </span>
+                </th>
+                {columns.map((feature) => {
+                  const cell = cells.get(cellKey(server.id, feature.id));
+                  if (!cell) throw new Error(`missing cell ${server.id}/${feature.id}`);
+                  return (
+                    <td
+                      data-server={server.id}
+                      data-feature={feature.id}
+                      data-status={cell.status}
+                      data-derived={cell.derived ? "true" : "false"}
+                    >
+                      <details class="cell">
+                        <summary aria-label={`${server.name}, ${feature.name}: ${cell.status}`}>
+                          <StatusCell status={cell.status} derived={cell.derived} />
+                        </summary>
+                        <ObservationDetail cell={cell} server={server} feature={feature} />
+                      </details>
+                    </td>
+                  );
+                })}
+              </tr>
             );
           })
         }
-      </tr>
-    </thead>
-    <tbody>
-      {
-        rows.map((server) => {
-          const access = accessOf(server);
-          const auth = authOf(server);
-          return (
-          <tr
-            data-server={server.id}
-            data-name={server.name.toLowerCase()}
-            data-access={access.value}
-            data-auth={auth.value}
-          >
-            <th scope="row" class="server-cell">
-              <span class="server-cell__row">
-                <a class="server-link" href={`/mcp/servers/${server.id}/`}>{server.name}</a>
-                {(() => {
-                  const scan = scans?.get(server.id);
-                  if (!scan) return null;
-                  const word = scan.grade.letter ? `grade ${scan.grade.letter}` : scan.grade.label.toLowerCase();
-                  return (
-                    <a
-                      class="grade-link"
-                      href={`/mcp/servers/${server.id}/scan/`}
-                      data-grade={scan.grade.letter ?? scan.grade.label}
-                      aria-label={`${server.name}, nightly scan: ${word}. Open the report`}
-                    >
-                      <GradeBadge grade={scan.grade} variant="cell" />
-                    </a>
-                  );
-                })()}
-              </span>
-              <span class="classes">
-                <span
-                  class:list={["class", `class-access-${access.value}`, { derived: access.derived }]}
-                  title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
-                >
-                  <span class="visually-hidden">Access: </span>
-                  {ACCESS_LABEL[access.value].toLowerCase()}
-                </span>
-                <span
-                  class:list={["class", `class-auth-${auth.value}`, { derived: auth.derived }]}
-                  title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
-                >
-                  <span class="visually-hidden">Auth: </span>
-                  {AUTH_LABEL[auth.value].toLowerCase()}
-                </span>
-              </span>
-            </th>
-            {columns.map((feature) => {
-              const cell = cells.get(cellKey(server.id, feature.id));
-              if (!cell) throw new Error(`missing cell ${server.id}/${feature.id}`);
-              return (
-                <td
-                  data-server={server.id}
-                  data-feature={feature.id}
-                  data-status={cell.status}
-                  data-derived={cell.derived ? "true" : "false"}
-                >
-                  <details class="cell">
-                    <summary aria-label={`${server.name}, ${feature.name}: ${cell.status}`}>
-                      <StatusCell status={cell.status} derived={cell.derived} />
-                    </summary>
-                    <ObservationDetail cell={cell} server={server} feature={feature} />
-                  </details>
-                </td>
-              );
-            })}
-          </tr>
-          );
-        })
-      }
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<style>
-  .matrix-scroll {
-    /* positioned so visually-hidden (absolute) labels inside the table stay inside the clip */
-    position: relative;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow), var(--inset-highlight);
-  }
-  .matrix-scroll:focus-visible {
-    outline-offset: 4px;
-  }
-  .matrix {
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 0;
-    width: max-content;
-    min-width: 100%;
-    font-variant-numeric: tabular-nums;
-  }
-  .matrix th,
-  .matrix td {
-    border-bottom: 1px solid var(--line-soft);
-    padding: var(--space-2) var(--space-1);
-    text-align: center;
-    vertical-align: middle;
-  }
-  .matrix tbody tr:last-child > * {
-    border-bottom: 0;
-  }
+<style is:global>
+  @layer reset, tokens, base, layout, components, product, utilities, print;
 
-  /* category groups */
-  .groups th {
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    color: var(--ink-muted);
-    background: var(--bg-sunken);
-    padding: var(--space-2) var(--space-2);
-    border-left: 1px solid var(--line);
-  }
-  .groups th span {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .groups td {
-    background: var(--bg-sunken);
-    position: sticky;
-    left: 0;
-    z-index: 3;
-    border-right: 1px solid var(--line);
-  }
+  /*
+   * The matrix. Global rather than scoped: a scoped style puts an attribute on each of the
+   * table's thousands of elements, and the page's blocking time grows with them (016 WP4).
+   */
+  @layer product {
+    .matrix-scroll {
+      /* positioned so visually-hidden (absolute) labels inside the table stay inside the clip */
+      position: relative;
+      /* as wide as the table, up to the column: no empty strip to the right of the last column */
+      width: fit-content;
+      max-width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      border-block: 1px solid var(--rule);
+      background: var(--ground);
+      /* M2: the home page's matrix thumbnail carries the same name and morphs into this */
+      view-transition-name: matrix;
+    }
 
-  /* feature columns: a narrow column with its id written upwards */
-  .features th[data-feature] {
-    width: 3rem;
-    min-width: 3rem;
-    max-width: 3rem;
-    padding: var(--space-3) 0 var(--space-2);
-    vertical-align: bottom;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--ink);
-  }
-  .features .server-head + th {
-    border-left: 1px solid var(--line);
-  }
-  .feature-head {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-  }
-  .feature-link {
-    display: block;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    height: 10rem;
-    padding-inline: 0.4rem;
-    text-decoration: none;
-    color: var(--ink);
-    border-radius: var(--radius-sm);
-  }
-  .feature-short {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 100%;
-    padding: 0.1rem 0;
-  }
-  .feature-link:hover .feature-short {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .feature-marks {
-    display: flex;
-    justify-content: center;
-    min-height: 0;
-  }
-  .feature-tags {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  .feature-tags .level {
-    font-size: 0.56rem;
-    padding: 0.25em 0.35em;
-  }
-  .party {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 500;
-    color: var(--ink-faint);
-    letter-spacing: 0.04em;
-  }
-  .changed {
-    display: grid;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 50%;
-    text-decoration: none;
-    --dot: var(--accent-2);
-    --halo: var(--accent-2-soft);
-  }
-  .changed::before {
-    content: "";
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    background: var(--dot);
-    box-shadow: 0 0 0 3px var(--halo);
-    transition: transform var(--dur-fast) var(--ease);
-  }
-  .changed.new {
-    --dot: var(--accent);
-    --halo: var(--accent-soft);
-  }
-  .changed:hover::before {
-    transform: scale(1.3);
-  }
+    .matrix-scroll:focus-visible {
+      outline-offset: 4px;
+    }
 
-  /* the sticky server column */
-  .server-head,
-  .server-cell {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    background: var(--bg-elevated);
-    text-align: left;
-    border-right: 1px solid var(--line);
-    min-width: 12rem;
-    padding-inline: var(--space-4);
-  }
-  .server-head {
-    vertical-align: bottom;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--ink);
-  }
-  .server-head__label {
-    display: block;
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--ink);
-  }
-  .server-head__hint {
-    display: block;
-    font-size: var(--text-2xs);
-    color: var(--ink-faint);
-    text-transform: none;
-    letter-spacing: 0;
-    font-weight: 400;
-    margin-top: 0.15rem;
-  }
-  .server-cell {
-    text-transform: none;
-    letter-spacing: 0;
-    font-weight: 500;
-    font-size: var(--text-sm);
-    line-height: 1.2;
-  }
-  .server-cell__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-  }
-  .server-link {
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .server-link:hover {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .grade-link {
-    display: inline-flex;
-    flex: none;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-  }
-  .grade-link:hover {
-    transform: scale(1.08);
-  }
-  .server-head__hint a {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 0.15em;
-  }
-  .classes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-top: 0.3rem;
-  }
-  .class {
-    font-family: var(--font-mono);
-    font-weight: 400;
-    font-size: 0.6rem;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    padding: 0.2rem 0.4rem;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    color: var(--ink-muted);
-    background: var(--bg-sunken);
-  }
-  .class.derived {
-    border-style: dashed;
-    background: transparent;
-    color: var(--ink-faint);
-  }
-  .class-access-closed {
-    border-color: color-mix(in oklch, var(--accent-2) 55%, var(--line));
-    color: var(--ink);
-  }
-  .class-auth-oauth {
-    border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
-    color: var(--ink);
-  }
-  /* group header rows the island inserts when the reader groups by a class */
-  .matrix tbody tr.group > th {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    text-align: left;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    color: var(--ink-muted);
-    background: var(--bg-sunken);
-    padding: var(--space-2) var(--space-4);
-    border-right: 1px solid var(--line);
-  }
-  .matrix tbody tr.group > td {
-    background: var(--bg-sunken);
-  }
-  .matrix tbody tr.group .n {
-    font-family: var(--font-mono);
-    color: var(--ink-faint);
-    margin-left: var(--space-2);
-  }
-  tbody tr:hover > * {
-    background: color-mix(in oklch, var(--accent-soft) 55%, var(--bg-elevated));
-  }
+    /*
+     * Clips the column highlight (M9), which reaches far above and below its cell, to the table,
+     * and gives it a stacking context to sit in behind the cells.
+     */
+    .matrix-clip {
+      width: max-content;
+      overflow: clip;
+      isolation: isolate;
+    }
 
-  /* cells */
-  .cell {
-    position: relative;
-  }
-  .cell summary {
-    list-style: none;
-    cursor: pointer;
-    display: inline-grid;
-    place-items: center;
-    padding: 0.15rem;
-    border-radius: 9px;
-    transition: transform var(--dur-fast) var(--ease);
-  }
-  .cell summary::-webkit-details-marker {
-    display: none;
-  }
-  .cell summary:hover {
-    transform: scale(1.12);
-  }
-  .cell summary:focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 1px;
-  }
-  .cell[open] > :global(.detail) {
-    position: absolute;
-    top: calc(100% + 0.4rem);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 4;
-    background: var(--bg-elevated);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    padding: var(--space-4);
-    text-align: left;
-    width: 22rem;
-    max-width: 80vw;
-  }
-  .matrix [hidden] {
-    display: none;
+    /*
+     * A fixed layout: the columns take their widths from the colgroup instead of from measuring
+     * every cell, which is most of the page's layout time. The island keeps --cols and the
+     * feature column's span equal to the columns shown.
+     */
+    .matrix {
+      --server-w: clamp(11rem, 36vw, 15rem);
+      --feature-w: 3rem;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 0;
+      width: calc(var(--server-w) + var(--cols) * var(--feature-w));
+      font-variant-numeric: tabular-nums;
+    }
+
+    .matrix__server-col {
+      width: var(--server-w);
+    }
+
+    .matrix__feature-col {
+      width: var(--feature-w);
+    }
+
+    .matrix th,
+    .matrix td {
+      border-bottom: 1px solid var(--rule);
+      padding: var(--space-2) var(--space-1);
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .matrix tbody tr:last-child > * {
+      border-bottom: 0;
+    }
+
+    .matrix [hidden] {
+      display: none;
+    }
+
+    /* category groups */
+    .matrix .groups th {
+      font-size: var(--tiny);
+      color: var(--ink-2);
+      background: var(--ground-2);
+      padding: var(--space-2);
+      border-left: 1px solid var(--rule);
+    }
+
+    .matrix .groups th span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .matrix .groups td {
+      background: var(--ground-2);
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      border-right: 1px solid var(--rule);
+    }
+
+    /* feature columns: a narrow column with its id, level and party written upwards */
+    .matrix .features th[data-feature] {
+      padding: var(--space-3) 0 var(--space-2);
+      vertical-align: bottom;
+    }
+
+    .matrix .server-head + th {
+      border-left: 1px solid var(--rule);
+    }
+
+    .matrix .feature-head {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .matrix .feature-link,
+    .matrix .feature-head .level {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .matrix .feature-link {
+      display: block;
+      height: 9.5rem;
+      padding-inline: 0.35rem;
+      color: var(--ink);
+      text-decoration: none;
+      border-radius: var(--radius-focus);
+    }
+
+    .matrix .feature-short {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: var(--tiny);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 100%;
+    }
+
+    .matrix .feature-link:hover {
+      color: var(--signal);
+    }
+
+    .matrix .feature-link:hover .feature-short {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+
+    .matrix .feature-head .level {
+      padding: 0.4em 0.25em;
+      letter-spacing: 0.04em;
+    }
+
+    .matrix .party {
+      font-family: var(--font-mono);
+      font-size: var(--tiny);
+      color: var(--ink-2);
+    }
+
+    .matrix .feature-marks {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* a column whose level changed is a filled dot, a new one a ring; both link to the diff */
+    .matrix .changed {
+      display: grid;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      text-decoration: none;
+    }
+
+    .matrix .changed::before {
+      content: "";
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      border: 1.5px solid var(--signal);
+      background: var(--signal);
+    }
+
+    .matrix .changed.new::before {
+      background: transparent;
+    }
+
+    /* the sticky server column, on the ground so the cells pass under it */
+    .matrix .server-head,
+    .matrix .server-cell {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: var(--ground);
+      text-align: left;
+      border-right: 1px solid var(--rule);
+      padding-inline: var(--space-3) var(--space-4);
+    }
+
+    .matrix .server-head {
+      vertical-align: bottom;
+    }
+
+    .matrix .server-head__label {
+      display: block;
+      font-size: var(--small);
+      font-weight: 600;
+    }
+
+    .matrix .server-head__hint {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: var(--tiny);
+      font-weight: 400;
+      color: var(--ink-2);
+    }
+
+    .matrix .server-head__hint a {
+      color: inherit;
+    }
+
+    .matrix .server-cell {
+      font-size: var(--small);
+      line-height: var(--leading-snug);
+    }
+
+    .matrix .server-cell__row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+
+    .matrix .server-link {
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .matrix .server-link:hover {
+      color: var(--signal);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+
+    .matrix .grade-link {
+      display: inline-flex;
+      flex: none;
+      border-radius: var(--radius-focus);
+      text-decoration: none;
+    }
+
+    .matrix .classes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      margin-top: var(--space-1);
+    }
+
+    .matrix .classes .chip {
+      color: var(--ink);
+      border-color: var(--rule-strong);
+    }
+
+    /* a class nobody has stated yet: dashed, like a recorded unknown */
+    .matrix .classes .chip.derived {
+      color: var(--ink-2);
+      border-color: var(--rule-strong);
+      border-style: dashed;
+    }
+
+    /* group header rows the island inserts when the reader groups by a class */
+    .matrix tbody tr.group > th {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      text-align: left;
+      font-size: var(--tiny);
+      color: var(--ink-2);
+      background: var(--ground-2);
+      padding: var(--space-2) var(--space-3);
+      border-right: 1px solid var(--rule);
+    }
+
+    .matrix tbody tr.group > td {
+      background: var(--ground-2);
+    }
+
+    .matrix tbody tr.group .n {
+      margin-left: var(--space-2);
+    }
+
+    /*
+     * M9, the crosshair: the row under the pointer or the focus takes the signal tint, and its
+     * column takes it through a pseudo-element that reaches past the table and is clipped to it.
+     * Plain CSS, so it works before and without the island.
+     */
+    .matrix tbody tr[data-server] > * {
+      transition: background-color var(--dur-fast) var(--ease);
+    }
+
+    .matrix tbody tr[data-server]:is(:hover, :focus-within) > td {
+      background-color: var(--signal-soft);
+    }
+
+    .matrix tbody tr[data-server]:is(:hover, :focus-within) > .server-cell {
+      background-color: color-mix(in oklch, var(--signal) 14%, var(--ground));
+    }
+
+    /* only the cell under the pointer or the focus has the pseudo-element, so the other cells
+       stay plain boxes */
+    .matrix tbody td:is(:hover, :focus-within) {
+      position: relative;
+    }
+
+    .matrix tbody td:is(:hover, :focus-within)::after {
+      content: "";
+      position: absolute;
+      inset: -500rem 0;
+      z-index: -1;
+      pointer-events: none;
+      background-color: var(--signal-soft);
+    }
+
+    /* cells */
+    .matrix .cell summary {
+      list-style: none;
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      padding: 0.2rem;
+      border-radius: var(--radius-focus);
+    }
+
+    .matrix .cell summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .matrix .cell summary:focus-visible {
+      outline: 2px solid var(--signal);
+      outline-offset: 1px;
+    }
+
+    /* without JavaScript the observation opens under its cell, above it in the last rows and
+       leaning left in the last columns, so the table's clip never cuts it */
+    .matrix .cell[open] {
+      position: relative;
+    }
+
+    .matrix .cell[open] > .obs {
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 50%;
+      translate: -50% 0;
+      z-index: 4;
+      width: 22rem;
+      max-width: 80vw;
+      padding: var(--space-4);
+      text-align: left;
+      font-weight: 400;
+      background: var(--ground-2);
+      border: 1px solid var(--rule-strong);
+      border-radius: var(--radius);
+    }
+
+    .matrix tbody tr:nth-last-child(-n + 6) .cell[open] > .obs {
+      top: auto;
+      bottom: calc(100% + 0.4rem);
+    }
+
+    .matrix tbody td:nth-last-child(-n + 4) .cell[open] > .obs {
+      left: auto;
+      right: 0;
+      translate: none;
+    }
   }
 </style>

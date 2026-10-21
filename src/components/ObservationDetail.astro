@@ -17,8 +17,8 @@ const evidenceNote = evidenceMatch?.[2]?.trim();
 const date = obs ? obs.observedAt.slice(0, 10) : undefined;
 ---
 
-<div class="detail" data-detail>
-  <p class="detail__head">
+<div class="obs" data-detail>
+  <p class="obs__head">
     <a href={`/mcp/servers/${server.id}/`}>{server.name}</a>
     <span aria-hidden="true">×</span>
     <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
@@ -26,7 +26,7 @@ const date = obs ? obs.observedAt.slice(0, 10) : undefined;
   <p><StatusCell status={cell.status} derived={cell.derived} variant="label" /></p>
   {
     obs ? (
-      <dl>
+      <dl class="kv obs__kv">
         <dt>Method</dt>
         <dd>{obs.method}</dd>
         <dt>Observed</dt>
@@ -51,62 +51,57 @@ const date = obs ? obs.observedAt.slice(0, 10) : undefined;
       </dl>
     ) : (
       <p class="muted">
-        No observation recorded for this server and feature under revision {cell.revision}.
+        No observation on record for this server and feature under revision {cell.revision}.
         {cell.status === "not-applicable"
           ? " The server has no HTTP transport, so the feature does not apply."
-          : " Unknown means nobody has looked yet, not that the feature is missing."}
+          : " The status stays unknown until someone records one."}
       </p>
     )
   }
 </div>
 
-<style>
-  .detail {
-    font-size: var(--text-sm);
-    min-width: 16rem;
-  }
-  .detail__head {
-    font-weight: 600;
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-    align-items: baseline;
-    margin-bottom: var(--space-3);
-    line-height: 1.35;
-  }
-  .detail__head a {
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .detail__head a:hover {
-    color: var(--accent);
-    text-decoration: underline;
-  }
-  .detail__head [aria-hidden] {
-    color: var(--ink-faint);
-    font-weight: 400;
-  }
-  dl {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: var(--space-2) var(--space-4);
-    margin: 0;
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--line-soft);
-  }
-  dt {
-    color: var(--ink-muted);
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    padding-top: 0.25em;
-  }
-  dd {
-    margin: 0;
-    overflow-wrap: anywhere;
-  }
-  .muted {
-    color: var(--ink-muted);
+<style is:global>
+  @layer reset, tokens, base, layout, components, product, utilities, print;
+
+  /* Global rather than scoped: the matrix renders one per cell, and scoping adds an attribute
+     to every element of every one (016 WP4). */
+  @layer product {
+    .obs {
+      font-size: var(--small);
+      min-width: 16rem;
+    }
+
+    .obs > p {
+      margin: 0 0 var(--space-3);
+    }
+
+    .obs__head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: var(--space-2);
+      font-weight: 600;
+      line-height: var(--leading-snug);
+    }
+
+    .obs__head a {
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .obs__head a:hover {
+      color: var(--signal);
+      text-decoration: underline;
+    }
+
+    .obs__head [aria-hidden] {
+      color: var(--ink-2);
+      font-weight: 400;
+    }
+
+    .obs__kv {
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--rule);
+    }
   }
 </style>

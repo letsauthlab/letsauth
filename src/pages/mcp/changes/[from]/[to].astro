@@ -49,106 +49,125 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
       </p>
     </header>
 
-    <div class="cols">
-      <section class="card" aria-labelledby="changed">
-        <h2 id="changed">Level changed <span class="n">{diff.changed.length}</span></h2>
-        {
-          diff.changed.length === 0 ? (
-            <p class="note">No feature changed level.</p>
-          ) : (
-            <ul class="list">
-              {diff.changed.map(({ feature, from: a, to: b }) => {
-                const line = FeatureLine(feature);
-                const entry = featureInRevision(feature, to);
-                return (
-                  <li data-feature={feature.id}>
-                    <a href={`/mcp/features/${feature.id}/`}>{line.name}</a>
-                    <span class="levels">
-                      <span class:list={["level", `level-${a}`]}>{a}</span>
-                      <span aria-hidden="true"> → </span>
-                      <span class="visually-hidden">to</span>
-                      <span class:list={["level", `level-${b}`]}>{b}</span>
-                    </span>
-                    <span class="meta">
-                      <code>{line.id}</code> · {line.party}
-                      {entry?.levelNote && <> · {entry.levelNote}</>}
-                      {entry && (
-                        <>
-                          {" · "}
-                          <Citation entry={entry} />
-                        </>
-                      )}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )
-        }
-      </section>
+    <ol class="timeline changes">
+      <li>
+        <time datetime={diff.from.date}>{diff.from.date}</time>
+        <p class="changes__rev">
+          <a href={href(from)}>{from}</a> published, the baseline for this comparison.
+        </p>
+      </li>
+      <li>
+        <time datetime={diff.to.date}>{diff.to.date}</time>
+        <p class="changes__rev">
+          <a href={href(to)}>{to}</a> published, with these differences.
+        </p>
 
-      <section class="card" aria-labelledby="added">
-        <h2 id="added">Added in {to} <span class="n">{diff.added.length}</span></h2>
-        {
-          diff.added.length === 0 ? (
-            <p class="note">Nothing was added.</p>
-          ) : (
-            <ul class="list">
-              {diff.added.map((feature) => {
-                const line = FeatureLine(feature);
-                const entry = featureInRevision(feature, to);
-                return (
-                  <li data-feature={feature.id}>
-                    <a href={`/mcp/features/${feature.id}/`}>{line.name}</a>
-                    {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
-                    <span class="meta">
-                      <code>{line.id}</code> · {line.party}
-                      {entry && (
-                        <>
-                          {" · "}
-                          <Citation entry={entry} />
-                        </>
-                      )}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )
-        }
-      </section>
+        <section aria-labelledby="changed">
+          <h2 id="changed">Level changed <span class="n">{diff.changed.length}</span></h2>
+          {
+            diff.changed.length === 0 ? (
+              <p class="note">No feature changed level.</p>
+            ) : (
+              <ul class="list">
+                {diff.changed.map(({ feature, from: a, to: b }) => {
+                  const line = FeatureLine(feature);
+                  const entry = featureInRevision(feature, to);
+                  return (
+                    <li data-feature={feature.id}>
+                      <span class="list__head">
+                        <a href={`/mcp/features/${feature.id}/`}>{line.name}</a>
+                        <span class="levels">
+                          <span class:list={["level", `level-${a}`]}>{a}</span>
+                          <span aria-hidden="true">→</span>
+                          <span class="visually-hidden">to</span>
+                          <span class:list={["level", `level-${b}`]}>{b}</span>
+                        </span>
+                      </span>
+                      <span class="meta">
+                        <code>{line.id}</code> · {line.party}
+                        {entry?.levelNote && <> · {entry.levelNote}</>}
+                        {entry && (
+                          <>
+                            {" · "}
+                            <Citation entry={entry} />
+                          </>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )
+          }
+        </section>
 
-      <section class="card" aria-labelledby="removed">
-        <h2 id="removed">Removed since {from} <span class="n">{diff.removed.length}</span></h2>
-        {
-          diff.removed.length === 0 ? (
-            <p class="note">Nothing was removed.</p>
-          ) : (
-            <ul class="list">
-              {diff.removed.map((feature) => {
-                const line = FeatureLine(feature);
-                const entry = featureInRevision(feature, from);
-                return (
-                  <li data-feature={feature.id}>
-                    <a href={`/mcp/features/${feature.id}/`}>{line.name}</a>
-                    {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
-                    <span class="meta">
-                      <code>{line.id}</code> · {line.party}
-                      {entry && (
-                        <>
-                          {" · "}
-                          <Citation entry={entry} />
-                        </>
-                      )}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )
-        }
-      </section>
-    </div>
+        <section aria-labelledby="added">
+          <h2 id="added">Added in {to} <span class="n">{diff.added.length}</span></h2>
+          {
+            diff.added.length === 0 ? (
+              <p class="note">Nothing was added.</p>
+            ) : (
+              <ul class="list">
+                {diff.added.map((feature) => {
+                  const line = FeatureLine(feature);
+                  const entry = featureInRevision(feature, to);
+                  return (
+                    <li data-feature={feature.id}>
+                      <span class="list__head">
+                        <a href={`/mcp/features/${feature.id}/`}>{line.name}</a>
+                        {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
+                      </span>
+                      <span class="meta">
+                        <code>{line.id}</code> · {line.party}
+                        {entry && (
+                          <>
+                            {" · "}
+                            <Citation entry={entry} />
+                          </>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )
+          }
+        </section>
+
+        <section aria-labelledby="removed">
+          <h2 id="removed">Removed since {from} <span class="n">{diff.removed.length}</span></h2>
+          {
+            diff.removed.length === 0 ? (
+              <p class="note">Nothing was removed.</p>
+            ) : (
+              <ul class="list">
+                {diff.removed.map((feature) => {
+                  const line = FeatureLine(feature);
+                  const entry = featureInRevision(feature, from);
+                  return (
+                    <li data-feature={feature.id}>
+                      <span class="list__head">
+                        <a href={`/mcp/features/${feature.id}/`}>{line.name}</a>
+                        {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
+                      </span>
+                      <span class="meta">
+                        <code>{line.id}</code> · {line.party}
+                        {entry && (
+                          <>
+                            {" · "}
+                            <Citation entry={entry} />
+                          </>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )
+          }
+        </section>
+      </li>
+    </ol>
   </div>
 </Base>
 
@@ -160,61 +179,71 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
     letter-spacing: -0.01em;
     text-decoration-thickness: 2px;
   }
-  .cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-    gap: var(--space-4);
-    align-items: start;
+  /* the two revisions as dated entries on the timeline; the differences hang off the newer */
+  .changes {
+    max-width: 52rem;
   }
-  .card h2 {
+  .changes__rev {
+    margin: var(--space-1) 0 var(--space-4);
+  }
+  .changes__rev a {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  .changes section + section {
+    margin-top: var(--space-6);
+  }
+  .changes h2 {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
     gap: var(--space-3);
-    font-size: var(--text-md);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-soft);
+    font-size: var(--h3);
+    margin-bottom: var(--space-2);
   }
   .note {
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
+    color: var(--ink-2);
+    font-size: var(--small);
   }
   .list {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: grid;
-    gap: var(--space-3);
+    border-top: 1px solid var(--rule);
   }
   .list li {
     display: grid;
-    gap: var(--space-2);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-soft);
+    gap: var(--space-1);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--rule);
   }
-  .list li:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
+  .list__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
   }
-  .list li > a {
+  .list__head > a {
     font-weight: 600;
     color: var(--ink);
     text-decoration: none;
   }
-  .list li > a:hover {
-    color: var(--accent);
+  .list__head > a:hover {
+    color: var(--signal);
     text-decoration: underline;
   }
   .levels {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--ink-faint);
+    color: var(--ink-2);
   }
   .meta {
-    font-size: var(--text-xs);
-    color: var(--ink-muted);
+    font-size: var(--tiny);
+    color: var(--ink-2);
     line-height: 1.5;
+  }
+  .meta code {
+    font-size: inherit;
   }
 </style>
