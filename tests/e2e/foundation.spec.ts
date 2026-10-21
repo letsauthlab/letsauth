@@ -47,8 +47,8 @@ test.describe("foundation pages", () => {
       const right = left + (navBox?.width ?? 0);
       expect(left).toBeGreaterThanOrEqual(0);
       expect(right).toBeLessThanOrEqual(width);
-      // the brand and the theme toggle sit inside the viewport
-      for (const el of await header.locator(".brand, .theme-toggle").all()) {
+      // the brand, the GitHub link and the theme toggle sit inside the viewport
+      for (const el of await header.locator(".brand, .site-github, .theme-toggle").all()) {
         const box = await el.boundingBox();
         expect(box).not.toBeNull();
         expect(box?.x).toBeGreaterThanOrEqual(0);
@@ -81,13 +81,14 @@ test.describe("foundation pages", () => {
         el.scrollLeft = 0;
         return out;
       });
-      expect(links).toHaveLength(6);
+      expect(links).toHaveLength(5);
       for (const link of links) {
         expect(link.inside, `${link.label} at ${width}px`).toBe(true);
         expect(link.size).toBeGreaterThanOrEqual(13);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     }
+    await expect(page.getByRole("link", { name: "Source on GitHub" }).first()).toBeVisible();
   });
 
   test("the current section is marked and shown in the navigation", async ({ page }) => {
