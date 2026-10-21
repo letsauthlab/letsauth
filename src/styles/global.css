@@ -673,17 +673,20 @@
     margin-bottom: 0;
   }
 
-  /* a warning (withdrawn, expired, an attack): a 2px rail on a tint; `.caution` for the milder kind */
+  /*
+   * A warning (withdrawn, expired, an attack): a 2px rail on a tint; `.caution` for the milder
+   * kind. Mixed in oklab: in oklch the tint takes a hue halfway round from the graphite ground.
+   */
   .notice {
     padding: var(--space-4) var(--space-5);
     border-left: 2px solid var(--threat);
     border-radius: 0 var(--radius) var(--radius) 0;
-    background: color-mix(in oklch, var(--threat) 12%, var(--ground));
+    background: color-mix(in oklab, var(--threat) 12%, var(--ground));
   }
 
   .notice.caution {
     border-left-color: var(--caution);
-    background: color-mix(in oklch, var(--caution) 12%, var(--ground));
+    background: color-mix(in oklab, var(--caution) 12%, var(--ground));
   }
 
   .notice > :last-child {
@@ -878,7 +881,7 @@
   /* a notice that is also a card (withdrawn, expired) keeps the notice's rail and tint */
   .card.notice {
     border-radius: 0 var(--radius) var(--radius) 0;
-    background: color-mix(in oklch, var(--threat) 12%, var(--ground));
+    background: color-mix(in oklab, var(--threat) 12%, var(--ground));
   }
 
   /*
