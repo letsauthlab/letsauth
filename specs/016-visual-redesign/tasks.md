@@ -71,6 +71,24 @@ and the latest observations. No boxes, no icons, one filled button.
 - [x] W3-T05 `tests/e2e/home.spec.ts` (new): the five products and their counts, one filled button, no script file or island, every matrix cell drawn and named `matrix`, the count-up waiting at 0 out of view and ending at the dataset's figures, the final figures at once under reduced motion, the h1 in two lines at 1440px and four at 360px, no sideways scroll at 320px, the figures present without JavaScript, axe and a screenshot
 - [x] W3-T06 Screenshot baselines: `home.spec.ts` is new; its three baselines come from the `refresh-screenshots` label on the pull request, not from a local browser
 
+## WP5: Standards map
+
+The map on a plate with one ink for every relation, told apart by dash pattern and weight; the
+neighbourhood of the node in focus in the signal colour; the builds-on spine drawn in once; the
+spec list and spec pages on the shared surfaces. No data change.
+
+- [x] W5-T01 `src/lib/standards.ts`: `buildsOnSpine(specs, relations)`, the longest builds-on chain from the oldest document to the newest, stable on ties; unit test in `tests/unit/standards.test.ts`
+- [x] W5-T02 `src/components/StandardsMap.astro`: the map frame is a `.plate`; lanes as hairlines with sentence-case labels; nodes on `--ground` with the maturity as a chip (dashed for a draft); edges in one ink, relation types by dash pattern, weight and arrowhead; all map text at 13px or more (`src/lib/graph.ts`: nodes 200 by 68, label column 120)
+- [x] W5-T03 M4: the spine edges draw in once on load from the oldest end (`stroke-dashoffset` over `--dur-draw`, split across the chain), a `--signal-soft` halo shows during the draw and fades after; both only under `prefers-reduced-motion: no-preference`, so the spine is drawn complete and the halo absent otherwise; filtered items use `visibility` so a filter never restarts the draw
+- [x] W5-T04 The legend moves into the map component as two `.panel`s: relation types with a sample drawn by the map's own edge styles, maturity by `MaturityTag`, and a note that colour only marks the node in focus
+- [x] W5-T05 `src/components/MaturityTag.astro`: a `.chip`, signal-tinted when published or in force, dashed when a draft, struck when expired or withdrawn
+- [x] W5-T06 `src/components/StandardsMap.svelte`: the neighbourhood highlight in `--signal` with a signal arrowhead; M2: on `pageswap` the followed list link, or an empty box over the followed map node (SVG cannot be captured), takes the `spec-title` view transition name that the spec page's h1 carries
+- [x] W5-T07 `src/pages/standards/index.astro`: filters in an `.explainer` (samples dropped from the checkboxes, the legend has them); recently revised as the head's meta line; the spec list as `.rows` per body with `content-visibility: auto`; this fixes the horizontal scroll at 320px (the old grid had a 20rem minimum); lede and copy without semicolons
+- [x] W5-T08 `src/pages/standards/[id].astro`: the withdrawn/expired notice as `.notice`, revisions as a `.timeline` with `.chip` status, features as `.rows`, eyebrow parts split by ` / `; `src/components/RelationList.astro` as `.rows`; `src/lib/labels.ts` relation descriptions without semicolons
+- [x] W5-T09 `tests/e2e/standards.spec.ts`: no page scroll at 320 and 412px; the spine animates once per edge; reduced motion shows the end state with no halo; keyboard focus highlights the neighbourhood as hover does; the legend counts and a greyscale screenshot of the map; `spec-page.spec.ts`: the title's view transition name
+- [x] W5-T10 Screenshot baselines for the standards and spec pages, plus the new greyscale one, through the `refresh-screenshots` label (the workflow only runs tests whose title contains "looks right", so the greyscale test is named that way)
+- [x] W5-T11 Colour back on the map after review (Jan): each relation type keeps its dash pattern and weight and gets a colour (builds on `--signal`, profiles `--boundary`, competes with `--threat`, solves the same problem as `--caution`, replaces and references `--ink-2`) at 62% strength, full on the spine and on the focused node's relations, with matching arrowheads; maturity chips coloured too (published `--signal`, in force `--boundary`, candidate `--caution`), in the map and in `MaturityTag`. Deviates from plan 5.3, which kept colour for the focus only
+
 ## WP7: Scanner pages
 
 The scanner overview and the per-server report on the new surfaces; the request ladder as a

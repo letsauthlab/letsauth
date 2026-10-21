@@ -52,22 +52,22 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   <div class="wrap">
     <Crumbs trail={[{ href: "/standards/", label: "Agent auth atlas" }]} current={spec.name} />
     <header class="page-head">
-      <p class="eyebrow">{BODY_LABEL[spec.body]} · {FAMILY_LABEL[spec.family]}</p>
+      <p class="eyebrow">{BODY_LABEL[spec.body]} / {FAMILY_LABEL[spec.family]}</p>
       <h1>{spec.name}</h1>
       <p class="lede">{spec.summary}</p>
       <p class="page-head__meta">
         <MaturityTag maturity={spec.maturity} variant="label" />
         {spec.maturityNote && <span class="note">{spec.maturityNote}</span>}
-        <span aria-hidden="true"> · </span>
+        <span aria-hidden="true">/</span>
         <a href={spec.url} rel="noopener">Canonical document</a>
-        <span aria-hidden="true"> · </span>
+        <span aria-hidden="true">/</span>
         <code>{spec.id}</code>
       </p>
     </header>
 
     {
       gone && (
-        <section class="card notice" aria-labelledby="gone">
+        <section class="notice gone" aria-labelledby="gone">
           <h2 id="gone">{MATURITY_LABEL[spec.maturity]}</h2>
           <p>
             {spec.maturity === "withdrawn"
@@ -79,18 +79,20 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
       )
     }
 
-    <section class="card revisions-card" aria-labelledby="revisions">
-      <h2 id="revisions">Revisions</h2>
-      <ol class="revisions" data-revisions>
+    <section class="revisions-section" aria-labelledby="revisions">
+      <h2 id="revisions">
+        Revisions <span class="n">{revisions.length}</span>
+      </h2>
+      <ol class="timeline revisions" data-revisions>
         {
           revisions.map((r) => (
             <li data-revision={r.id} data-status={r.status}>
+              <time datetime={r.date}>{r.date}</time>
               <div class="rev-head">
                 <a href={r.url} rel="noopener" class="rev-id">
                   {r.id}
                 </a>
-                <time datetime={r.date}>{r.date}</time>
-                <span class:list={["pill", { current: r.status === "current" }]}>{r.status}</span>
+                <span class:list={["chip", { signal: r.status === "current" }]}>{r.status}</span>
                 {diffHref.has(r.id) && (
                   <a class="diff" href={diffHref.get(r.id)}>
                     What changed since {r.supersedes}
@@ -125,13 +127,13 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
               Features of revision <code>{current.id}</code> that the MCP auth atlas observes, with
               the level the revision puts on them.
             </p>
-            <ul class="features" data-defines>
+            <ul class="rows features" data-defines>
               {defined.map(({ feature, entry }) => (
                 <li data-feature={feature.id}>
                   <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
                   <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>
                   <span class="meta">
-                    {PARTY_LABEL[feature.party]} · {CATEGORY_LABEL[feature.category]} ·{" "}
+                    {PARTY_LABEL[feature.party]} / {CATEGORY_LABEL[feature.category]} /{" "}
                     <Citation entry={entry} />
                   </span>
                 </li>
@@ -144,7 +146,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
 
     <footer class="page-foot prose">
       <p>
-        Maturity is the publisher's own status; dates are the document's own. To correct this
+        Maturity is the publisher's own status, and dates are the document's own. To correct this
         entry, edit <a href={repoFile} rel="noopener">its data file</a> and open a pull request;
         see <a href="https://github.com/letsauthlab/letsauth/blob/main/docs/atlas-maintenance.md" rel="noopener">the maintenance guide</a>.
       </p>
@@ -157,91 +159,58 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
 </Base>
 
 <style>
-  .note {
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
+  /* M2: the map node or list entry the reader followed grows into this title */
+  .page-head h1 {
+    view-transition-name: spec-title;
   }
-  .notice {
-    margin-bottom: var(--space-5);
-    border-color: var(--line-strong);
-    background: var(--bg-sunken);
-  }
-  .revisions-card {
+  .gone {
     margin-bottom: var(--space-6);
   }
-  .card h2 {
-    font-size: var(--text-lg);
+  .gone h2 {
+    font-size: var(--h3);
+    margin-top: 0;
   }
+  .revisions-section,
   .relations-section,
   .defines-section {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-7);
   }
+  .revisions-section h2,
+  .relations-section h2,
   .defines-section h2 {
-    font-size: var(--text-xl);
-  }
-  .revisions {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: var(--space-3);
-  }
-  .revisions li {
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line);
-  }
-  .revisions li:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
+    font-size: var(--h2);
   }
   .rev-head {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-3);
-    font-size: var(--text-sm);
+    margin-top: var(--space-1);
+    font-size: var(--small);
   }
   .rev-id {
     font-family: var(--font-mono);
     font-weight: 600;
-  }
-  .rev-head time {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-muted);
-  }
-  .pill.current {
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-    border-color: color-mix(in oklch, var(--accent) 40%, transparent);
+    overflow-wrap: anywhere;
   }
   .diff {
-    font-size: var(--text-xs);
+    font-size: var(--tiny);
   }
   .changes {
     margin: var(--space-2) 0 0;
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
+    font-size: var(--small);
+    color: var(--ink-2);
+    max-width: var(--measure);
   }
   .features {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
-    gap: var(--space-2) var(--space-5);
-    font-size: var(--text-sm);
+    font-size: var(--small);
   }
   .features li {
-    display: grid;
-    grid-template-columns: 1fr max-content;
-    gap: var(--space-1) var(--space-3);
+    display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--line);
-  }
-  .features li:last-child {
-    border-bottom: 0;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) 0;
   }
   .features a {
     font-weight: 600;
@@ -249,15 +218,11 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
     text-decoration: none;
   }
   .features a:hover {
-    color: var(--accent);
-    text-decoration: underline;
+    color: var(--signal);
   }
   .features .meta {
-    grid-column: 1 / -1;
-    color: var(--ink-muted);
-    font-size: var(--text-xs);
-  }
-  .relations-section h2 {
-    font-size: var(--text-xl);
+    flex-basis: 100%;
+    color: var(--ink-2);
+    font-size: var(--tiny);
   }
 </style>
