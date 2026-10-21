@@ -168,8 +168,8 @@ export const RELATION_DESCRIPTION: Record<RelationType, string> = {
   "builds-on": "Depends on the other document's mechanisms and cannot be used without them.",
   profiles: "Narrows the other document's options for one setting without changing it.",
   references: "Cites the other document normatively or for a specific mechanism.",
-  replaces: "Supersedes the other document; the older one stays for history.",
-  "competes-with": "Proposes a different answer to the same question; the note says how.",
+  replaces: "Supersedes the other document. The older one stays for history.",
+  "competes-with": "Proposes a different answer to the same question. The note says how.",
   "solves-same-problem-as":
     "Addresses the same need by a different route without competing for adoption.",
 };

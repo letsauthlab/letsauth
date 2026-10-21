@@ -3,7 +3,8 @@
  * Progressive enhancement over the server-rendered standards map. The SVG and the spec list in
  * the DOM are the source of truth: this island only hides edges, nodes and list entries that
  * fall outside the filter, syncs the query string, and highlights a node's neighbourhood on
- * hover and focus. Without JS the page is complete.
+ * hover and focus. Without JS the page is complete. It also hands the followed node or list entry
+ * to the cross-document view transition, so it grows into the spec page's title (plan 016, M2).
  */
 import { onMount } from "svelte";
 
@@ -113,6 +114,41 @@ onMount(() => {
     node.addEventListener("focus", () => highlight(id));
     node.addEventListener("blur", () => highlight(null));
   }
+
+  // M2: name the followed link for the view transition. A map node is SVG, which a view
+  // transition cannot capture, so an empty box over it carries the name instead.
+  let followed: Element | null = null;
+  const links = [...nodes, ...document.querySelectorAll("#spec-list a[href^='/standards/']")];
+  for (const link of links) link.addEventListener("click", () => (followed = link));
+  let ghost: HTMLElement | null = null;
+  type Swap = Event & { viewTransition?: unknown; activation?: { entry?: { url?: string } } };
+  window.addEventListener("pageswap", (event) => {
+    const { viewTransition, activation } = event as Swap;
+    const to = activation?.entry?.url;
+    const href = followed?.getAttribute("href");
+    if (!viewTransition || !to || !href || new URL(to).pathname !== href) return;
+    let named = followed as HTMLElement | SVGElement;
+    if (followed instanceof SVGElement) {
+      const box = followed.getBoundingClientRect();
+      ghost ??= document.body.appendChild(document.createElement("div"));
+      Object.assign(ghost.style, {
+        position: "fixed",
+        left: `${box.left}px`,
+        top: `${box.top}px`,
+        width: `${box.width}px`,
+        height: `${box.height}px`,
+        pointerEvents: "none",
+      });
+      named = ghost;
+    }
+    named.style.viewTransitionName = "spec-title";
+  });
+  // coming back from the history cache: the old name must not linger
+  window.addEventListener("pageshow", () => {
+    for (const el of [ghost, followed])
+      (el as HTMLElement | null)?.style.removeProperty("view-transition-name");
+    followed = null;
+  });
 
   frame?.setAttribute("data-enhanced", "");
   apply(false);

@@ -5,14 +5,7 @@ import StandardsMapIsland from "@/components/StandardsMap.svelte";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
 import { layoutGraph } from "@/lib/graph";
-import {
-  BODY_LABEL,
-  FAMILY_LABEL,
-  MATURITY_LABEL,
-  MATURITY_ORDER,
-  RELATION_DESCRIPTION,
-  RELATION_LABEL,
-} from "@/lib/labels";
+import { BODY_LABEL, FAMILY_LABEL, RELATION_LABEL } from "@/lib/labels";
 import {
   currentRevisionOf,
   mapRelations,
@@ -32,7 +25,6 @@ const withdrawn = withdrawnSpecs(data);
 const recent = recentlyRevised(data, 5);
 const bodies = groups.map((g) => g.body);
 const usedTypes = RELATION_TYPES.filter((t) => relations.some((r) => r.type === t));
-const usedMaturities = MATURITY_ORDER.filter((m) => nodes.some((s) => s.maturity === m));
 const repo = "https://github.com/letsauthlab/letsauth";
 ---
 
@@ -46,10 +38,21 @@ const repo = "https://github.com/letsauthlab/letsauth";
       <p class="eyebrow">Agent auth atlas</p>
       <h1>The standards that decide how agents are authorized, and how they relate</h1>
       <p class="lede">
-        One map of the OAuth extensions, workload identity drafts, agent protocols, credential
-        formats and EU acts that an agent, an MCP server or an identity provider has to follow.
-        Every node is a specification with dated revisions; every line is a typed relation with
-        a note on what it is based on.
+        This map shows the specifications for agent authorization and the typed relations
+        between them, as recorded in the atlas data files. It covers OAuth extensions, workload
+        identity drafts, agent protocols, credential formats and EU acts.
+      </p>
+      <p class="page-head__meta recent">
+        <span>Recently revised</span>
+        {
+          recent.map(({ spec, revision }, i) => (
+            <span>
+              {i > 0 && <span aria-hidden="true">/ </span>}
+              <a href={`/standards/${spec.id}/`}>{spec.name}</a>{" "}
+              <time datetime={revision.date}>{revision.date}</time>
+            </span>
+          ))
+        }
       </p>
       <dl class="facts" aria-label="Map at a glance">
         <div>
@@ -65,28 +68,15 @@ const repo = "https://github.com/letsauthlab/letsauth";
           <dd class="num">{bodies.length}</dd>
         </div>
       </dl>
-      <p class="recent">
-        <span class="recent__label">Recently revised</span>
-        {
-          recent.map(({ spec, revision }, i) => (
-            <>
-              {i > 0 && <span aria-hidden="true"> · </span>}
-              <a href={`/standards/${spec.id}/`}>{spec.name}</a>{" "}
-              <time datetime={revision.date}>{revision.date}</time>
-            </>
-          ))
-        }
-      </p>
     </header>
 
-    <form id="map-filters" class="filters card" method="get" action="/standards/">
+    <form id="map-filters" class="filters explainer" method="get" action="/standards/">
       <fieldset>
         <legend>Relation types</legend>
         {
           usedTypes.map((t) => (
             <label class="check">
               <input type="checkbox" name="type" value={t} />
-              <span class:list={["sample", `sample-${t}`]} aria-hidden="true" />
               {RELATION_LABEL[t].forward}
             </label>
           ))
@@ -113,7 +103,7 @@ const repo = "https://github.com/letsauthlab/letsauth";
       </div>
       <noscript>
         <p class="note" data-noscript-note>
-          Filtering needs JavaScript; the full map and list are shown below.
+          Filtering needs JavaScript. The full map and list are shown below.
         </p>
       </noscript>
     </form>
@@ -121,44 +111,15 @@ const repo = "https://github.com/letsauthlab/letsauth";
     <StandardsMap layout={layout} />
     <StandardsMapIsland client:idle />
 
-    <section class="legend" aria-labelledby="legend-title">
-      <h2 id="legend-title">Legend</h2>
-      <div class="legend__cols">
-        <dl class="legend__list">
-          {
-            usedTypes.map((t) => (
-              <>
-                <dt>
-                  <span class:list={["sample", `sample-${t}`]} aria-hidden="true" />
-                  {RELATION_LABEL[t].forward}
-                </dt>
-                <dd>{RELATION_DESCRIPTION[t]}</dd>
-              </>
-            ))
-          }
-        </dl>
-        <dl class="legend__list">
-          {
-            usedMaturities.map((m) => (
-              <>
-                <dt>
-                  <MaturityTag maturity={m} variant="label" />
-                </dt>
-                <dd>{MATURITY_LABEL[m]} is the publisher's status, not a grade.</dd>
-              </>
-            ))
-          }
-        </dl>
-      </div>
-    </section>
-
     <section id="spec-list" class="list" aria-labelledby="list-title">
       <h2 id="list-title">Every specification on the map</h2>
       {
         groups.map((g) => (
           <section class="body-group" data-body-group={g.body} aria-labelledby={`body-${g.body}`}>
-            <h3 id={`body-${g.body}`}>{BODY_LABEL[g.body]}</h3>
-            <ul>
+            <h3 id={`body-${g.body}`}>
+              {BODY_LABEL[g.body]} <span class="n">{g.specs.length}</span>
+            </h3>
+            <ul class="rows">
               {g.specs.map((spec) => {
                 const current = currentRevisionOf(spec);
                 return (
@@ -168,8 +129,8 @@ const repo = "https://github.com/letsauthlab/letsauth";
                       <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
                     </span>
                     <span class="meta">
-                      {FAMILY_LABEL[spec.family]} · {current.id}{" "}
-                      <time datetime={current.date}>{current.date}</time> ·{" "}
+                      {FAMILY_LABEL[spec.family]} / <code>{current.id}</code>{" "}
+                      <time datetime={current.date}>{current.date}</time> /{" "}
                       <a href={spec.url} rel="noopener">
                         Document
                       </a>
@@ -184,11 +145,13 @@ const repo = "https://github.com/letsauthlab/letsauth";
       {
         withdrawn.length > 0 && (
           <section class="body-group" aria-labelledby="body-withdrawn">
-            <h3 id="body-withdrawn">Withdrawn</h3>
+            <h3 id="body-withdrawn">
+              Withdrawn <span class="n">{withdrawn.length}</span>
+            </h3>
             <p class="note">
               Withdrawn documents leave the map but keep their page and their relations.
             </p>
-            <ul>
+            <ul class="rows">
               {withdrawn.map((spec) => (
                 <li data-withdrawn={spec.id}>
                   <span class="who">
@@ -207,7 +170,7 @@ const repo = "https://github.com/letsauthlab/letsauth";
     <footer class="page-foot prose">
       <h2>Contribute</h2>
       <p>
-        Specifications live one per file under <code>data/specs/</code>; relations in
+        Specifications live one per file under <code>data/specs/</code>, relations in
         <code>data/relations.yaml</code>. A relation of a judgement type (competes with, solves
         the same problem as) carries a note saying what it is based on. The build rejects a
         relation to an unknown document and names the field. See
@@ -223,47 +186,30 @@ const repo = "https://github.com/letsauthlab/letsauth";
 </Base>
 
 <style>
-  .recent {
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-    max-width: none;
-    margin: var(--space-4) 0 0;
-    line-height: 1.8;
-  }
-  .recent__label {
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    margin-right: var(--space-2);
-  }
   .recent time {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-faint);
+    font-size: var(--tiny);
   }
   .filters {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-4) var(--space-6);
-    margin-bottom: var(--space-4);
-    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
   }
   fieldset {
     border: 0;
     padding: 0;
     margin: 0;
+    min-width: 0;
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-4);
     align-items: center;
   }
   legend {
-    font-size: var(--text-2xs);
+    font-size: var(--tiny);
     font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-muted);
+    color: var(--ink-2);
     padding: 0;
     margin-bottom: var(--space-2);
     width: 100%;
@@ -272,11 +218,11 @@ const repo = "https://github.com/letsauthlab/letsauth";
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: var(--text-sm);
+    font-size: var(--small);
     cursor: pointer;
   }
   .check input {
-    accent-color: var(--accent);
+    accent-color: var(--signal);
     width: 1rem;
     height: 1rem;
     margin: 0;
@@ -287,121 +233,42 @@ const repo = "https://github.com/letsauthlab/letsauth";
   .note {
     margin: 0;
   }
-  /* Line samples match the SVG edge styles: dash pattern first, colour second. */
-  .sample {
-    display: inline-block;
-    width: 2.2rem;
-    height: 0;
-    border-top: 2px solid var(--ink-faint);
-    vertical-align: middle;
-  }
-  .sample-builds-on {
-    border-top-color: var(--accent);
-  }
-  .sample-profiles {
-    border-top-style: dashed;
-    border-top-color: var(--accent);
-  }
-  .sample-replaces {
-    border-top-width: 3px;
-    border-top-color: var(--level-deprecated);
-  }
-  .sample-references {
-    border-top-style: dotted;
-  }
-  .sample-competes-with {
-    border-top-style: dashed;
-    border-top-width: 3px;
-    border-top-color: var(--accent-2);
-  }
-  .sample-solves-same-problem-as {
-    border-top-style: dotted;
-    border-top-width: 3px;
-    border-top-color: var(--level-may);
-  }
-  .legend {
-    margin-top: var(--space-6);
-  }
-  .legend h2,
   .list h2 {
-    font-size: var(--text-xl);
+    font-size: var(--h2);
   }
-  .legend__cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-8);
-  }
-  .legend__list {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: var(--space-3) var(--space-4);
-    font-size: var(--text-sm);
-    margin: 0;
-    padding: var(--space-4) var(--space-5);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm), var(--inset-highlight);
-    align-content: start;
-  }
-  .legend__list dt {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-weight: 600;
-  }
-  .legend__list dd {
-    margin: 0;
-    color: var(--ink-muted);
-  }
+  /* the list is long and below the fold: skip its layout until it scrolls near (plan 016, 7) */
   .body-group {
     margin-bottom: var(--space-6);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 16rem;
   }
   .body-group h3 {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    font-family: var(--font-body);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    color: var(--ink-muted);
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    margin-bottom: var(--space-4);
+    font-size: var(--small);
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--ink-2);
+    margin: 0 0 var(--space-2);
   }
-  .body-group h3::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--line);
+  .body-group .note {
+    margin-bottom: var(--space-3);
   }
-  .body-group ul {
-    list-style: none;
-    padding: 0;
+  .body-group .rows {
     margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-    gap: var(--space-3) var(--space-5);
   }
   .body-group li {
-    display: grid;
-    gap: var(--space-1);
-    font-size: var(--text-sm);
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius);
-    background: color-mix(in oklch, var(--bg-elevated) 60%, transparent);
-    transition: border-color var(--dur-fast) var(--ease);
-  }
-  .body-group li:hover {
-    border-color: var(--line-strong);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-3) 0;
   }
   .who {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1) var(--space-3);
+    min-width: 0;
   }
   .who a {
     font-weight: 600;
@@ -409,26 +276,26 @@ const repo = "https://github.com/letsauthlab/letsauth";
     text-decoration: none;
   }
   .who a:hover {
-    color: var(--accent);
-    text-decoration: underline;
+    color: var(--signal);
   }
   .meta {
-    color: var(--ink-muted);
-    font-size: var(--text-xs);
+    color: var(--ink-2);
+    font-size: var(--tiny);
+    font-variant-numeric: tabular-nums;
   }
+  .meta code,
   .meta time {
     font-family: var(--font-mono);
+    font-size: var(--tiny);
+    background: none;
+    padding: 0;
+  }
+  .meta a {
+    color: var(--ink-2);
   }
   @media (max-width: 40rem) {
     .count {
       margin-left: 0;
-    }
-    .legend__list {
-      grid-template-columns: 1fr;
-      gap: var(--space-1) 0;
-    }
-    .legend__list dd {
-      margin-bottom: var(--space-3);
     }
   }
 </style>

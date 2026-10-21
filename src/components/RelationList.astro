@@ -62,7 +62,7 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
           <h3 id={s.id}>
             {s.heading} <span class="n">{s.entries.length}</span>
           </h3>
-          <ul>
+          <ul class="rows">
             {s.entries.map(({ relation, other }) => (
               <li data-other={other.id} data-type={typeOf(s.id)}>
                 <span class="who">
@@ -85,41 +85,31 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
 }
 
 <style>
-  .note {
-    color: var(--ink-muted);
-  }
   .relations {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--space-5);
   }
   .group h3 {
-    font-size: var(--text-md);
-    margin-bottom: var(--space-1);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--line);
+    font-size: var(--small);
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--ink-2);
+    margin: 0 0 var(--space-2);
   }
-  ul {
-    list-style: none;
-    padding: 0;
+  .rows {
     margin: 0;
-    display: grid;
-    gap: var(--space-2);
   }
   li {
     display: grid;
     gap: var(--space-1);
     padding: var(--space-3) 0;
-    border-bottom: 1px solid var(--line-soft);
-    font-size: var(--text-sm);
-  }
-  li:last-child {
-    border-bottom: 0;
+    font-size: var(--small);
   }
   .who {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-2) var(--space-3);
+    gap: var(--space-1) var(--space-3);
   }
   .who a {
     font-weight: 600;
@@ -127,15 +117,14 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
     text-decoration: none;
   }
   .who a:hover {
-    color: var(--accent);
-    text-decoration: underline;
+    color: var(--signal);
   }
   .why {
-    color: var(--ink-muted);
+    color: var(--ink-2);
     max-width: var(--measure);
   }
   .src {
-    font-size: var(--text-xs);
+    font-size: var(--tiny);
     justify-self: start;
   }
 </style>

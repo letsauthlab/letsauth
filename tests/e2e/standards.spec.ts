@@ -1,14 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
 import { BODY_LABEL, MATURITY_LABEL } from "../../src/lib/labels";
-import { mapRelations, specNodes, specsByBody } from "../../src/lib/standards";
-import { expectNoSeriousA11yViolations } from "./helpers";
+import { buildsOnSpine, mapRelations, specNodes, specsByBody } from "../../src/lib/standards";
+import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const nodes = specNodes(data);
 const relations = mapRelations(data);
 const bodies = specsByBody(nodes);
 const competes = relations.filter((r) => r.type === "competes-with");
+const spine = buildsOnSpine(nodes, relations);
 const first = nodes[0];
 if (!first) throw new Error("the seed data needs at least one spec");
 
@@ -63,14 +64,50 @@ test.describe("standards map (US1)", () => {
     await context.close();
   });
 
-  test("has no horizontal page scroll at phone width (SC-004)", async ({ page }) => {
-    await page.setViewportSize({ width: 412, height: 900 });
+  for (const width of [320, 412]) {
+    test(`has no horizontal page scroll at ${width}px (SC-004)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/standards/");
+      const [scroll, inner] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        window.innerWidth,
+      ]);
+      expect(scroll).toBeLessThanOrEqual(inner ?? 0);
+    });
+  }
+
+  test("the builds-on spine draws in once, from the oldest document (M4)", async ({ page }) => {
+    test.skip(spine.length === 0, "no builds-on chain in the seed data");
     await page.goto("/standards/");
-    const [scroll, inner] = await page.evaluate(() => [
-      document.documentElement.scrollWidth,
-      window.innerWidth,
-    ]);
-    expect(scroll).toBeLessThanOrEqual(inner ?? 0);
+    const edges = page.locator("#map path.edge.spine");
+    await expect(edges).toHaveCount(spine.length);
+    const runs = await edges.evaluateAll((els) =>
+      els.flatMap((el) =>
+        el.getAnimations().map((a) => ({
+          name: (a as CSSAnimation).animationName,
+          iterations: a.effect?.getTiming().iterations,
+        })),
+      ),
+    );
+    expect(runs.length).toBe(spine.length);
+    for (const run of runs) expect(run).toEqual({ name: "map-draw", iterations: 1 });
+    const first = spine[0];
+    await expect(
+      page.locator(`#map path[data-relation="${first?.from}|builds-on|${first?.to}"]`),
+    ).toHaveClass(/spine/);
+  });
+
+  test("under reduced motion the spine is drawn complete with no halo (M4)", async ({ page }) => {
+    await page.goto("/standards/");
+    await expectEndStateUnderReducedMotion(page, "#map");
+    const offsets = await page
+      .locator("#map path.edge.spine")
+      .evaluateAll((els) => els.map((el) => getComputedStyle(el).strokeDashoffset));
+    for (const offset of offsets) expect(offset).toBe("0px");
+    const halos = await page
+      .locator("#map .spine-halo")
+      .evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
+    for (const opacity of halos) expect(opacity).toBe("0");
   });
 
   test("filter state in the URL restores the filtered view (FR-007)", async ({ page }) => {
@@ -123,6 +160,33 @@ test.describe("standards map (US1)", () => {
       page.locator(`#map path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
     ).toHaveClass(/is-near/);
     expect(await page.locator("#map a[data-spec].is-far").count()).toBeGreaterThan(0);
+  });
+
+  test("keyboard focus on a node highlights its neighbourhood as hover does", async ({ page }) => {
+    const rel = relations[0];
+    test.skip(!rel, "no relation in the seed data");
+    await page.goto("/standards/");
+    await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
+    await page.locator(`#map a[data-spec="${rel?.from}"]`).focus();
+    await expect(page.locator(`#map a[data-spec="${rel?.to}"]`)).toHaveClass(/is-near/);
+    await expect(
+      page.locator(`#map path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
+    ).toHaveClass(/is-near/);
+    expect(await page.locator("#map a[data-spec].is-far").count()).toBeGreaterThan(0);
+    await page.locator(`#map a[data-spec="${rel?.from}"]`).blur();
+    await expect(page.locator("#map .is-far")).toHaveCount(0);
+  });
+
+  test("the legend explains relations by line and maturity by chip, readable in greyscale", async ({
+    page,
+  }) => {
+    await page.goto("/standards/");
+    const used = new Set(relations.map((r) => r.type));
+    await expect(page.locator("[data-legend='relations'] dt svg")).toHaveCount(used.size);
+    const maturities = new Set(nodes.map((s) => s.maturity));
+    await expect(page.locator("[data-legend='maturity'] dt .chip")).toHaveCount(maturities.size);
+    await page.addStyleTag({ content: "html { filter: grayscale(1) }" });
+    await expect(page.locator("#map-frame")).toHaveScreenshot("standards-greyscale.png");
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {

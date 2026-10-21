@@ -1,8 +1,16 @@
 ---
-import { LANE_LABEL_W, type Layout, PAD, wrapLabel } from "@/lib/graph";
-import { BODY_LABEL, BODY_SHORT, MATURITY_LABEL, MATURITY_TAG, RELATION_LABEL } from "@/lib/labels";
-import { RELATION_TYPES } from "@/lib/standards";
+import { type Layout, PAD, wrapLabel } from "@/lib/graph";
+import {
+  BODY_LABEL,
+  MATURITY_LABEL,
+  MATURITY_ORDER,
+  MATURITY_TAG,
+  RELATION_DESCRIPTION,
+  RELATION_LABEL,
+} from "@/lib/labels";
+import { buildsOnSpine, RELATION_TYPES } from "@/lib/standards";
 import type { RelationType } from "@/schema";
+import MaturityTag from "./MaturityTag.astro";
 
 interface Props {
   layout: Layout;
@@ -11,9 +19,24 @@ interface Props {
 const { layout } = Astro.props;
 const { nodes, edges, lanes, width, height } = layout;
 const byId = new Map(nodes.map((n) => [n.spec.id, n.spec]));
-const directed: RelationType[] = RELATION_TYPES.filter(
-  (t) => t !== "competes-with" && t !== "solves-same-problem-as",
+const specs = nodes.map((n) => n.spec);
+const relations = edges.map((e) => e.relation);
+const usedTypes = RELATION_TYPES.filter((t) => relations.some((r) => r.type === t));
+const usedMaturities = MATURITY_ORDER.filter((m) => specs.some((s) => s.maturity === m));
+
+// M4: the longest builds-on chain draws in from the oldest document to the newest
+const spine = buildsOnSpine(specs, relations);
+const spineStep = new Map(spine.map((r, i) => [`${r.from}|${r.type}|${r.to}`, i]));
+const spineEdges = edges.filter((e) =>
+  spineStep.has(`${e.relation.from}|${e.relation.type}|${e.relation.to}`),
 );
+const spineFirst = spine[0] ? byId.get(spine[0].to) : undefined;
+const spineLast = spine.at(-1) ? byId.get(spine.at(-1)?.from ?? "") : undefined;
+
+const final = new Set(["published", "in-force"]);
+const draft = new Set(["individual-draft", "working-group-draft", "candidate"]);
+// 13px Geist at weight 500 averages a little under 7px a character
+const chipWidth = (text: string) => Math.round(text.length * 7 + 16);
 
 function edgeTitle(type: RelationType, fromId: string, toId: string, note?: string): string {
   const from = byId.get(fromId)?.name ?? fromId;
@@ -21,11 +44,12 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
   const phrase = `${from} ${RELATION_LABEL[type].forward} ${to}`;
   return note ? `${phrase}. ${note}` : phrase;
 }
+const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type}|${e.relation.to}`;
 ---
 
 <figure class="map" aria-labelledby="map-caption">
   <div
-    class="map-frame"
+    class="plate map-frame"
     id="map-frame"
     tabindex="0"
     role="region"
@@ -47,9 +71,9 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
       </title>
       <defs>
         {
-          directed.map((t) => (
+          ["arrow", "arrow-near", "arrow-spine"].map((id) => (
             <marker
-              id={`arrow-${t}`}
+              id={id}
               viewBox="0 0 10 10"
               refX="9"
               refY="5"
@@ -57,7 +81,7 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
               markerHeight="7"
               orient="auto-start-reverse"
             >
-              <path d="M0,0 L10,5 L0,10 z" class:list={["arrow", `arrow-${t}`]} />
+              <path d="M0,0 L10,5 L0,10 z" class={id} />
             </marker>
           ))
         }
@@ -65,17 +89,23 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
 
       <g class="lanes" aria-hidden="true">
         {
-          lanes.map((lane) => (
+          lanes.map((lane, i) => (
             <g class="lane" data-body={lane.body}>
-              <rect
-                x={PAD / 2}
-                y={lane.y - 8}
-                width={width - PAD}
-                height={lane.height + 16}
-                rx="10"
-              />
-              <text x={PAD + 4} y={lane.y + 14} class="lane-label">
-                {BODY_LABEL[lane.body]}
+              {i > 0 && (
+                <line
+                  x1={PAD / 2}
+                  x2={width - PAD / 2}
+                  y1={lane.y - 13}
+                  y2={lane.y - 13}
+                  class="lane-rule"
+                />
+              )}
+              <text x={PAD} y={lane.y + 14} class="lane-label">
+                {wrapLabel(BODY_LABEL[lane.body], 12, 2).map((line, j) => (
+                  <tspan x={PAD} dy={j === 0 ? 0 : 17}>
+                    {line}
+                  </tspan>
+                ))}
               </text>
             </g>
           ))
@@ -84,19 +114,41 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
 
       <g class="edges" aria-hidden="true">
         {
-          edges.map((e) => (
+          spineEdges.map((e) => (
             <path
-              class:list={["edge", `edge-${e.relation.type}`, { symmetric: e.symmetric }]}
+              class="spine-halo"
               d={e.d}
-              data-relation={`${e.relation.from}|${e.relation.type}|${e.relation.to}`}
-              data-type={e.relation.type}
-              data-from={e.relation.from}
-              data-to={e.relation.to}
-              marker-end={e.symmetric ? undefined : `url(#arrow-${e.relation.type})`}
-            >
-              <title>{edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}</title>
-            </path>
+              pathLength="1"
+              style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
+            />
           ))
+        }
+        {
+          edges.map((e) => {
+            const step = spineStep.get(key(e));
+            const onSpine = step !== undefined;
+            return (
+              <path
+                class:list={[
+                  "edge",
+                  `edge-${e.relation.type}`,
+                  { symmetric: e.symmetric, spine: onSpine },
+                ]}
+                d={e.d}
+                pathLength={onSpine ? "1" : undefined}
+                style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
+                data-relation={key(e)}
+                data-type={e.relation.type}
+                data-from={e.relation.from}
+                data-to={e.relation.to}
+                marker-end={e.symmetric ? undefined : onSpine ? "url(#arrow-spine)" : "url(#arrow)"}
+              >
+                <title>
+                  {edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}
+                </title>
+              </path>
+            );
+          })
         }
       </g>
 
@@ -105,6 +157,7 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
           nodes.map((n) => {
             const lines = wrapLabel(n.spec.name, 24, 2);
             const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
+            const tag = MATURITY_TAG[n.spec.maturity];
             return (
               <a
                 href={`/standards/${n.spec.id}/`}
@@ -114,21 +167,24 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
                 data-maturity={n.spec.maturity}
                 aria-label={label}
               >
-                <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="8" class="node-box" />
-                <text x={n.x + 10} y={n.y + 15} class="node-meta">
-                  {BODY_SHORT[n.spec.body]}
+                <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-box" />
+                <rect
+                  x={n.x + 10}
+                  y={n.y + 9}
+                  width={chipWidth(tag)}
+                  height="19"
+                  rx="9.5"
+                  class:list={[
+                    "node-chip",
+                    { final: final.has(n.spec.maturity), draft: draft.has(n.spec.maturity) },
+                  ]}
+                />
+                <text x={n.x + 18} y={n.y + 23} class="node-tag">
+                  {tag}
                 </text>
-                <text
-                  x={n.x + n.w - 10}
-                  y={n.y + 15}
-                  class="node-meta node-maturity"
-                  text-anchor="end"
-                >
-                  {MATURITY_TAG[n.spec.maturity]}
-                </text>
-                <text x={n.x + 10} y={n.y + 33} class="node-name">
+                <text x={n.x + 10} y={n.y + 46} class="node-name">
                   {lines.map((line, i) => (
-                    <tspan x={n.x + 10} dy={i === 0 ? 0 : 14}>
+                    <tspan x={n.x + 10} dy={i === 0 ? 0 : 16}>
                       {line}
                     </tspan>
                   ))}
@@ -141,99 +197,179 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
     </svg>
   </div>
   <figcaption id="map-caption">
-    Rows are publishing bodies; a specification sits one column right of what it builds on,
-    profiles or replaces. Hover a line for the relation; the
-    <a href="#spec-list">list below</a> carries the same information as text.
+    Rows are publishing bodies. A specification sits one column right of what it builds on,
+    profiles or replaces.{" "}
+    {
+      spineFirst && spineLast && (
+        <>
+          The darker line is the longest chain of documents that build on each other, from{" "}
+          {spineFirst.name} to {spineLast.name}.{" "}
+        </>
+      )
+    }
+    Hover or focus a node to trace its relations. The <a href="#spec-list">list below</a> carries
+    the same information as text.
   </figcaption>
 </figure>
 
-<style define:vars={{ "lane-label-w": `${LANE_LABEL_W}px` }}>
+<section class="legend" aria-labelledby="legend-title">
+  <h2 id="legend-title">Legend</h2>
+  <div class="legend__cols">
+    <dl class="panel legend__list" data-legend="relations">
+      {
+        usedTypes.map((t) => (
+          <>
+            <dt>
+              <svg class="sample" width="44" height="10" viewBox="0 0 44 10" aria-hidden="true">
+                <path d="M2,5 L40,5" class:list={["edge", `edge-${t}`]} />
+              </svg>
+              {RELATION_LABEL[t].forward}
+            </dt>
+            <dd>{RELATION_DESCRIPTION[t]}</dd>
+          </>
+        ))
+      }
+    </dl>
+    <dl class="panel legend__list" data-legend="maturity">
+      {
+        usedMaturities.map((m) => (
+          <>
+            <dt>
+              <MaturityTag maturity={m} />
+            </dt>
+            <dd>{MATURITY_LABEL[m]}. The publisher's status, not a grade.</dd>
+          </>
+        ))
+      }
+    </dl>
+  </div>
+  <p class="note">
+    Relation types differ by dash pattern and line weight, maturity by the word in the chip. A
+    dashed chip is a draft. Colour only marks the relations of the node in focus.
+  </p>
+</section>
+
+<style>
   .map {
-    margin: 0 0 var(--space-5);
+    margin: 0 0 var(--space-6);
   }
   .map-frame {
+    padding: 0;
     overflow: auto;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow), var(--inset-highlight);
     max-height: 80vh;
   }
   .map-frame:focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 2px;
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
   }
   svg {
     display: block;
     font-family: var(--font-body);
   }
   figcaption {
-    margin-top: var(--space-2);
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--small);
     max-width: var(--measure);
   }
 
-  .lane rect {
-    fill: var(--bg);
-    stroke: var(--line);
+  .lane-rule {
+    stroke: var(--rule);
     stroke-width: 1;
   }
-  .lane:nth-child(even) rect {
-    fill: var(--bg-sunken);
-  }
   .lane-label {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    fill: var(--ink-muted);
+    fill: var(--ink-2);
   }
 
-  /* Edge types are told apart by dash pattern and arrowhead, with colour as a second cue. */
+  /*
+   * Edges: one ink at low weight, told apart by dash pattern, line weight and arrowhead
+   * (plan 016, 5.3). Colour is reserved for the neighbourhood of the node in focus.
+   */
   .edge {
+    --edge: color-mix(in oklch, var(--ink-2) 55%, transparent);
     fill: none;
-    stroke: var(--ink-faint);
-    stroke-width: 1.6;
-    opacity: 0.85;
-    transition: opacity var(--dur-fast) var(--ease);
-  }
-  .edge-builds-on {
-    stroke: var(--accent);
+    stroke: var(--edge);
+    stroke-width: 1.5;
+    transition:
+      opacity var(--dur-fast) var(--ease),
+      stroke var(--dur-fast) var(--ease);
   }
   .edge-profiles {
-    stroke: var(--accent);
     stroke-dasharray: 7 4;
   }
   .edge-replaces {
-    stroke: var(--level-deprecated);
-    stroke-width: 2.2;
+    stroke-width: 3;
   }
   .edge-references {
-    stroke: var(--ink-faint);
-    stroke-dasharray: 2 4;
+    stroke-dasharray: 0.5 4.5;
     stroke-linecap: round;
+    stroke-width: 2;
   }
   .edge-competes-with {
-    stroke: var(--accent-2);
-    stroke-width: 2.2;
-    stroke-dasharray: 10 5;
+    stroke-dasharray: 11 3 2 3;
   }
   .edge-solves-same-problem-as {
-    stroke: var(--level-may);
-    stroke-dasharray: 1 5;
-    stroke-width: 2.4;
+    stroke-dasharray: 0.5 7;
     stroke-linecap: round;
+    stroke-width: 4;
   }
   .arrow {
-    fill: var(--ink-faint);
+    fill: color-mix(in oklch, var(--ink-2) 55%, transparent);
   }
-  .arrow-builds-on,
-  .arrow-profiles {
-    fill: var(--accent);
+  .arrow-spine {
+    fill: var(--ink-2);
   }
-  .arrow-replaces {
-    fill: var(--level-deprecated);
+  .arrow-near {
+    fill: var(--signal);
+  }
+
+  /* the builds-on spine: full ink, drawn in once on load from the oldest end (M4) */
+  .edge.spine {
+    --edge: var(--ink-2);
+    stroke-width: 2;
+    stroke-dasharray: 1;
+  }
+  .spine-halo {
+    fill: none;
+    stroke: var(--signal-soft);
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .edge.spine {
+      animation: map-draw calc(var(--dur-draw) / var(--n)) linear
+        calc(var(--dur-draw) / var(--n) * var(--i)) both;
+    }
+    .spine-halo {
+      animation:
+        map-draw calc(var(--dur-draw) / var(--n)) linear
+          calc(var(--dur-draw) / var(--n) * var(--i)) both,
+        map-halo calc(var(--dur-draw) + var(--dur-slow)) linear both;
+    }
+  }
+  /* a negative offset reveals the path from its end, where the older document sits */
+  @keyframes map-draw {
+    from {
+      stroke-dashoffset: -1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* the halo shows while the spine draws (1200 of 1680ms), then fades out */
+  @keyframes map-halo {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    2%,
+    71% {
+      opacity: 1;
+    }
   }
 
   .node {
@@ -241,93 +377,120 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
     text-decoration: none;
   }
   .node-box {
-    fill: var(--bg-elevated);
-    stroke: var(--line-strong);
-    stroke-width: 1.5;
+    fill: var(--ground);
+    stroke: var(--rule-strong);
+    stroke-width: 1;
     transition: stroke var(--dur-fast) var(--ease);
   }
-  .node:hover .node-box,
-  .node:focus-visible .node-box {
+  .node:hover .node-box {
     stroke: var(--ink);
-    stroke-width: 2;
   }
   .node:focus-visible {
     outline: none;
   }
   .node:focus-visible .node-box {
-    stroke: var(--focus);
+    stroke: var(--signal);
+    stroke-width: 2.5;
   }
   .node-name {
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     fill: var(--ink);
   }
-  .node-meta {
-    font-size: 9px;
+  /* maturity as a chip: the word says it, a dashed outline marks a draft (MaturityTag) */
+  .node-chip {
+    fill: none;
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+  }
+  .node-chip.draft {
+    stroke-dasharray: 3 2;
+  }
+  .node-chip.final {
+    fill: color-mix(in oklch, var(--signal) 8%, transparent);
+    stroke: color-mix(in oklch, var(--signal) 45%, transparent);
+  }
+  .node-tag {
+    font-size: 13px;
     font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    fill: var(--ink-muted);
+    fill: var(--ink-2);
   }
-  /* Maturity: border style first, colour second (constitution V). */
-  .maturity-published .node-box {
-    stroke: var(--accent);
-  }
-  .maturity-published .node-maturity {
-    fill: var(--accent);
-  }
-  .maturity-in-force .node-box {
-    stroke: var(--accent-2);
-    stroke-width: 2.5;
-  }
-  .maturity-in-force .node-maturity {
-    fill: var(--accent-2);
-  }
-  .maturity-candidate .node-box {
-    stroke: var(--level-should);
-    stroke-dasharray: 2 3;
-    stroke-width: 2;
-  }
-  .maturity-candidate .node-maturity {
-    fill: var(--level-should);
-  }
-  .maturity-working-group-draft .node-box {
-    stroke-dasharray: 6 4;
-  }
-  .maturity-individual-draft .node-box {
-    stroke-dasharray: 3 4;
-    stroke-width: 1.2;
-  }
-  .maturity-expired .node-box,
-  .maturity-withdrawn .node-box {
-    stroke: var(--level-deprecated);
-    opacity: 0.6;
+  .node-chip.final + .node-tag {
+    fill: var(--signal);
   }
   .maturity-expired .node-name,
-  .maturity-withdrawn .node-name {
+  .maturity-withdrawn .node-name,
+  .maturity-expired .node-tag,
+  .maturity-withdrawn .node-tag {
     text-decoration: line-through;
-    fill: var(--ink-muted);
+    fill: var(--ink-2);
   }
 
-  /* Filtering and neighbourhood highlight, driven by the island. */
+  /*
+   * Filtering and the neighbourhood highlight, driven by the island. Hidden items keep their box
+   * (visibility, not display) so the spine's one-time draw-in does not restart on a filter.
+   */
   :global(#map .is-hidden) {
-    display: none;
+    visibility: hidden;
   }
   :global(#map .is-far) {
     opacity: 0.18;
   }
   :global(#map .edge.is-near) {
-    opacity: 1;
-    stroke-width: 2.6;
+    --edge: var(--signal);
+    stroke-width: 2.25;
+  }
+  :global(#map .edge.is-near:not(.symmetric)) {
+    marker-end: url(#arrow-near);
   }
   :global(#map .node.is-near .node-box) {
-    stroke: var(--ink);
-    stroke-width: 2;
+    stroke: var(--signal);
+    stroke-width: 1.5;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .edge,
-    .node-box {
-      transition: none;
+
+  .legend {
+    margin: 0 0 var(--space-7);
+  }
+  .legend h2 {
+    font-size: var(--h3);
+  }
+  .legend__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  .legend__list {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-3) var(--space-4);
+    font-size: var(--small);
+    margin: 0;
+    align-content: start;
+  }
+  .legend__list dt {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: 500;
+  }
+  .legend__list dd {
+    margin: 0;
+    color: var(--ink-2);
+  }
+  .sample {
+    flex: none;
+  }
+  .sample .edge {
+    --edge: var(--ink-2);
+  }
+  @media (max-width: 40rem) {
+    .legend__list {
+      grid-template-columns: 1fr;
+      gap: var(--space-1) 0;
+    }
+    .legend__list dd {
+      margin-bottom: var(--space-3);
     }
   }
 </style>
