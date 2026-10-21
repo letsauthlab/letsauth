@@ -189,7 +189,7 @@ onMount(() => {
     <div class="cell-dialog__bar">
       <h2 id="cell-dialog-title">Observation</h2>
       <form method="dialog">
-        <button type="submit" class="button small" aria-label="Close">Close</button>
+        <button type="submit" class="button small quiet" aria-label="Close">Close</button>
       </form>
     </div>
     <div bind:this={detailHost}></div>

@@ -40,12 +40,18 @@ jobs:
           pnpm check:append-only "origin/${{ github.base_ref }}"
       - name: Lint
         run: pnpm lint
+      - name: Prose (warn only until WP9 of specs/016)
+        run: pnpm check:prose
+      - name: Colour contrast
+        run: pnpm check:contrast
       - name: Typecheck
         run: pnpm typecheck
       - name: Unit tests
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: Byte budgets
+        run: pnpm check:budgets
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests

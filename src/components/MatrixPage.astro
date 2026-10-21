@@ -129,7 +129,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       </span>
       {
         diff && (
-          <a class="button small" href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>
+          <a class="button small quiet" href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>
             What changed since {diff.from.id}
           </a>
         )
@@ -194,7 +194,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     </div>
     <div class="field actions">
       <button type="submit" class="button small">Apply</button>
-      <button type="reset" class="button small">Reset</button>
+      <button type="reset" class="button small quiet">Reset</button>
     </div>
     <p id="matrix-count" class="count" aria-live="polite">
       {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
@@ -269,8 +269,8 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       observations arrive here by pull request.
     </p>
     <p class="page-foot__links">
-      <a class="button small" href="/mcp/data.json">Download this matrix as JSON</a>
-      <a class="button small" href="/contribute/">Add or correct an observation</a>
+      <a class="button small quiet" href="/mcp/data.json">Download this matrix as JSON</a>
+      <a class="button small quiet" href="/contribute/">Add or correct an observation</a>
     </p>
   </footer>
 </div>

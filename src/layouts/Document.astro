@@ -6,8 +6,9 @@ import Base from "@/layouts/Base.astro";
  * the tree, so none has a breadcrumb. The page opens with the shared page head, then runs as
  * two columns: the text on the left, and on the right a rail with the page's sections (read
  * from the h2s the page renders), an optional aside and the date the text last changed.
- * Sections are numbered; the rail tracks the reader's place without JavaScript. Pages put
- * their sections in the default slot and a card for the rail in the `aside` slot.
+ * Sections are numbered; the rail marks the section the address points at (`:target`) without
+ * JavaScript, and a 2px bar at the top of the window shows how far the reader is (M14). Pages
+ * put their sections in the default slot and a `.panel` for the rail in the `aside` slot.
  */
 interface Props {
   title: string;
@@ -55,9 +56,22 @@ const body = (await Astro.slots.render("default")).replace(
   },
 );
 const hasAside = Astro.slots.has("aside");
+// The rail marks the section in the address: one :has(:target) selector per section, since a
+// link cannot see its target. Ids are slugs or the page's own, so they need no escaping.
+const currentRule = sections
+  .map((s) => `.doc:has([id="${s.id}"]:target) .doc__toc a[href="#${s.id}"]`)
+  .join(",");
 ---
 
 <Base title={title} description={description} path={path}>
+  {
+    currentRule && (
+      <Fragment slot="head">
+        <style is:inline set:html={`${currentRule}{color:var(--ink);border-color:var(--signal)}`} />
+      </Fragment>
+    )
+  }
+  <div class="reading-progress" aria-hidden="true"></div>
   <article class="wrap">
     <header class="page-head">
       <p class="eyebrow">{eyebrow}</p>
@@ -101,9 +115,10 @@ const hasAside = Astro.slots.has("aside");
 </Base>
 
 <style>
+  /* the rail sits beside a text column one measure wide */
   .doc {
     display: grid;
-    grid-template-columns: minmax(0, 46rem) 15rem;
+    grid-template-columns: minmax(0, var(--measure)) 15rem;
     justify-content: space-between;
     gap: var(--space-7) var(--space-8);
     align-items: start;
@@ -113,15 +128,13 @@ const hasAside = Astro.slots.has("aside");
     top: calc(var(--header-h) + var(--space-5));
     display: grid;
     gap: var(--space-5);
-    font-size: var(--text-sm);
+    font-size: var(--small);
   }
   .doc__rail-title {
     margin: 0 0 var(--space-3);
-    font-size: var(--text-2xs);
+    font-size: var(--tiny);
     font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-faint);
+    color: var(--ink-2);
   }
   .doc__toc ol {
     list-style: none;
@@ -139,8 +152,8 @@ const hasAside = Astro.slots.has("aside");
     gap: var(--space-3);
     align-items: baseline;
     padding: 0.3em 0 0.3em var(--space-3);
-    border-left: 1px solid var(--line);
-    color: var(--ink-muted);
+    border-left: 2px solid var(--rule);
+    color: var(--ink-2);
     text-decoration: none;
     line-height: 1.35;
     transition:
@@ -150,27 +163,62 @@ const hasAside = Astro.slots.has("aside");
   .doc__toc a::before {
     content: counter(toc, decimal-leading-zero);
     flex: none;
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    color: var(--ink-faint);
+    font-size: var(--tiny);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
   }
-  .doc__toc a:hover {
-    color: var(--ink);
-    border-left-color: var(--line-strong);
-  }
-  .doc__toc li:has(:target) a,
+  .doc__toc a:hover,
   .doc__toc a:focus-visible {
     color: var(--ink);
+    border-left-color: var(--rule-strong);
   }
   .doc__updated {
     margin: 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-faint);
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+
+  /* M14: reading progress, only where scroll-driven animation exists and motion is welcome */
+  .reading-progress {
+    display: none;
+  }
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reading-progress {
+        display: block;
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 20;
+        height: 2px;
+        background: var(--signal);
+        transform-origin: 0 50%;
+        transform: scaleX(0);
+        pointer-events: none;
+        /* longhands: the minifier would fold a shorthand and the timeline into one invalid rule */
+        animation-name: reading-progress;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: scroll(root block);
+      }
+    }
+  }
+  @keyframes reading-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @media print {
+    .doc {
+      display: block;
+    }
+    .doc__rail {
+      display: none;
+    }
   }
   @media (max-width: 64rem) {
     .doc {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: var(--space-6);
     }
     /* The rail reads first on one column: a row of section chips, then the text. */
@@ -185,10 +233,10 @@ const hasAside = Astro.slots.has("aside");
       gap: var(--space-2);
     }
     .doc__toc a {
-      padding: 0.35em 0.75em;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--bg-elevated);
+      padding: 0.2em 0.75em;
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-pill);
+      font-size: var(--tiny);
     }
     .doc__toc a::before {
       content: none;
@@ -200,56 +248,58 @@ const hasAside = Astro.slots.has("aside");
 </style>
 
 <style is:global>
+  /* Repeated from global.css so the order holds whichever stylesheet the bundle puts first. */
+  @layer reset, tokens, base, layout, components, product, utilities, print;
+
   /*
-   * Body typography for long-form pages. Wrapped in :where() so a page's own classes win.
-   * Sections are numbered like the rail; the number sits above the heading as a small label.
+   * Body typography for long-form pages, in the layout layer so a page's own (unlayered) classes
+   * win. Sections are numbered like the rail; the number sits above the heading as a label.
    */
-  :where(.doc__body) {
-    counter-reset: section;
-    font-size: 1.0625rem;
-    line-height: 1.65;
-  }
-  :where(.doc__body) h2 {
-    counter-increment: section;
-    margin-top: var(--space-8);
-    scroll-margin-top: calc(var(--header-h) + var(--space-5));
-  }
-  :where(.doc__body) h2::before {
-    content: counter(section, decimal-leading-zero);
-    display: block;
-    margin-bottom: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    color: var(--accent);
-  }
-  :where(.doc__body) h2:first-child {
-    margin-top: 0;
-  }
-  :where(.doc__body) h3 {
-    margin-top: var(--space-6);
-  }
-  :where(.doc__body) :where(p, ul, ol, dl) {
-    max-width: var(--measure);
-  }
-  :where(.doc__body) :where(ul, ol) {
-    padding-left: 1.3em;
-  }
-  :where(.doc__body) :where(ul, ol) > li {
-    margin-bottom: var(--space-2);
-    padding-left: 0.2em;
-  }
-  :where(.doc__body) li::marker {
-    color: var(--accent);
-  }
-  :where(.doc__body) address {
-    font-style: normal;
-    max-width: 24rem;
-    line-height: 1.7;
-    margin-bottom: var(--space-4);
-  }
-  :where(.doc__body) > :last-child {
-    margin-bottom: 0;
+  @layer layout {
+    .doc__body {
+      counter-reset: section;
+    }
+    .doc__body h2 {
+      counter-increment: section;
+      margin-top: var(--space-8);
+      scroll-margin-top: calc(var(--header-h) + var(--space-5));
+    }
+    .doc__body h2::before {
+      content: counter(section, decimal-leading-zero);
+      display: block;
+      margin-bottom: var(--space-2);
+      font-size: var(--tiny);
+      font-weight: 500;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-2);
+    }
+    .doc__body h2:first-child {
+      margin-top: 0;
+    }
+    .doc__body h3 {
+      margin-top: var(--space-6);
+    }
+    .doc__body :is(p, ul, ol, dl) {
+      max-width: var(--measure);
+    }
+    .doc__body :is(ul, ol) {
+      padding-left: 1.3em;
+    }
+    .doc__body :is(ul, ol) > li {
+      margin-bottom: var(--space-2);
+      padding-left: 0.2em;
+    }
+    .doc__body li::marker {
+      color: var(--ink-2);
+    }
+    .doc__body address {
+      font-style: normal;
+      max-width: 24rem;
+      margin-bottom: var(--space-4);
+    }
+    .doc__body > :last-child {
+      margin-bottom: 0;
+    }
   }
 </style>

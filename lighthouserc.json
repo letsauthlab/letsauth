@@ -3,6 +3,7 @@
     "collect": {
       "staticDistDir": "./dist",
       "url": [
+        "http://localhost/index.html",
         "http://localhost/mcp/index.html",
         "http://localhost/mcp/servers/stripe/index.html",
         "http://localhost/mcp/features/mcp.as.cimd/index.html",
@@ -38,6 +39,18 @@
           "error",
           {
             "maxNumericValue": 153600
+          }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          {
+            "maxNumericValue": 0.1
+          }
+        ],
+        "total-blocking-time": [
+          "warn",
+          {
+            "maxNumericValue": 200
           }
         ]
       }

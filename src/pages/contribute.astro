@@ -32,26 +32,26 @@ const entry = `- server: stripe                     # must equal the file's serv
     Pick the one that fits what you have. Both end in a reviewed pull request, and the result
     looks the same in the atlas.
   </p>
-  <ul class="cards" role="list">
-    <li class="card">
+  <ul class="rows" role="list">
+    <li>
       <p class="eyebrow">Path A</p>
-      <h3>Open an issue</h3>
+      <h3 class="rows__title">Open an issue</h3>
       <p>
         The quickest route. The form asks for the same fields as a data entry: server, feature,
         revision, status, method, date, evidence and your handle. A maintainer turns an accepted
         issue into a pull request and links the issue as evidence where the issue itself is the
         evidence.
       </p>
-      <p><a class="button primary" href={issue} rel="noopener">Open the issue form</a></p>
+      <p><a class="button" href={issue} rel="noopener">Open the issue form</a></p>
     </li>
-    <li class="card">
+    <li>
       <p class="eyebrow">Path B</p>
-      <h3>Open a pull request</h3>
+      <h3 class="rows__title">Open a pull request</h3>
       <p>
         Append an entry to the server's observation file yourself. Validation runs locally and
         again in CI, so a reviewer only has to open the evidence. The steps are below.
       </p>
-      <p><a class="button" href={repo} rel="noopener">Open the repository</a></p>
+      <p><a class="button quiet" href={repo} rel="noopener">Open the repository</a></p>
     </li>
   </ul>
 
@@ -122,7 +122,7 @@ const entry = `- server: stripe                     # must equal the file's serv
   </p>
 
   <Fragment slot="aside">
-    <div class="card">
+    <div class="panel">
       <p class="eyebrow">Quick links</p>
       <ul class="links" role="list">
         <li><a href={issue} rel="noopener">Issue form</a></li>
@@ -141,13 +141,13 @@ const entry = `- server: stripe                     # must equal the file's serv
     padding: 0;
     display: grid;
     gap: var(--space-2);
-    font-size: var(--text-sm);
+    font-size: var(--small);
   }
   .links a {
     color: var(--ink);
     text-decoration: none;
   }
   .links a:hover {
-    color: var(--accent);
+    color: var(--signal);
   }
 </style>

@@ -43,7 +43,7 @@ try {
   }).join("");
   await page.setViewportSize({ width: 1200, height: 630 });
   await page.setContent(`<style>${tokens}
-    @font-face{font-family:Display;src:url('${fontUrl("bricolage-grotesque")}');font-weight:100 900}
+    @font-face{font-family:Display;src:url('${fontUrl("geist")}');font-weight:100 900}
     @font-face{font-family:Mono;src:url('${fontUrl("geist-mono")}');font-weight:100 900}
     *{box-sizing:border-box}
     body{margin:0;width:1200px;height:630px;padding:64px 80px;background:

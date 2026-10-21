@@ -1,5 +1,7 @@
 /*
  * Design tokens. The one place colours, type, spacing and motion are defined (constitution V).
+ * The values, the contrast table and the motion catalogue are documented in docs/design.md;
+ * `pnpm check:contrast` recomputes the table from this file.
  *
  * Colours are OKLCH pairs resolved with light-dark(): the root follows the system preference
  * through `color-scheme: light dark`, and data-theme forces one scheme when the viewer chose
@@ -8,71 +10,69 @@
 :root {
   color-scheme: light dark;
 
-  /* surfaces: warm paper by day, deep slate by night */
-  --bg: light-dark(oklch(97.6% 0.008 85), oklch(16.5% 0.012 265));
-  --bg-elevated: light-dark(oklch(99.4% 0.004 85), oklch(20.5% 0.013 265));
-  --bg-sunken: light-dark(oklch(95% 0.012 85), oklch(13.5% 0.012 265));
-  --bg-glass: light-dark(oklch(97.6% 0.008 85 / 90%), oklch(16.5% 0.012 265 / 86%));
+  /* grounds: cool graphite (hue 250 to 255) */
+  --ground: light-dark(oklch(98.5% 0.003 250), oklch(21% 0.008 255));
+  --ground-2: light-dark(oklch(95.5% 0.005 250), oklch(25% 0.01 255));
+  --ground-3: light-dark(oklch(91.5% 0.007 250), oklch(29.5% 0.011 255));
+  --code-bg: light-dark(oklch(97.2% 0.004 250), oklch(18.5% 0.008 255));
 
-  /* ink */
-  --ink: light-dark(oklch(21% 0.014 280), oklch(94% 0.008 85));
-  --ink-muted: light-dark(oklch(44% 0.016 280), oklch(74% 0.012 265));
-  --ink-faint: light-dark(oklch(50% 0.015 280), oklch(66% 0.012 265));
+  /* ink and rules */
+  --ink: light-dark(oklch(24% 0.01 255), oklch(91% 0.005 255));
+  --ink-2: light-dark(oklch(47% 0.012 255), oklch(72% 0.01 255));
+  --rule: light-dark(oklch(88% 0.006 250), oklch(33% 0.01 255));
+  --rule-strong: light-dark(oklch(62% 0.01 255), oklch(54% 0.012 255));
 
-  /* hairlines */
-  --line: light-dark(oklch(89% 0.012 85), oklch(27% 0.014 265));
-  --line-strong: light-dark(oklch(78% 0.016 85), oklch(37% 0.016 265));
-  --line-soft: light-dark(oklch(93% 0.01 85), oklch(23% 0.013 265));
+  /* the accent (teal of the wordmark) and the warning (its rust), desaturated in dark */
+  --signal: light-dark(oklch(46% 0.09 175), oklch(78% 0.08 172));
+  --signal-soft: color-mix(in oklch, var(--signal) 14%, transparent);
+  --on-signal: light-dark(oklch(98.5% 0.003 250), oklch(21% 0.008 255));
+  --threat: light-dark(oklch(50% 0.12 35), oklch(79% 0.09 45));
 
-  /* accents */
-  --accent: light-dark(oklch(47% 0.09 180), oklch(81% 0.11 175));
-  --accent-strong: light-dark(oklch(40% 0.09 180), oklch(88% 0.1 175));
-  --accent-ink: light-dark(oklch(99% 0 0), oklch(18% 0.05 175));
-  --accent-soft: light-dark(oklch(93.5% 0.035 180), oklch(27% 0.045 175));
-  --accent-glow: light-dark(oklch(75% 0.11 180 / 35%), oklch(70% 0.12 175 / 22%));
-  --accent-2: light-dark(oklch(53% 0.14 35), oklch(79% 0.12 40));
-  --accent-2-soft: light-dark(oklch(94% 0.03 35), oklch(28% 0.06 35));
-  --focus: light-dark(oklch(55% 0.19 262), oklch(78% 0.12 255));
+  /* support colours: each carries meaning and is always paired with a glyph or a word */
+  --boundary: light-dark(oklch(48% 0.06 230), oklch(76% 0.05 230));
+  --ok: light-dark(oklch(48% 0.07 155), oklch(78% 0.06 155));
+  --caution: light-dark(oklch(50% 0.1 70), oklch(80% 0.08 80));
 
-  /* status colours: an ink for text and outlines, a soft fill, and the ink used on a filled chip */
-  --status-on: light-dark(oklch(99% 0 0), oklch(15% 0.02 265));
-  --status-supported: light-dark(oklch(45% 0.13 152), oklch(78% 0.15 152));
-  --status-supported-soft: light-dark(oklch(93% 0.05 152), oklch(27% 0.06 152));
-  --status-partial: light-dark(oklch(50% 0.12 68), oklch(82% 0.14 80));
-  --status-partial-soft: light-dark(oklch(94% 0.06 85), oklch(29% 0.06 80));
-  --status-unsupported: light-dark(oklch(50% 0.17 25), oklch(76% 0.15 22));
-  --status-unsupported-soft: light-dark(oklch(93% 0.04 25), oklch(28% 0.07 22));
-  --status-unknown: light-dark(oklch(48% 0.012 280), oklch(66% 0.012 265));
-  --status-unknown-soft: light-dark(oklch(92% 0.006 280), oklch(24% 0.01 265));
-  --status-not-applicable: light-dark(oklch(48% 0.012 280), oklch(66% 0.012 265));
-  --status-not-applicable-soft: transparent;
+  /* status inks (plan 3.2): filled chips for observed statuses, outline or dot for unknown */
+  --status-supported: var(--ok);
+  --status-partial: var(--caution);
+  --status-unsupported: var(--threat);
+  --status-unknown: var(--ink-2);
+  --status-not-applicable: var(--rule-strong);
+  /* the glyph drawn on a filled status chip */
+  --status-on: var(--on-signal);
 
   /* requirement levels */
-  --level-must: var(--accent-2);
-  --level-should: light-dark(oklch(48% 0.1 78), oklch(82% 0.12 85));
-  --level-may: light-dark(oklch(48% 0.09 255), oklch(78% 0.09 250));
-  --level-deprecated: var(--status-unknown);
+  --level-must: var(--threat);
+  --level-should: var(--caution);
+  --level-may: var(--boundary);
+  --level-deprecated: var(--ink-2);
 
-  /* type */
-  --font-display:
-    "Bricolage Grotesque Variable", "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui,
-    sans-serif;
+  /* explorer toggle kinds */
+  --toggle-attack: var(--threat);
+  --toggle-misconfiguration: var(--caution);
+
+  /* type: Geist for headlines, interface and body; Geist Mono for ids, code and tokens */
   --font-body:
-    "Geist Variable", Geist, Inter, "SF Pro Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    "Geist Variable", Geist, "Geist Fallback", "SF Pro Text", "Segoe UI", system-ui, -apple-system,
+    sans-serif;
   --font-mono:
     "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --text-2xs: 0.7rem;
-  --text-xs: 0.78rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.3rem);
-  --text-xl: clamp(1.5rem, 1.25rem + 1.2vw, 2.1rem);
-  --text-2xl: clamp(2.2rem, 1.5rem + 3.2vw, 4.2rem);
+  --text-body: clamp(1.0625rem, 1.02rem + 0.15vw, 1.125rem);
+  --small: 0.875rem;
+  /* the floor: no text on the site is smaller than 13px */
+  --tiny: 0.8125rem;
+  --h1-home: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
+  --h1: clamp(2rem, 1.5rem + 2vw, 3.1rem);
+  --h2: clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem);
+  --h3: 1.2rem;
+  --lede: clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem);
   --leading-tight: 1.05;
   --leading-snug: 1.3;
-  --leading-body: 1.6;
+  --leading-body: 1.7;
   --tracking-tight: -0.03em;
+  --tracking-snug: -0.015em;
   --tracking-wide: 0.08em;
 
   /* spacing (4px base) */
@@ -85,35 +85,79 @@
   --space-7: 3rem;
   --space-8: 4.5rem;
   --space-9: 7rem;
-  --gutter: clamp(1rem, 4vw, 2.5rem);
-  --measure: 64ch;
-  --page-max: 84rem;
-  --header-h: 3.75rem;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --measure: 66ch;
+  --page-max: 78rem;
+  /* what sticky content must clear at the top of the viewport: nothing, since the header
+     scrolls away with the page (016 WP2) */
+  --header-h: 0rem;
 
-  /* shape and shadow */
-  --radius-sm: 6px;
+  /* shape: one radius for controls and panels, a larger one for the diagram plate */
   --radius: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --shadow-sm:
-    0 1px 2px light-dark(oklch(20% 0.02 265 / 6%), oklch(0% 0 0 / 40%)),
-    0 1px 1px light-dark(oklch(20% 0.02 265 / 4%), oklch(0% 0 0 / 20%));
-  --shadow:
-    0 1px 2px light-dark(oklch(20% 0.02 265 / 6%), oklch(0% 0 0 / 40%)),
-    0 10px 30px -14px light-dark(oklch(20% 0.02 265 / 20%), oklch(0% 0 0 / 60%));
-  --shadow-lg:
-    0 2px 4px light-dark(oklch(20% 0.02 265 / 6%), oklch(0% 0 0 / 45%)),
-    0 24px 60px -24px light-dark(oklch(20% 0.02 265 / 30%), oklch(0% 0 0 / 70%));
-  --inset-highlight: inset 0 1px 0 0 light-dark(oklch(100% 0 0 / 70%), oklch(100% 0 0 / 5%));
+  --radius-plate: 14px;
+  --radius-pill: 999px;
+  --radius-focus: 4px;
 
   /* motion */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-draw: cubic-bezier(0.5, 0, 0.2, 1);
   --dur-fast: 120ms;
   --dur: 220ms;
   --dur-slow: 480ms;
+  --dur-draw: 1200ms;
+
+  /*
+   * Legacy names (specs/016-visual-redesign plan 3.2). They alias the tokens above so that
+   * components not yet migrated keep rendering; WP10 deletes this block.
+   */
+  --bg: var(--ground);
+  --bg-elevated: var(--ground-2);
+  --bg-sunken: var(--code-bg);
+  --ink-muted: var(--ink-2);
+  --ink-faint: var(--ink-2);
+  --line: var(--rule);
+  --line-strong: var(--rule-strong);
+  --line-soft: var(--rule);
+  --accent: var(--signal);
+  /* a step from the signal towards the ink: darker by day, lighter by night */
+  --accent-strong: color-mix(in oklch, var(--signal) 80%, var(--ink));
+  --accent-ink: var(--on-signal);
+  --accent-2: var(--threat);
+  --focus: var(--signal);
+  --font-display: var(--font-body);
+  --text-2xs: var(--tiny);
+  --text-xs: var(--tiny);
+  --text-sm: var(--small);
+  --text-md: 1rem;
+  --text-lg: var(--lede);
+  --text-xl: var(--h2);
+  --text-2xl: var(--h1);
+  --radius-sm: 6px;
+  --radius-lg: var(--radius-plate);
+  --radius-xl: var(--radius-plate);
+  --ease-out: var(--ease);
+
+  /*
+   * Removed tokens, kept as neutral values until WP10. Shadows resolve to an invisible shadow
+   * rather than `none` because components combine them in lists (`var(--shadow), ...`), where
+   * `none` would invalidate the whole declaration.
+   */
+  --bg-glass: var(--ground);
+  --accent-glow: transparent;
+  --accent-soft: var(--signal-soft);
+  --accent-2-soft: color-mix(in oklch, var(--threat) 12%, transparent);
+  --shadow-sm: 0 0 0 0 transparent;
+  --shadow: 0 0 0 0 transparent;
+  --shadow-lg: 0 0 0 0 transparent;
+  --inset-highlight: 0 0 0 0 transparent;
+  --status-supported-soft: color-mix(in oklch, var(--ok) 12%, transparent);
+  --status-partial-soft: color-mix(in oklch, var(--caution) 12%, transparent);
+  --status-unsupported-soft: color-mix(in oklch, var(--threat) 12%, transparent);
+  --status-unknown-soft: color-mix(in oklch, var(--ink-2) 10%, transparent);
+  --status-not-applicable-soft: transparent;
 }
 
+/* data-theme only flips the scheme; every colour above follows it through light-dark(). */
 :root[data-theme="light"] {
   color-scheme: light;
 }
@@ -122,17 +166,11 @@
   color-scheme: dark;
 }
 
-/* The full wordmark occupies its own row above navigation on phones. */
-@media (max-width: 40rem) {
-  :root {
-    --header-h: 6.25rem;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-fast: 0ms;
     --dur: 0ms;
     --dur-slow: 0ms;
+    --dur-draw: 0ms;
   }
 }

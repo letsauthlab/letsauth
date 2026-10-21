@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { LEGAL_LINKS, OPERATOR } from "../../src/lib/site";
-import { expectNoSeriousA11yViolations } from "./helpers";
+import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const pages = [
   { path: "/about/", heading: "Let's Auth Labs" },
@@ -40,18 +40,107 @@ test.describe("foundation pages", () => {
     for (const width of [320, 390, 640, 641, 768, 896, 897, 1024, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       const header = page.locator(".site-header");
-      const bounds = await header.boundingBox();
-      expect(bounds).not.toBeNull();
-      for (const el of await header.locator("a:visible, button:visible").all()) {
+      const nav = header.getByRole("navigation", { name: "Primary" });
+      const navBox = await nav.boundingBox();
+      expect(navBox).not.toBeNull();
+      const left = navBox?.x ?? 0;
+      const right = left + (navBox?.width ?? 0);
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(right).toBeLessThanOrEqual(width);
+      // the brand and the theme toggle sit inside the viewport
+      for (const el of await header.locator(".brand, .theme-toggle").all()) {
         const box = await el.boundingBox();
         expect(box).not.toBeNull();
         expect(box?.x).toBeGreaterThanOrEqual(0);
         expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
       }
-      const nav = header.getByRole("navigation", { name: "Primary" });
-      expect(await nav.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      // a navigation row that does not fit scrolls sideways, with no visible scrollbar
+      const style = await nav.evaluate((el: HTMLElement) => ({
+        overflows: el.scrollWidth > el.clientWidth,
+        overflowX: getComputedStyle(el).overflowX,
+        scrollbar: getComputedStyle(el).scrollbarWidth,
+        bar: el.offsetHeight - el.clientHeight,
+      }));
+      if (style.overflows) {
+        expect(style.overflowX, `nav at ${width}px`).toBe("auto");
+        expect(style.scrollbar).toBe("none");
+      }
+      expect(style.bar).toBe(0);
+      // every destination can be scrolled fully into view inside the row, at 13px or more
+      const links = await nav.evaluate((el) => {
+        const row = el.getBoundingClientRect();
+        const out = [...el.querySelectorAll("a")].map((a) => {
+          a.scrollIntoView({ block: "nearest", inline: "nearest" });
+          const box = a.getBoundingClientRect();
+          return {
+            label: a.textContent?.trim(),
+            inside: box.left >= row.left - 0.5 && box.right <= row.right + 0.5,
+            size: Number.parseFloat(getComputedStyle(a).fontSize),
+          };
+        });
+        el.scrollLeft = 0;
+        return out;
+      });
+      expect(links).toHaveLength(6);
+      for (const link of links) {
+        expect(link.inside, `${link.label} at ${width}px`).toBe(true);
+        expect(link.size).toBeGreaterThanOrEqual(13);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     }
+  });
+
+  test("the current section is marked and shown in the navigation", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/breaches/");
+    const current = page
+      .getByRole("navigation", { name: "Primary" })
+      .locator('a[aria-current="page"]');
+    await expect(current).toHaveText("Breach anatomy");
+    await expect(current).toBeInViewport({ ratio: 1 });
+    expect(await current.evaluate((el) => getComputedStyle(el).borderBottomWidth)).toBe("2px");
+  });
+
+  test("the header is flat and scrolls away with the page", async ({ page }) => {
+    await page.goto("/about/");
+    const header = page.locator(".site-header");
+    const style = await header.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { position: cs.position, shadow: cs.boxShadow, filter: cs.backdropFilter };
+    });
+    expect(style).toEqual({ position: "static", shadow: "none", filter: "none" });
+    await expect(page.locator(".wip")).toContainText("Work in progress");
+  });
+
+  test("the reading progress bar shows where scroll-driven animation is supported", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/privacy/");
+    const bar = page.locator(".reading-progress");
+    const supported = await page.evaluate(() => CSS.supports("animation-timeline: scroll()"));
+    if (!supported) {
+      await expect(bar).toBeHidden();
+      return;
+    }
+    // at the top of the page the bar is scaled to nothing, so test that it is rendered
+    expect(await bar.evaluate((el) => getComputedStyle(el).display)).toBe("block");
+    const scaleAt = () => bar.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+    expect(await scaleAt()).toBeLessThan(0.05);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(scaleAt).toBeGreaterThan(0.95);
+  });
+
+  test("under reduced motion there is no progress bar and nothing moves", async ({ page }) => {
+    await page.goto("/privacy/");
+    await expectEndStateUnderReducedMotion(page, "body");
+    await expect(page.locator(".reading-progress")).toBeHidden();
+    const running = await page.evaluate(() =>
+      document.getAnimations().map((a) => (a as CSSAnimation).animationName ?? a.id),
+    );
+    expect(running).toEqual([]);
+    const button = page.getByRole("button", { name: "Toggle colour theme" });
+    expect(await button.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s, 0s");
   });
 
   for (const { path, heading } of pages) {

@@ -1,11 +1,23 @@
 /*
  * Self-hosted variable fonts (constitution VII: no third-party font host). The @fontsource
  * packages declare @font-face with font-display: swap and ship the woff2 files, which Vite
- * copies into the build. Fallback stacks are in tokens.css.
+ * copies into the build. Font stacks are in tokens.css.
  *
- * Bricolage Grotesque carries headlines, Geist carries body and interface text, Geist Mono
- * carries identifiers, code and tabular figures.
+ * Geist carries headlines, body and interface text; Geist Mono carries identifiers, code and
+ * tabular figures.
  */
-@import "@fontsource-variable/bricolage-grotesque/wght.css";
 @import "@fontsource-variable/geist/wght.css";
 @import "@fontsource-variable/geist-mono/wght.css";
+
+/*
+ * Arial scaled to Geist's metrics (Geist 1.7.2), so text keeps its place when Geist swaps in.
+ * It sits in the stack right after Geist and is used only until Geist has loaded.
+ */
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("ArialMT"), local("Arial Regular");
+  size-adjust: 104.71%;
+  ascent-override: 95.98%;
+  descent-override: 28.17%;
+  line-gap-override: 0%;
+}

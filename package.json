@@ -23,14 +23,16 @@
     "typecheck": "astro sync && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "pnpm validate:data && pnpm lint && pnpm typecheck && pnpm test && astro build && pnpm check:links",
+    "check": "pnpm validate:data && pnpm lint && pnpm check:prose && pnpm check:contrast && pnpm typecheck && pnpm test && astro build && pnpm check:links && pnpm check:budgets",
+    "check:budgets": "tsx scripts/check-budgets.ts",
+    "check:contrast": "tsx scripts/check-contrast.ts",
     "check:links": "tsx scripts/check-links.ts",
+    "check:prose": "tsx scripts/check-prose.ts",
     "edge-rules": "tsx scripts/bunny-edge-rules.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
     "@astrojs/svelte": "^9.0.1",
-    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
     "astro": "^7.3.8",
