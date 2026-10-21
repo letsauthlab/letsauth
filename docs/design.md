@@ -236,8 +236,8 @@ package of the redesign that builds it. Anything not in this table does not anim
 | # | Where | What | Means | Reduced motion | WP |
 | --- | --- | --- | --- | --- | --- |
 | M1 | Every page | Cross-document view transition, root crossfade 220ms | continuity | none (as today) | WP2 |
-| M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate, map, chain head) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
-| M3 | Home facts, server page facts | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
+| M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate from `MatrixThumb.astro` as `matrix`, map, chain head) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
+| M3 | Home facts, server page facts (`Facts.astro`) | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
 | M4 | Standards map, decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, halo fades after, once on load | "follow this path" | path shown complete | WP5, WP8 |
 | M5 | Explorer chain | The current step's arrow draws in (300ms), the body fades up 8px (220ms); later steps dim once stepping starts | "you are here" | arrow and body shown, dimming applied without transition | WP6 |
 | M6 | Explorer chain | Optional play: steps advance every 2.5 s after the reader presses Play; any click, key or scroll pauses; never starts by itself | guided reading | Play button hidden | WP6 |
