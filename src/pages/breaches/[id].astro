@@ -26,6 +26,13 @@ const date = new Date(`${v.disclosed}T00:00:00Z`).toLocaleDateString("en-GB", {
   year: "numeric",
 });
 const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
+// the first sentence leads the page; the rest of the summary is the account under it
+const [lede = v.summary, ...account] = v.summary.trim().split(/(?<=\.)\s+(?=[A-Z])/);
+// a source as a short label: its host and the start of its path
+const label = (url: string) => {
+  const path = new URL(url).pathname.replace(/\/$/, "");
+  return `${host(url)}${path.length > 28 ? `${path.slice(0, 26)}…` : path}`;
+};
 ---
 
 <Base title={v.title} description={v.summary.trim()} path={`/breaches/${v.id}/`}>
@@ -34,132 +41,140 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
     <header class="page-head">
       <p class="eyebrow">Breach anatomy</p>
       <h1>{v.title}</h1>
-      <p class="lede">{v.summary}</p>
+      <p class="lede">{lede}</p>
+      <p class="page-head__meta">
+        <span class="chip signal" data-class={v.class}>{VULNERABILITY_CLASS_LABEL[v.class]}</span>
+        <code>{v.id}</code>
+      </p>
     </header>
 
-    <div class="overview">
-      <section class="panel" aria-label="Facts">
-        <dl class="kv">
-          <dt>Class</dt>
-          <dd><span class="chip signal" data-class={v.class}>{VULNERABILITY_CLASS_LABEL[v.class]}</span></dd>
-          <dt>Affects</dt>
-          <dd>
-            <ul class="plain" role="list">
-              {v.affects.map((a) => <li>{a}</li>)}
-            </ul>
-          </dd>
-          <dt>Sources</dt>
-          <dd>
-            <ul class="plain" role="list">
-              {
-                v.sources.map((s) => (
-                  <li>
-                    <a href={s} rel="noopener">{s}</a>
-                    <span class="host"> {host(s)}</span>
-                  </li>
-                ))
-              }
-            </ul>
-          </dd>
-        </dl>
-      </section>
+    <div class="anatomy">
+      <div class="anatomy__main">
+        {
+          account.length > 0 && (
+            <section id="account" aria-labelledby="account-title">
+              <h2 id="account-title">What happened</h2>
+              <p>{account.join(" ")}</p>
+            </section>
+          )
+        }
 
-      <section id="timeline" class="events" aria-labelledby="timeline-title">
-        <h2 id="timeline-title">Timeline</h2>
-        <ol class="timeline" role="list">
-          <li>
-            <time datetime={v.disclosed}>{date}</time>
-            <p>Disclosed in the advisory from {host(v.sources[0] ?? "https://example.org")}.</p>
-          </li>
+        <section id="controls" aria-labelledby="controls-title">
+          <h2 id="controls-title">The control that was missing</h2>
           {
-            v.fixed && (
-              <li>
-                <span class="timeline__label">After disclosure</span>
-                <p>Fixed: {v.fixed}.</p>
-              </li>
+            controls.length > 0 ? (
+              <ul role="list" class="rows controls__list">
+                {controls.map((c) => {
+                  const current = c.feature.revisions.at(-1);
+                  return (
+                    <li data-feature={c.feature.id}>
+                      <p class="controls__name">
+                        <a href={`/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
+                        {current && <span class:list={["level", `level-${current.level}`]}>{current.level}</span>}
+                        <span class="party">{PARTY_LABEL[c.feature.party]}</span>
+                      </p>
+                      <p class="controls__text">{c.feature.description}</p>
+                      <p class="controls__counts" data-observed={c.observed ? "true" : "false"}>
+                        {c.observed
+                          ? `Listed servers under MCP Authorization ${c.revisionId}: ${c.counts.supported} supported, ${c.counts.partial} partial, ${c.counts.unsupported} unsupported, ${c.counts.unknown} unknown${c.counts.notApplicable > 0 ? `, ${c.counts.notApplicable} not applicable` : ""}.`
+                          : `${c.reason[0]?.toUpperCase()}${c.reason.slice(1)}.`}
+                      </p>
+                      {current && (
+                        <p class="controls__cite">
+                          <Citation entry={{ spec: current.spec, revision: current.revision, section: current.section }} withRevision />
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p class="none" data-no-controls>
+                No requirement in the MCP auth atlas stands for this control yet. A requirement joins
+                the atlas when a specification revision states it.
+              </p>
             )
           }
-        </ol>
-      </section>
-    </div>
+        </section>
 
-    <section id="controls" class="controls" aria-labelledby="controls-title">
-      <h2 id="controls-title">The control that was missing</h2>
-      {
-        controls.length > 0 ? (
-          <ul role="list" class="rows controls__list">
-            {controls.map((c) => {
-              const current = c.feature.revisions.at(-1);
-              return (
-                <li data-feature={c.feature.id}>
-                  <div class="rows__head">
-                    <p class="controls__name">
-                      <a href={`/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
-                      <span class="party">{PARTY_LABEL[c.feature.party]}</span>
-                    </p>
-                    {current && <span class:list={["level", `level-${current.level}`]}>{current.level}</span>}
-                  </div>
-                  <p class="controls__text">{c.feature.description}</p>
-                  {current && (
-                    <p class="controls__cite">
-                      <Citation entry={{ spec: current.spec, revision: current.revision, section: current.section }} withRevision />
-                    </p>
-                  )}
-                  <p class="controls__counts" data-observed={c.observed ? "true" : "false"}>
-                    {c.observed
-                      ? `Listed servers under MCP Authorization ${c.revisionId}: ${c.counts.supported} supported, ${c.counts.partial} partial, ${c.counts.unsupported} unsupported, ${c.counts.unknown} unknown${c.counts.notApplicable > 0 ? `, ${c.counts.notApplicable} not applicable` : ""}.`
-                      : `${c.reason[0]?.toUpperCase()}${c.reason.slice(1)}.`}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p class="controls__none" data-no-controls>
-            No requirement in the MCP auth atlas stands for this control yet. The summary above
-            says what it is. A requirement joins the atlas when a specification revision states
-            it.
-          </p>
-        )
-      }
-    </section>
-
-    <section id="replay" class="replay" aria-labelledby="replay-title">
-      <h2 id="replay-title">Replay in the explorer</h2>
-      {
-        replay ? (
-          <div class:list={["panel", `kind-${replay.toggle.kind}`]}>
-            <p class="replay__kind">{TOGGLE_KIND_LABEL[replay.toggle.kind]}</p>
-            <p class="replay__head">
-              <a href={`/explorer/${replay.scenario.id}/${replay.toggle.id}/`} data-replay={replay.toggle.id}>
-                {replay.scenario.title} · {replay.toggle.name}
-              </a>
-            </p>
-            <p class="replay__summary">{replay.toggle.summary}</p>
-            <p class="replay__meta">
-              {Object.keys(replay.toggle.replaces).length} step{Object.keys(replay.toggle.replaces).length === 1 ? "" : "s"} of the baseline change ·
-              Against <Citation entry={replay.toggle.cites} withRevision />
-              {replay.toggle.violates && replay.toggle.violates.length > 0 && (
-                <>
-                  {" · "}Defeats{" "}
-                  {replay.toggle.violates.map((id, i) => (
+        <section id="replay" aria-labelledby="replay-title">
+          <h2 id="replay-title">Replay in the explorer</h2>
+          {
+            replay ? (
+              <div class:list={["replay", `kind-${replay.toggle.kind}`]}>
+                <p class="replay__kind">
+                  {TOGGLE_KIND_LABEL[replay.toggle.kind]} in {replay.scenario.title}
+                </p>
+                <p class="replay__head">
+                  <a href={`/explorer/${replay.scenario.id}/${replay.toggle.id}/`} data-replay={replay.toggle.id}>
+                    {replay.toggle.name}
+                  </a>
+                </p>
+                <p class="replay__summary">{replay.toggle.summary}</p>
+                <p class="replay__meta">
+                  {Object.keys(replay.toggle.replaces).length} step{Object.keys(replay.toggle.replaces).length === 1 ? "" : "s"} of the baseline change ·
+                  Against <Citation entry={replay.toggle.cites} withRevision />
+                  {replay.toggle.violates && replay.toggle.violates.length > 0 && (
                     <>
-                      {i > 0 && ", "}
-                      <a href={`/mcp/features/${id}/`}>{featureById.get(id)?.name ?? id}</a>
+                      {" · "}Defeats{" "}
+                      {replay.toggle.violates.map((id, i) => (
+                        <>
+                          {i > 0 && ", "}
+                          <a href={`/mcp/features/${id}/`}>{featureById.get(id)?.name ?? id}</a>
+                        </>
+                      ))}
                     </>
-                  ))}
-                </>
-              )}
-            </p>
-          </div>
-        ) : (
-          <p class="replay__none" data-no-replay>
-            No scenario in the explorer replays this pattern yet. The incident is recorded here
-            from its public notice. A replay follows when a baseline chain exists for it.
-          </p>
-        )
-      }
-    </section>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <p class="none" data-no-replay>
+                No scenario in the explorer replays this pattern yet. A replay follows when a
+                baseline chain exists for it.
+              </p>
+            )
+          }
+        </section>
+      </div>
+
+      <aside class="anatomy__side panel" aria-label="Facts">
+        <section id="timeline" aria-labelledby="timeline-title">
+          <h2 id="timeline-title">Timeline</h2>
+          <ol class="timeline" role="list">
+            <li>
+              <time datetime={v.disclosed}>{date}</time>
+              <p>Disclosed in the advisory from {host(v.sources[0] ?? "https://example.org")}.</p>
+            </li>
+            {
+              v.fixed && (
+                <li>
+                  <span class="timeline__label">After disclosure</span>
+                  <p>Fixed: {v.fixed}.</p>
+                </li>
+              )
+            }
+          </ol>
+        </section>
+        <section aria-labelledby="affects-title">
+          <h2 id="affects-title">Affects</h2>
+          <ul class="plain" role="list">
+            {v.affects.map((a) => <li>{a}</li>)}
+          </ul>
+        </section>
+        <section aria-labelledby="sources-title">
+          <h2 id="sources-title">Sources</h2>
+          <ul class="plain sources" role="list">
+            {
+              v.sources.map((s) => (
+                <li>
+                  <a href={s} rel="noopener" title={s}>{label(s)}</a>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+      </aside>
+    </div>
 
     <footer class="page-foot">
       <p>
@@ -177,32 +192,46 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
 </Base>
 
 <style>
-  .overview {
+  /* the account at reading width on the left, the facts beside it in one panel that stays in view */
+  .anatomy {
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    gap: var(--space-6);
+    grid-template-columns: minmax(0, var(--measure)) minmax(16rem, 22rem);
+    justify-content: space-between;
+    gap: var(--space-7);
     align-items: start;
+  }
+  .anatomy__main > section + section {
+    margin-top: var(--space-7);
+  }
+  .anatomy h2 {
+    font-size: var(--h3);
+    margin-bottom: var(--space-3);
+  }
+  .anatomy__side {
+    position: sticky;
+    top: var(--space-5);
+    display: grid;
+    gap: var(--space-5);
+  }
+  .anatomy__side h2 {
+    font-size: var(--small);
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: var(--space-2);
+  }
+  .anatomy__side .timeline {
+    margin: 0;
   }
   .plain {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-2);
+    font-size: var(--small);
   }
-  .plain a {
+  .sources a {
     overflow-wrap: anywhere;
-  }
-  .host {
-    font-family: var(--font-mono);
-    font-size: var(--tiny);
-    color: var(--ink-2);
-  }
-  .events h2,
-  .controls h2,
-  .replay h2 {
-    font-size: var(--h3);
-    margin-bottom: var(--space-3);
   }
   .timeline p {
     margin: var(--space-1) 0 0;
@@ -239,42 +268,31 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
     }
   }
 
-  .controls,
-  .replay {
-    margin-top: var(--space-7);
+  .controls__list {
+    margin: 0;
   }
   .controls__name {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--space-2);
-    margin: 0;
+    gap: var(--space-1) var(--space-3);
+    margin: 0 0 var(--space-1);
     font-weight: 500;
+    max-width: none;
+  }
+  .rows .controls__name {
     color: var(--ink);
     font-size: var(--text-body);
-    max-width: none;
   }
   .party {
     font-size: var(--tiny);
+    font-weight: 400;
     color: var(--ink-2);
   }
-  .controls__text,
-  .replay__summary {
-    margin: 0 0 var(--space-2);
-    color: var(--ink-2);
+  .rows .controls__cite {
+    font-size: var(--tiny);
   }
-  .controls__cite {
-    margin: 0 0 var(--space-2);
-  }
-  .controls__counts,
-  .replay__meta {
-    margin: 0;
-    font-size: var(--small);
-    color: var(--ink-2);
-    max-width: none;
-  }
-  .controls__none,
-  .replay__none {
+  .none {
     color: var(--ink-2);
   }
   .kind-attack {
@@ -283,20 +301,50 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
   .kind-misconfiguration {
     --kind: var(--toggle-misconfiguration);
   }
+  /* the replay: a rail in the toggle's ink, like the toggled steps it links to */
+  .replay {
+    padding: var(--space-1) 0 var(--space-1) var(--space-5);
+    border-left: 2px solid var(--kind);
+  }
+  .replay p {
+    margin: 0 0 var(--space-2);
+  }
+  .replay > :last-child {
+    margin-bottom: 0;
+  }
   .replay__kind {
-    margin: 0 0 var(--space-1);
     font-size: var(--tiny);
-    font-weight: 600;
-    color: var(--kind);
+    font-weight: 500;
+    color: var(--ink-2);
   }
   .replay__head {
-    margin: 0 0 var(--space-2);
-    font-weight: 500;
+    font-size: var(--h3);
+    font-weight: 600;
+    letter-spacing: var(--tracking-snug);
+    line-height: var(--leading-snug);
+  }
+  .replay__head a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .replay__head a:hover {
+    color: var(--signal);
+  }
+  .replay__summary {
+    color: var(--ink-2);
+  }
+  .replay__meta {
+    font-size: var(--small);
+    color: var(--ink-2);
     max-width: none;
   }
-  @media (max-width: 48rem) {
-    .overview {
+  @media (max-width: 60rem) {
+    .anatomy {
       grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+    .anatomy__side {
+      position: static;
     }
   }
 </style>
