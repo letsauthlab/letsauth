@@ -29,11 +29,11 @@ const footerGroups = [
   {
     title: "Explore",
     links: [
-      { href: "/mcp/", label: "MCP auth atlas" },
+      { href: "/mcp/", label: "Servers" },
       { href: "/mcp/scanner/", label: "Scanner" },
-      { href: "/standards/", label: "Agent auth atlas" },
-      { href: "/explorer/", label: "Delegation chain explorer" },
-      { href: "/breaches/", label: "Breach anatomy" },
+      { href: "/standards/", label: "Standards" },
+      { href: "/explorer/", label: "Explorer" },
+      { href: "/breaches/", label: "Breaches" },
     ],
   },
   {
@@ -61,12 +61,12 @@ const footerGroups = [
 const nav = [
   {
     href: "/mcp/",
-    label: "MCP auth atlas",
+    label: "Servers",
     match: (p: string) => p.startsWith("/mcp/"),
   },
   {
     href: "/standards/",
-    label: "Agent auth atlas",
+    label: "Standards",
     match: (p: string) => p.startsWith("/standards/"),
   },
   {
@@ -76,7 +76,7 @@ const nav = [
   },
   {
     href: "/breaches/",
-    label: "Breach anatomy",
+    label: "Breaches",
     match: (p: string) => p.startsWith("/breaches/"),
   },
   {

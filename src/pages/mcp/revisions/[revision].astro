@@ -20,7 +20,7 @@ if (currentRevision(getDataset()).id === revision) return Astro.redirect("/mcp/"
   path={`/mcp/revisions/${revision}/`}
 >
   <div class="wrap">
-    <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={`Revision ${revision}`} />
+    <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={`Revision ${revision}`} />
   </div>
   <MatrixPage revisionId={revision} />
 </Base>
