@@ -95,3 +95,26 @@ and `RelationList` render only on the standards pages, so they stay with WP5.
 - [x] W4-T14 Screenshot baselines refreshed through the `refresh-screenshots` label on the pull request, not from a local browser: matrix, server and the new status-shape shots changed; the feature page and the scanner pages stayed within the 2% tolerance in CI's Chromium
 - [x] W4-T15 Review: the matrix comes first. The revision moves into the head's meta line, the filters fold into one "Filter and group" button in a bar with the status legend and the count right above the table (the island opens it when the URL carries a filter), and the legend notes and the facts row move below the table; the matrix region is as wide as its table
 - [x] W4-T16 Review: `.field` inputs and selects share one 2.5rem box; selects drop the platform drawing for a chevron in `--ink-2` (`.field` is only used on the matrix page)
+
+## WP7: Scanner pages
+
+The scanner overview and the per-server report on the new surfaces; the request ladder as a
+transcript with the line-by-line reveal (M12); the 320px overflow on `/mcp/scanner/` fixed.
+
+- [x] W7-T01 `src/lib/scanner.ts`: `requestLadder(view)` reads the requests a recorded report records from the evidence of its newest scanner observations (a recorded report keeps no request log, `requests` stays empty and `scan.json` is unchanged): method, URL, answer and the fields read, one line per method and address with the newest answer, in ladder order (protected resource metadata path-aware then root, the endpoint GET then POST, any pointer, the authorization server)
+- [x] W7-T02 `src/components/ScanReport.astro` replaces `ScanReport.svelte`: the component never hydrated (its live mode went in 004 T031), and as Astro it uses `StatusCell` instead of a copy of its glyphs. Grade letter in a 1px outline with no fill; the ladder as a `.transcript` inside an `.explainer`, with the grade as its last line; the checks as `.rows` per party with a `StatusCell`, the level, id, cited section, date and evidence
+- [x] W7-T03 M12: a page script (no island) arms the ladder only when motion is allowed and `IntersectionObserver` exists, and prints it line by line 60ms apart, once, when it scrolls into view; the static list is the end state, so without JavaScript or under reduced motion every line shows at once
+- [x] W7-T04 `src/pages/mcp/servers/[id]/scan.astro`: the grade rule as a `.panel`, the unscanned requirements as `.rows` with `.chip`s, the withdrawn notice as `.notice`
+- [x] W7-T05 `src/pages/mcp/scanner/index.astro`: "What it reads" is the ladder of one example scan as a `.transcript`, built from the scanner's own URL rules; status and grade rule as `.panel`s; the run-it-yourself note says the site never scans on request; grids use `min(100%, …)` so nothing is wider than the viewport at 320px; three missing spaces after line breaks restored
+- [x] W7-T06 `tests/e2e/scanner.spec.ts`: no page scroll at 320 and 412px on both pages; no form, input or scan button; the transcript matches `requestLadder` line by line with JavaScript off and ends with the grade; the reveal runs once with the grade last; reduced motion shows the end state
+- [x] W7-T07 Screenshot baselines: the `refresh-screenshots` run on the pull request found `scanner.png` and `report.png` unchanged (both are viewport shots, the head is above the changes and the report is masked), so none were committed
+
+### WP3 follow-up: one page, not a stack of sections
+
+After review, the merged home page read as unfinished: loose sections with nothing tying them
+together. The former layout's side-by-side split comes back in the new tone.
+
+- [x] W3-T07 `src/pages/index.astro`: statement and matrix plate side by side above 64rem, as before; the plate gets a head (product and revision, link) and a foot (size, last observation, key) on its own rules, with the grid on `--ground`
+- [x] W3-T08 The facts as one band between two rules, equal columns with a hairline between each (two by two below 64rem)
+- [x] W3-T09 "What the lab publishes" (numbered `.rows`, counts as `.chip`) and "Latest observations" (on a `.panel`, with the seed note and a quiet small button) side by side above 64rem, each under an eyebrow
+- [x] W3-T10 `tests/e2e/home.spec.ts`: the two sections sit side by side at 1440px; selectors follow the new markup; baselines refreshed through the `refresh-screenshots` label
