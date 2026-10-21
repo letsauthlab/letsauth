@@ -74,7 +74,8 @@ that has no page of its own.
 Pages at the top of the tree are named by the header or the footer and carry no breadcrumb. Every
 page below them renders one with `Crumbs` (`src/components/Crumbs.astro`): the ancestors as links,
 from the product root down, then the page itself. A product's subtree lights up its entry in the
-header on every page under it.
+header on every page under it. The header holds the brand, one text entry per product, and two
+icons: the repository on GitHub (labelled "Source on GitHub") and the theme toggle.
 
 Old addresses (`/atlas/mcp/…`, `/atlas/standards/…`, `/scanner/…`) are listed in `redirects` in
 `astro.config.mjs`; the build writes a forwarding page for each. [`deploy.md`](deploy.md) has the
