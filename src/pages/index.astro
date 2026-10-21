@@ -1,28 +1,33 @@
 ---
+import Facts from "@/components/Facts.astro";
+import MatrixThumb from "@/components/MatrixThumb.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
-import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
+import { currentRevision, matrixFor } from "@/lib/atlas";
+import { breachList } from "@/lib/breaches";
 import { getDataset } from "@/lib/data";
+import { scenarioList } from "@/lib/explorer";
 import { CATEGORY_LABEL, METHOD_LABEL } from "@/lib/labels";
+import { scannerFacts, scannerIndex } from "@/lib/scanner";
 import { mapRelations, specNodes } from "@/lib/standards";
 
 const data = getDataset();
 const revision = currentRevision(data);
 const matrix = matrixFor(data, revision.id);
-const observed = data.observations.length;
 const specs = specNodes(data).length;
 const relations = mapRelations(data).length;
+const scenarios = scenarioList(data);
+const toggles = scenarios.reduce((n, s) => n + s.toggles.length, 0);
+const breaches = breachList(data).length;
+const scanner = scannerFacts(scannerIndex(data));
+const newest = data.observations
+  .map((o) => o.observedAt)
+  .sort()
+  .at(-1)
+  ?.slice(0, 10);
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// the whole matrix as a thumbnail: one square per cell, servers across, features down
-const CELL = 12;
-const GAP = 3;
-const STEP = CELL + GAP;
-const thumbW = matrix.rows.length * STEP - GAP;
-const thumbH = matrix.columns.length * STEP - GAP;
-let observedCells = 0;
-for (const cell of matrix.cells.values()) if (cell.observation) observedCells += 1;
-
-// the newest observations on record, for the activity list
+// the newest observation of each of the six most recently observed servers
 const serverName = new Map(data.servers.map((s) => [s.id, s]));
 const featureName = new Map(data.features.map((f) => [f.id, f]));
 const latest = [...data.observations]
@@ -30,442 +35,264 @@ const latest = [...data.observations]
     (o) => !serverName.get(o.server)?.withdrawn && featureName.get(o.feature)?.party !== "client",
   )
   .sort((a, b) => b.observedAt.localeCompare(a.observedAt) || a.server.localeCompare(b.server))
+  .filter((o, i, all) => all.findIndex((p) => p.server === o.server) === i)
   .slice(0, 6);
+
+const products = [
+  {
+    href: "/mcp/",
+    name: "MCP auth atlas",
+    text: `Public MCP servers against the requirements of MCP Authorization ${revision.id}, one dated observation per cell.`,
+    count: plural(matrix.rows.length, "server"),
+  },
+  {
+    href: "/standards/",
+    name: "Agent auth atlas",
+    text: "The specifications behind agent authorization as one graph, with what builds on what and the dated revisions of each.",
+    count: `${plural(specs, "specification")}, ${plural(relations, "relation")}`,
+  },
+  {
+    href: "/explorer/",
+    name: "Delegation chain explorer",
+    text: "Delegation scenarios stepped hop by hop, with the decoded token at each step and toggles that break the chain.",
+    count: `${plural(scenarios.length, "scenario")}, ${plural(toggles, "toggle")}`,
+  },
+  {
+    href: "/breaches/",
+    name: "Breach anatomy",
+    text: "Published vulnerabilities in how agents were authorized, each traced to the control that was missing.",
+    count: plural(breaches, "entry", "entries"),
+  },
+  {
+    href: "/mcp/scanner/",
+    name: "Scanner",
+    text: "A passive scanner that reads the public metadata of each listed server and records what it finds as observations.",
+    count: `${scanner.scanned} of ${scanner.servers} servers scanned`,
+  },
+];
 ---
 
 <Base
   title="letsauth"
-  description="letsauth is an independent lab for authentication and authorization in the agent era. Start with the MCP auth atlas: which public MCP servers support which features of the MCP Authorization specification."
+  description="letsauth is an independent lab for agent authorization. It keeps one open dataset of what the agent protocols require and what public servers do, starting with the MCP auth atlas."
   path="/"
 >
   <div class="wrap">
-    <section class="hero">
-      <div class="hero__copy">
-        <p class="eyebrow">An independent lab for agent auth</p>
-        <h1>Authentication for agents, <span class="hero__accent">measured</span> instead of asserted.</h1>
-        <p class="lede">
-          letsauth keeps one open dataset of what the agent protocols require and what real
-          servers do. Every claim cites a specification revision, every status cites an
-          observation, and the data is yours to download.
-        </p>
-        <p class="cta">
-          <a class="button primary" href="/mcp/">
-            Open the MCP auth atlas
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </a>
-          <a class="button quiet" href="/explorer/">Step through a delegation chain</a>
-          <a class="button quiet" href="/standards/">See the standards map</a>
-          <a class="button quiet" href="/mcp/data.json">Get the data</a>
-        </p>
-      </div>
+    <header class="page-head home-head">
+      <p class="eyebrow">An independent lab for agent authorization</p>
+      <h1>Agent authorization, on the record</h1>
+      <p class="lede">
+        letsauth keeps one open dataset of what the agent protocols require and what public
+        servers do. Each requirement cites a specification revision and each status cites a dated
+        observation.
+      </p>
+      <p class="home-head__actions">
+        <a class="button" href="/mcp/">Open the MCP auth atlas</a>
+        <a class="button quiet" href="/mcp/data.json">Download the data</a>
+      </p>
+    </header>
 
-      <a class="hero__thumb" href="/mcp/" aria-label="Open the MCP auth atlas matrix">
-        <figure class="thumb">
-          <div class="thumb__bar" aria-hidden="true">
-            <span class="thumb__dots"><i></i><i></i><i></i></span>
-            <span class="thumb__title">mcp · {revision.id}</span>
-          </div>
-          <svg
-            class="thumb__grid"
-            viewBox={`0 0 ${thumbW} ${thumbH}`}
-            width={thumbW}
-            height={thumbH}
-            role="img"
-            aria-label={`Thumbnail of the matrix: ${matrix.rows.length} servers across, ${matrix.columns.length} requirements down, ${observedCells} cells observed.`}
-          >
-            {
-              matrix.columns.map((feature, y) =>
-                matrix.rows.map((server, x) => {
-                  const cell = matrix.cells.get(cellKey(server.id, feature.id));
-                  return (
-                    <rect
-                      x={x * STEP}
-                      y={y * STEP}
-                      width={CELL}
-                      height={CELL}
-                      rx="3"
-                      class={`c-${cell?.status ?? "unknown"}${cell?.derived ? " derived" : ""}`}
-                    />
-                  );
-                }),
-              )
-            }
-          </svg>
-          <figcaption class="thumb__caption">
-            <span>{matrix.rows.length} servers × {matrix.columns.length} requirements</span>
-            <span class="thumb__legend" aria-hidden="true">
-              <i class="c-supported"></i> supported
-              <i class="c-partial"></i> partial
-              <i class="c-unsupported"></i> unsupported
-              <i class="c-unknown"></i> unknown
-            </span>
-          </figcaption>
-        </figure>
+    <figure class="home-plate">
+      <a class="plate" href="/mcp/" aria-label="Open the matrix of the MCP auth atlas">
+        <MatrixThumb revisionId={revision.id} />
       </a>
-    </section>
-
-    <dl class="facts numbers" aria-label="Atlas at a glance">
-      <div>
-        <dt>Public MCP servers listed</dt>
-        <dd class="num">{matrix.rows.length}</dd>
-      </div>
-      <div>
-        <dt>Requirements in MCP Authorization {revision.id}</dt>
-        <dd class="num">{matrix.columns.length}</dd>
-      </div>
-      <div>
-        <dt>Observations on record, each with evidence</dt>
-        <dd class="num">{observed}</dd>
-      </div>
-      <div>
-        <dt>Specifications on the standards map</dt>
-        <dd class="num">{specs}<span class="of"> · {relations} relations</span></dd>
-      </div>
-    </dl>
-
-    <section class="how" aria-labelledby="how">
-      <h2 id="how" class="visually-hidden">How the atlas works</h2>
-      <article class="how__item">
-        <span class="how__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 4h10l4 4v12H5z" />
-            <path d="M15 4v4h4M8.5 12h7M8.5 16h7" />
-          </svg>
+      <figcaption>
+        <span>
+          {`${matrix.rows.length} servers × ${matrix.columns.length} requirements of MCP Authorization ${revision.id}`}
         </span>
-        <h3>Every claim cites a revision</h3>
-        <p>
-          Each requirement links to the section of the MCP Authorization revision it comes from.
-          When the spec moves, the atlas says what changed and keeps the old reading intact.
-        </p>
-      </article>
-      <article class="how__item">
-        <span class="how__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="6.5" />
-            <path d="m20 20-4.2-4.2M8.5 11l1.8 1.8 3.4-3.6" />
-          </svg>
-        </span>
-        <h3>Every status cites an observation</h3>
-        <p>
-          A cell is only ever a dated observation with a method and evidence a reviewer can open.
-          Nothing is inferred from silence: an empty cell reads <em>unknown</em>, never failure.
-        </p>
-      </article>
-      <article class="how__item">
-        <span class="how__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 7.5c0-1.4 3.6-2.5 8-2.5s8 1.1 8 2.5-3.6 2.5-8 2.5-8-1.1-8-2.5Z" />
-            <path d="M4 7.5v9c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-9M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5" />
-          </svg>
-        </span>
-        <h3>Open, append-only data</h3>
-        <p>
-          The dataset is YAML in a public repository under CC BY 4.0. Observations are never
-          edited, so the atlas is also a record of how the ecosystem moved.
-        </p>
-      </article>
-    </section>
+        {newest && (
+          <span>
+            Last observation <time datetime={newest}>{newest}</time>
+          </span>
+        )}
+        <a href="/mcp/">Open the matrix</a>
+      </figcaption>
+      <p class="home-plate__key" aria-hidden="true">
+        <span><i class="k-s"></i>Supported</span>
+        <span><i class="k-p"></i>Partial</span>
+        <span><i class="k-x"></i>Unsupported</span>
+        <span><i class="k-u"></i>Unknown</span>
+        <span><i class="k-d"></i>No observation</span>
+      </p>
+    </figure>
 
-    <div class="split">
-      <section class="prose" aria-labelledby="what">
-        <p class="eyebrow">The atlas</p>
-        <h2 id="what">What it is, and what it refuses to be</h2>
-        <p>
-          The MCP Authorization specification tells servers how to advertise their authorization
-          server, which registration methods to accept, how to validate tokens and how to challenge
-          for scopes. The atlas is a matrix of public servers against those requirements. It is
-          neutral: rows are alphabetical, nothing is scored, and an empty cell is shown as{" "}
-          <em>unknown</em>, never as a failure.
-        </p>
-        <p>
-          The atlas contacts no server at build time. Seed data comes from vendor documentation
-          and public directories, and says so on every cell. The{" "}
-          <a href="/mcp/scanner/">scanner</a> reads public metadata every night; its output lands in
-          the same repository, as pull requests, like everything else.
-        </p>
-        <h3>And the standards behind it</h3>
-        <p>
-          The <a href="/standards/">agent auth atlas</a> draws the specifications behind all
-          of this as one graph: OAuth and its extensions, workload identity, the agent protocols,
-          credential formats and the EU acts, with what builds on what, what competes with what,
-          and each document's maturity and dated revisions.
-        </p>
-        <p class="cta">
-          <a class="button quiet" href="/standards/">Open the standards map</a>
-          <a class="button quiet" href="/contribute/">Add what you know</a>
-        </p>
-      </section>
-
-      <section class="latest" aria-labelledby="latest">
-        <p class="eyebrow">Latest observations</p>
-        <h2 id="latest" class="latest__title">Newest entries on record</h2>
-        <ol class="latest__list">
-          {
-            latest.map((o) => {
-              const s = serverName.get(o.server);
-              const f = featureName.get(o.feature);
-              return (
-                <li>
-                  <StatusCell status={o.status} variant="cell" />
-                  <span class="latest__what">
-                    <a href={`/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
-                    <span class="latest__feature">
-                      <a href={`/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
-                      {f && <span class="latest__cat"> · {CATEGORY_LABEL[f.category]}</span>}
-                    </span>
-                  </span>
-                  <span class="latest__meta">
-                    <time datetime={o.observedAt}>{o.observedAt.slice(0, 10)}</time>
-                    <span>{METHOD_LABEL[o.method]}</span>
-                  </span>
-                </li>
-              );
-            })
-          }
-        </ol>
-        <p class="latest__more">
-          <a href="/mcp/">See the full matrix</a>
-        </p>
-      </section>
+    <div class="home-facts">
+      <Facts
+        label="The dataset at a glance"
+        items={[
+          { label: "Servers listed", value: matrix.rows.length },
+          { label: `Requirements in ${revision.id}`, value: matrix.columns.length },
+          { label: "Observations on record", value: data.observations.length },
+          { label: "Specifications mapped", value: specs },
+        ]}
+      />
     </div>
+
+    <section class="home-section" aria-labelledby="products">
+      <h2 id="products">What the lab publishes</h2>
+      <ul class="rows">
+        {
+          products.map((p) => (
+            <li>
+              <div class="rows__head">
+                <h3 class="rows__title">
+                  <a href={p.href}>{p.name}</a>
+                </h3>
+                <span class="rows__meta">{p.count}</span>
+              </div>
+              <p>{p.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="home-section" aria-labelledby="latest">
+      <h2 id="latest">Latest observations</h2>
+      <p class="home-section__note">
+        Seed data comes from vendor documentation and public directories, and each entry names
+        its method. A cell with no observation on record reads unknown.
+      </p>
+      <ol class="rows latest">
+        {
+          latest.map((o) => {
+            const s = serverName.get(o.server);
+            const f = featureName.get(o.feature);
+            return (
+              <li>
+                <StatusCell status={o.status} variant="cell" />
+                <span class="latest__what">
+                  <a href={`/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
+                  <span>
+                    <a href={`/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
+                    {f && <> · {CATEGORY_LABEL[f.category]}</>}
+                  </span>
+                </span>
+                <span class="latest__meta">
+                  <time datetime={o.observedAt}>{o.observedAt.slice(0, 10)}</time>
+                  <span>{METHOD_LABEL[o.method]}</span>
+                </span>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </section>
+
+    <footer class="page-foot">
+      <p class="page-foot__links">
+        <a href="/mcp/">See the full matrix</a>
+        <a href={`/mcp/revisions/${revision.id}/`}>MCP Authorization {revision.id}</a>
+        <a href="/contribute/">Add an observation</a>
+      </p>
+    </footer>
   </div>
 </Base>
 
 <style>
-  .hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    gap: var(--space-7);
-    align-items: center;
-    padding-block: var(--space-6) var(--space-8);
+  .home-head h1 {
+    max-width: 18ch;
+    font-size: var(--h1-home);
   }
-  .hero__copy {
-    max-width: 38rem;
+  .home-head .lede {
+    max-width: 52ch;
   }
-  .hero__accent {
-    color: var(--accent);
-    background: linear-gradient(120deg, var(--accent) 0%, var(--accent-strong) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .cta {
+  .home-head__actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-top: var(--space-5);
+    margin: var(--space-5) 0 0;
   }
 
-  /* the thumbnail of the whole matrix, framed like a window */
-  .hero__thumb {
+  /* the flagship data view: the whole matrix on its plate, one line under it */
+  .home-plate {
+    margin: 0 0 var(--space-7);
+  }
+  .home-plate .plate {
     display: block;
-    text-decoration: none;
-    color: inherit;
-    border-radius: var(--radius-xl);
-    transition: transform var(--dur) var(--ease-out);
+    padding: var(--space-5);
+    transition: border-color var(--dur-fast) var(--ease);
   }
-  .hero__thumb:hover {
-    transform: translateY(-3px);
+  .home-plate .plate:hover {
+    border-color: var(--rule-strong);
   }
-  .thumb {
-    margin: 0;
-    position: relative;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-lg), var(--inset-highlight);
-    overflow: hidden;
-  }
-  .thumb::before {
-    content: "";
-    position: absolute;
-    inset: -40% -20% auto;
-    height: 80%;
-    background: radial-gradient(closest-side, var(--accent-glow), transparent);
-    opacity: 0.6;
-    pointer-events: none;
-  }
-  .thumb__bar {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--line-soft);
-    background: color-mix(in oklch, var(--bg-sunken) 70%, transparent);
-  }
-  .thumb__dots {
-    display: inline-flex;
-    gap: 5px;
-  }
-  .thumb__dots i {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--line-strong);
-    opacity: 0.7;
-  }
-  .thumb__title {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    color: var(--ink-faint);
-    letter-spacing: 0.02em;
-  }
-  .thumb__grid {
-    position: relative;
-    display: block;
-    width: 100%;
-    height: auto;
-    padding: var(--space-4);
-  }
-  .thumb__grid rect {
-    transition: opacity var(--dur) var(--ease);
-  }
-  .thumb__caption {
+  .home-plate figcaption {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    gap: var(--space-2) var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    border-top: 1px solid var(--line-soft);
-    font-size: var(--text-xs);
-    color: var(--ink-muted);
+    gap: var(--space-1) var(--space-5);
+    margin-top: var(--space-3);
+    font-size: var(--small);
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
   }
-  .thumb__legend {
+  .home-plate figcaption a {
+    margin-left: auto;
+  }
+  .home-plate__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-2) 0 0;
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+  .home-plate__key span {
     display: inline-flex;
     align-items: center;
-    gap: 0.35em;
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
+    gap: 0.4em;
   }
-  .thumb__legend i {
-    width: 9px;
-    height: 9px;
+  .home-plate__key i {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
     border-radius: 2px;
-    margin-left: 0.5em;
   }
-  .c-supported {
-    fill: var(--status-supported);
-    background: var(--status-supported);
+  .k-s {
+    background: var(--ok);
   }
-  .c-partial {
-    fill: var(--status-partial);
-    background: var(--status-partial);
+  .k-p {
+    background: var(--caution);
   }
-  .c-unsupported {
-    fill: var(--status-unsupported);
-    background: var(--status-unsupported);
+  .k-x {
+    background: var(--threat);
   }
-  .c-unknown {
-    fill: var(--status-unknown);
-    background: var(--status-unknown);
+  .k-u {
+    border: 1.5px dashed var(--ink-2);
+  }
+  .home-plate__key .k-d {
+    width: 0.25rem;
+    height: 0.25rem;
+    margin-inline: 0.1875rem;
+    border-radius: 50%;
+    background: var(--ink-2);
     opacity: 0.45;
   }
-  .c-unknown.derived {
-    opacity: 0.14;
-  }
-  .c-not-applicable {
-    fill: var(--status-unknown);
-    opacity: 0.08;
+
+  .home-facts {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
   }
 
-  /* numbers band */
-  .numbers {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-5) var(--space-6);
-    padding-block: var(--space-5);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    margin-bottom: var(--space-8);
+  .home-section {
+    margin-top: var(--space-8);
+    max-width: 52rem;
   }
-  .numbers dt {
-    white-space: normal;
-  }
-
-  /* how it works */
-  .how {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-8);
-  }
-  .how__item {
-    position: relative;
-    padding: var(--space-5);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm), var(--inset-highlight);
-    transition:
-      transform var(--dur) var(--ease-out),
-      box-shadow var(--dur) var(--ease-out),
-      border-color var(--dur) var(--ease-out);
-  }
-  .how__item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow), var(--inset-highlight);
-    border-color: var(--line-strong);
-  }
-  .how__icon {
-    display: inline-grid;
-    place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius);
-    background: var(--accent-soft);
-    color: var(--accent-strong);
+  .home-section h2 {
     margin-bottom: var(--space-4);
   }
-  .how__icon svg {
-    width: 1.3rem;
-    height: 1.3rem;
-  }
-  .how__item h3 {
-    font-size: var(--text-md);
-    margin-bottom: var(--space-2);
-  }
-  .how__item p {
-    margin: 0;
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
+  .home-section__note {
+    max-width: var(--measure);
+    color: var(--ink-2);
+    font-size: var(--small);
   }
 
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-8);
-    align-items: start;
-  }
-  .split .cta {
-    margin-top: var(--space-4);
-  }
-  .latest__title {
-    font-size: var(--text-xl);
-  }
-  .latest__list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 var(--space-4);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm), var(--inset-highlight);
-    overflow: hidden;
-  }
-  .latest__list li {
+  .latest > li {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--space-3);
     align-items: center;
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--line-soft);
-    font-size: var(--text-sm);
-  }
-  .latest__list li:last-child {
-    border-bottom: 0;
+    padding-block: var(--space-3);
+    font-size: var(--small);
   }
   .latest__what {
     display: flex;
@@ -479,65 +306,28 @@ const latest = [...data.observations]
     text-decoration: none;
   }
   .latest__what > a:hover {
-    color: var(--accent);
+    color: var(--signal);
   }
-  .latest__feature {
-    font-size: var(--text-xs);
-    color: var(--ink-muted);
+  .latest__what > span {
+    color: var(--ink-2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .latest__feature a {
-    color: var(--ink-muted);
-  }
-  .latest__cat {
-    color: var(--ink-faint);
+  .latest__what > span a {
+    color: var(--ink-2);
   }
   .latest__meta {
     display: flex;
     flex-direction: column;
     align-items: end;
     gap: 0.1rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    color: var(--ink-faint);
+    font-size: var(--tiny);
+    color: var(--ink-2);
     white-space: nowrap;
   }
   .latest__meta time {
-    color: var(--ink-muted);
-  }
-  .latest__more {
-    font-size: var(--text-sm);
-  }
-
-  @media (max-width: 64rem) {
-    .hero {
-      grid-template-columns: 1fr;
-      gap: var(--space-6);
-      padding-block: var(--space-4) var(--space-7);
-    }
-    .hero__thumb {
-      max-width: 40rem;
-    }
-    .numbers {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .how {
-      grid-template-columns: 1fr;
-    }
-    .split {
-      grid-template-columns: 1fr;
-      gap: var(--space-7);
-    }
-  }
-  @media (max-width: 40rem) {
-    .numbers {
-      grid-template-columns: 1fr;
-      gap: var(--space-4);
-    }
-    .thumb__legend {
-      display: none;
-    }
+    font-family: var(--font-mono);
+    color: var(--ink);
   }
 </style>

@@ -1,0 +1,38 @@
+---
+/*
+ * A row of headline numbers (`.facts`). The figures are in the HTML; when the row is half in
+ * view, a tiny inline script counts each one up from 0 over 600ms, once (plan 016, M3). Under
+ * reduced motion, or without IntersectionObserver, it does nothing and the figures stand.
+ * Each figure reserves the width of its final value, so counting never moves the layout.
+ */
+interface Props {
+  label: string;
+  items: { label: string; value: number }[];
+}
+
+const { label, items } = Astro.props;
+---
+
+<dl class="facts" aria-label={label}>
+  {
+    items.map((item) => (
+      <div>
+        <dt>{item.label}</dt>
+        <dd>
+          <span data-count={item.value} style={`min-inline-size:${String(item.value).length}ch`}>
+            {item.value}
+          </span>
+        </dd>
+      </div>
+    ))
+  }
+</dl>
+<script is:inline>
+(()=>{const l=document.currentScript.previousElementSibling,n=l.querySelectorAll("[data-count]");if(matchMedia("(prefers-reduced-motion: reduce)").matches||!self.IntersectionObserver)return;const z=k=>n.forEach(e=>e.textContent=Math.round(e.dataset.count*k));z(0);addEventListener("beforeprint",()=>z(1));const o=new IntersectionObserver(([x])=>{if(!x.isIntersecting)return;o.disconnect();const t=performance.now(),f=w=>{const p=Math.min((w-t)/600,1);z(1-(1-p)**3);p<1&&requestAnimationFrame(f)};requestAnimationFrame(f)},{threshold:.5});o.observe(l)})()
+</script>
+
+<style>
+  dd span {
+    display: inline-block;
+  }
+</style>
