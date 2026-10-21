@@ -58,3 +58,16 @@ apart from marking their secondary buttons `quiet`.
 - [x] W2-T12 `tests/e2e/foundation.spec.ts`: the fit test checks the scrolling navigation at every width (row inside the viewport, no scrollbar, every link reachable at 13px or more, no page scroll); the current section is marked and in view at 320px; the header is static with no shadow or blur; the progress bar renders and fills where `animation-timeline` is supported; under reduced motion it is hidden and nothing runs
 - [x] W2-T13 `docs/design.md`: the `--lede` token, the layers and the surface list with the deprecated aliases
 - [x] W2-T14 Screenshot baselines: every page changes; to be refreshed through the `refresh-screenshots` label on the pull request, not from a local browser
+
+## WP7: Scanner pages
+
+The scanner overview and the per-server report on the new surfaces; the request ladder as a
+transcript with the line-by-line reveal (M12); the 320px overflow on `/mcp/scanner/` fixed.
+
+- [x] W7-T01 `src/lib/scanner.ts`: `requestLadder(view)` reads the requests a recorded report records from the evidence of its newest scanner observations (a recorded report keeps no request log, `requests` stays empty and `scan.json` is unchanged): method, URL, answer and the fields read, one line per method and address with the newest answer, in ladder order (protected resource metadata path-aware then root, the endpoint GET then POST, any pointer, the authorization server)
+- [x] W7-T02 `src/components/ScanReport.astro` replaces `ScanReport.svelte`: the component never hydrated (its live mode went in 004 T031), and as Astro it uses `StatusCell` instead of a copy of its glyphs. Grade letter in a 1px outline with no fill; the ladder as a `.transcript` inside an `.explainer`, with the grade as its last line; the checks as `.rows` per party with a `StatusCell`, the level, id, cited section, date and evidence
+- [x] W7-T03 M12: a page script (no island) arms the ladder only when motion is allowed and `IntersectionObserver` exists, and prints it line by line 60ms apart, once, when it scrolls into view; the static list is the end state, so without JavaScript or under reduced motion every line shows at once
+- [x] W7-T04 `src/pages/mcp/servers/[id]/scan.astro`: the grade rule as a `.panel`, the unscanned requirements as `.rows` with `.chip`s, the withdrawn notice as `.notice`
+- [x] W7-T05 `src/pages/mcp/scanner/index.astro`: "What it reads" is the ladder of one example scan as a `.transcript`, built from the scanner's own URL rules; status and grade rule as `.panel`s; the run-it-yourself note says the site never scans on request; grids use `min(100%, …)` so nothing is wider than the viewport at 320px; three missing spaces after line breaks restored
+- [x] W7-T06 `tests/e2e/scanner.spec.ts`: no page scroll at 320 and 412px on both pages; no form, input or scan button; the transcript matches `requestLadder` line by line with JavaScript off and ends with the grade; the reveal runs once with the grade last; reduced motion shows the end state
+- [x] W7-T07 Screenshot baselines `scanner.png` and `report.png`: refreshed through the `refresh-screenshots` label on the pull request

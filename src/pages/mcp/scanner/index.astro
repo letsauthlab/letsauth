@@ -6,7 +6,8 @@ import { getDataset } from "@/lib/data";
 import { passiveChecks, scannerFacts, scannerIndex, unscannedFeatures } from "@/lib/scanner";
 import { MAX_REQUESTS } from "@/scanner/discovery";
 import { GRADE_RULE } from "@/scanner/grade";
-import { SCANNER_ID, USER_AGENT } from "@/scanner/version";
+import { wellKnownAsUrls, wellKnownPrmUrls } from "@/scanner/urls";
+import { USER_AGENT } from "@/scanner/version";
 
 const data = getDataset();
 const revision = currentRevision(data);
@@ -16,6 +17,40 @@ const unscanned = unscannedFeatures(data);
 const facts = scannerFacts(views);
 const repo = "https://github.com/letsauthlab/letsauth";
 const issue = `${repo}/issues/new?template=observation.yml`;
+
+// One scan of an example server, built from the same URL rules the scanner uses.
+const example = {
+  server: "https://mcp.example.com/mcp",
+  issuer: "https://auth.example.com/tenant",
+};
+const [prmPath, prmRoot] = wellKnownPrmUrls(example.server);
+const ladder = [
+  { method: "GET", url: prmPath, note: "protected resource metadata (RFC 9728), path-aware" },
+  { method: "GET", url: prmRoot, note: "if nothing there: the same at the root" },
+  {
+    method: "GET",
+    url: example.server,
+    note: "no credentials, the Accept header an MCP client sends; only the status and the WWW-Authenticate header are read, never the body",
+  },
+  {
+    method: "POST",
+    url: example.server,
+    note: "if the GET was routed elsewhere (405, a redirect): an empty body with the JSON content type, no JSON-RPC message",
+  },
+  {
+    method: "GET",
+    url: "<resource_metadata>",
+    note: "if the well-known locations had nothing and the challenge names a metadata URL",
+  },
+  ...wellKnownAsUrls(example.issuer).map((url, i) => ({
+    method: "GET",
+    url,
+    note:
+      i === 0
+        ? "authorization server metadata for the first issuer the metadata names (RFC 8414)"
+        : `if not found yet: OpenID Connect Discovery, ${i === 1 ? "path-inserted" : "path-appended"}`,
+  })),
+];
 ---
 
 <Base
@@ -58,48 +93,38 @@ const issue = `${repo}/issues/new?template=observation.yml`;
     </header>
 
     <section class="how" aria-labelledby="how-title">
-      <h2 id="how-title">How it works</h2>
+      <h2 id="how-title">What it reads</h2>
+      <p class="how__lede">
+        One scan of a server listed at <code>{example.server}</code>, request by request. A line
+        marked "if" is sent only when the answers before it leave the question open.
+      </p>
+      <div class="explainer ladder">
+        <ol class="transcript" aria-label="The requests of one scan, in order">
+          {ladder.map((line) => (
+            <li>
+              <span class="transcript__method">{line.method}</span>
+              <span class="transcript__url">{line.url}</span>
+              <span class="transcript__note">{line.note}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <p class="how__after">
+        At most {MAX_REQUESTS} requests over HTTPS, no credentials, no body sent, redirects
+        followed only on the same host. It identifies itself as <code>{USER_AGENT}</code>. The
+        challenge is the only thing read from the endpoint, and it is what every anonymous client
+        receives; that is why it still counts as a passive scan (<a
+          href={`${repo}/blob/main/specs/008-discovery-challenge/spec.md`}
+          rel="noopener">why</a>, and <a
+          href={`${repo}/blob/main/specs/010-discovery-strategies/spec.md`}
+          rel="noopener">why the empty POST is too</a>).
+      </p>
       <div class="how__grid">
-        <article class="card">
-          <h3>What it reads</h3>
-          <ol>
-            <li>
-              The protected resource metadata (RFC 9728) at the path-aware well-known location
-              derived from the server URL, then at the root.
-            </li>
-            <li>
-              The challenge the endpoint returns to an unauthenticated request: the status and
-              the <code>WWW-Authenticate</code> header, which RFC 9728 and the MCP specification
-              define as the other way to announce that metadata, and whose <code>scope</code>
-              parameter names the scopes to ask for. First one <code>GET</code>; when that is
-              routed elsewhere (a streamable HTTP server may answer <code>GET</code> with 405, a
-              landing page with a redirect), one <code>POST</code> with an empty body, which
-              carries no JSON-RPC message. The response body is never read. When the well-known
-              locations had nothing and the challenge names a <code>resource_metadata</code> URL,
-              that document is fetched.
-            </li>
-            <li>
-              For the first authorization server the metadata names: its metadata at the three
-              well-known locations the MCP specification lists (RFC 8414 and OpenID Connect
-              Discovery, path-inserted and path-appended).
-            </li>
-          </ol>
-          <p>
-            At most {MAX_REQUESTS} requests over HTTPS, no credentials, no body sent, redirects
-            followed only on the same host. It identifies itself as <code>{USER_AGENT}</code>.
-            The challenge is the only thing read from the endpoint, and it is what every
-            anonymous client receives; that is why it still counts as a passive scan (<a
-              href={`${repo}/blob/main/specs/008-discovery-challenge/spec.md`}
-              rel="noopener">why</a>, and <a
-              href={`${repo}/blob/main/specs/010-discovery-strategies/spec.md`}
-              rel="noopener">why the empty POST is too</a>).
-          </p>
-        </article>
-        <article class="card">
-          <h3>What a status means</h3>
+        <section class="panel" aria-labelledby="status-title">
+          <h3 id="status-title">What a status means</h3>
           <p>
             <strong>Supported</strong> and <strong>unsupported</strong> are written only when a
-            document was fetched and the deciding field is present or absent.
+            document was fetched and the deciding field is present or absent.{" "}
             <strong>Unknown</strong> means the scanner could not tell: the document could not be
             fetched, no authorization server was named, or nothing was advertised to judge. A
             fetch failure is never written as a failure of the server.
@@ -113,9 +138,9 @@ const issue = `${repo}/issues/new?template=observation.yml`;
             Every observation starts with the URL that decided it and names the field and
             value, so a reviewer can open it.
           </p>
-        </article>
-        <article class="card" id="grade-rule">
-          <h3>How the grade is derived</h3>
+        </section>
+        <section class="panel" id="grade-rule" aria-labelledby="grade-title">
+          <h3 id="grade-title">How the grade is derived</h3>
           <ol class="rule">
             {GRADE_RULE.map((line) => <li>{line}</li>)}
           </ol>
@@ -123,14 +148,14 @@ const issue = `${repo}/issues/new?template=observation.yml`;
             The grade is a property of one report at one time, derived from the statuses shown.
             The atlas never sorts or ranks servers by it.
           </p>
-        </article>
+        </section>
       </div>
     </section>
 
     <section class="where" aria-labelledby="where-title">
       <h2 id="where-title">Where the results show</h2>
       <p>
-        The scanner has no list of its own. Its results live in the
+        The scanner has no list of its own. Its results live in the{" "}
         <a href="/mcp/">MCP auth atlas</a>: the letter next to each server name in the matrix is
         that server's latest grade, and every <a href="/mcp/">server page</a> carries the
         same grade with a link to the full report at <code>/mcp/servers/&lt;server&gt;/scan/</code>, which lists
@@ -146,7 +171,8 @@ const issue = `${repo}/issues/new?template=observation.yml`;
       <section class="prose" aria-labelledby="self-title">
         <h2 id="self-title">Run it yourself</h2>
         <p>
-          The same command runs the nightly job and your terminal:
+          The site never scans on request. In a clone of the repository, the command the nightly
+          job runs works from your terminal too:
         </p>
         <pre tabindex="0"><code>pnpm scan https://mcp.example.com/mcp   # any server, nothing written
 pnpm scan notion                        # a listed server by id
@@ -161,7 +187,7 @@ pnpm scan notion --write                # append what the nightly rule would</co
         <h2 id="not-title">What it does not check</h2>
         <p>
           {unscanned.length} server-side requirements need a token, a scope or a reading of the
-          implementation and stay out of a passive scan: for example
+          implementation and stay out of a passive scan: for example{" "}
           {unscanned.slice(0, 3).map((f, i) => (
             <>
               {i > 0 && ", "}
@@ -188,29 +214,64 @@ pnpm scan notion --write                # append what the nightly rule would</co
     margin-bottom: var(--space-7);
   }
   .how h2,
-  .where h2 {
-    font-size: var(--text-xl);
+  .where h2,
+  .split h2 {
+    font-size: var(--h2);
   }
+  .how__lede,
+  .how__after,
   .where p {
-    max-width: 70ch;
-    color: var(--ink-muted);
+    max-width: var(--measure);
+    color: var(--ink-2);
+  }
+  .how__after {
+    margin-top: var(--space-4);
   }
   .where a {
     color: var(--ink);
   }
+  .ladder .transcript {
+    margin: 0;
+  }
+  /* method and address on one line, the note under the address; addresses break, never scroll */
+  .ladder .transcript > li {
+    display: grid;
+    grid-template-columns: 4.5ch minmax(0, 1fr);
+    gap: 0 var(--space-3);
+    white-space: normal;
+    margin-bottom: var(--space-2);
+  }
+  .ladder .transcript > li:last-child {
+    margin-bottom: 0;
+  }
+  .transcript__url {
+    overflow-wrap: anywhere;
+  }
+  .ladder .transcript__note {
+    grid-column: 2;
+    font-family: var(--font-body);
+  }
+  @media (max-width: 40rem) {
+    .ladder,
+    .ladder .transcript {
+      padding: var(--space-3);
+    }
+  }
   .how__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
     gap: var(--space-4);
+    align-items: start;
+    margin-top: var(--space-6);
   }
   .how__grid h3 {
-    font-size: var(--text-md);
-    margin-bottom: var(--space-3);
+    font-size: var(--h3);
+    margin: 0 0 var(--space-3);
   }
   .how__grid p,
   .how__grid ol {
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
+    font-size: var(--small);
+    color: var(--ink-2);
   }
   .how__grid ol {
     padding-left: 1.3em;
@@ -222,17 +283,20 @@ pnpm scan notion --write                # append what the nightly rule would</co
     color: var(--ink);
   }
   .rule li::marker {
-    font-family: var(--font-mono);
-    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
   }
   .split {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
     gap: var(--space-6) var(--space-8);
     margin-bottom: var(--space-7);
   }
   .split h2 {
-    font-size: var(--text-xl);
     margin-top: 0;
+  }
+  .split pre {
+    max-width: 100%;
+    overflow-x: auto;
   }
 </style>

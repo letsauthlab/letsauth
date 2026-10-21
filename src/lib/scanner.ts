@@ -1,5 +1,6 @@
 import { type Grade, grade, NOT_SCANNED, noOAuth } from "../scanner/grade";
 import { type CheckResult, passiveFeatures, REPORT_VERSION, type Report } from "../scanner/report";
+import { wellKnownPrmUrls } from "../scanner/urls";
 import { SCANNER_ID } from "../scanner/version";
 import type { Feature, FeatureRevision, Observation, Server } from "../schema";
 import {
@@ -136,6 +137,100 @@ export function reportFromView(view: ScanView, generatedAt = new Date().toISOStr
     grade: view.grade,
     observations: [],
   };
+}
+
+/** One request of the ladder as the report's evidence records it (M12). */
+export interface LadderLine {
+  method: "GET" | "POST";
+  url: string;
+  /** The answer as the evidence words it: `HTTP 200`, `HTTP 302, redirect`, `timeout`. */
+  answer: string;
+  /**
+   * What the checks read from the answer: the endpoint's status and challenge header, a
+   * document's fields by name, or `status` when nothing more was read.
+   */
+  read: string[];
+}
+
+const EVIDENCE = /^(https:\/\/\S+) — ([^;]+?)(?:; (.*))?$/s;
+/** A field a check names first in its note: `issuer: …`, `scopes_supported without …`. */
+const FIELD = /^(WWW-Authenticate|issuer|resource|[a-z]+(?:_[a-z]+)+)(?=[: ])/;
+/** The endpoint ladder in words, as checks.ts writes it: `GET HTTP 405, POST HTTP 400`. */
+const LADDER_STEP = /\b(GET|POST) (HTTP \d{3}|[a-z-]+)/g;
+
+const sameUrl = (a: string, b: string) => {
+  try {
+    return new URL(a).href === new URL(b).href;
+  } catch {
+    return a === b;
+  }
+};
+
+/** The answer without the detail in brackets: `HTTP 302, redirect (not followed to …)`. */
+const shortAnswer = (answer: string) => answer.replace(/\s*\(.*\)$/s, "").trim();
+
+/**
+ * The requests behind a report, in the order the scanner makes them: protected resource
+ * metadata (path-aware, then root), the endpoint (GET, then POST), any other document (the
+ * challenge's pointer), then the authorization server. Read from the evidence of the newest
+ * scanner observation of each check; one line per method and address, the newest answer wins.
+ * A recorded report keeps no request log of its own (`requests` is empty), so the evidence is
+ * what it records.
+ */
+export function requestLadder(view: ScanView): LadderLine[] {
+  const target = view.server.url;
+  const prm = wellKnownPrmUrls(target);
+  const lines = new Map<string, LadderLine & { at: number; order: number }>();
+  let order = 0;
+  const add = (method: "GET" | "POST", url: string, answer: string, at: number, field?: string) => {
+    const key = `${method} ${url}`;
+    const line = lines.get(key);
+    if (!line || at > line.at) {
+      lines.set(key, { method, url, answer, read: [], at, order: line?.order ?? order++ });
+    }
+    const current = lines.get(key);
+    if (current && field && current.answer === answer && !current.read.includes(field)) {
+      current.read.push(field);
+    }
+  };
+  for (const check of view.checks) {
+    if (!check.observedAt) continue;
+    const m = check.evidence.match(EVIDENCE);
+    if (!m?.[1] || !m[2]) continue;
+    const [, url, answer, note = ""] = m;
+    const at = Date.parse(check.observedAt);
+    if (sameUrl(url, target)) {
+      const steps = [...note.matchAll(LADDER_STEP)];
+      if (steps.length > 0) {
+        for (const [, method, word] of steps) add(method as "GET" | "POST", url, word ?? "", at);
+        continue;
+      }
+      add("GET", url, shortAnswer(answer), at);
+      continue;
+    }
+    add("GET", url, shortAnswer(answer), at, note.match(FIELD)?.[1]);
+  }
+  const stage = (url: string) => {
+    const i = prm.findIndex((p) => sameUrl(p, url));
+    if (i >= 0) return i;
+    if (sameUrl(url, target)) return 10;
+    if (/\/\.well-known\/(oauth-authorization-server|openid-configuration)/.test(url)) return 30;
+    return 20;
+  };
+  return [...lines.values()]
+    .sort(
+      (a, b) =>
+        stage(a.url) - stage(b.url) ||
+        (a.method === b.method ? 0 : a.method === "GET" ? -1 : 1) ||
+        a.order - b.order,
+    )
+    .map(({ method, url, answer, read }) => ({
+      method,
+      url,
+      answer,
+      read:
+        read.length > 0 ? read : sameUrl(url, target) ? ["status", "WWW-Authenticate"] : ["status"],
+    }));
 }
 
 /** The requirements the scanner does not judge (active or manual), for the report page's note. */

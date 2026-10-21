@@ -1,9 +1,9 @@
 ---
 import Crumbs from "@/components/Crumbs.astro";
-import ScanReport from "@/components/ScanReport.svelte";
+import ScanReport from "@/components/ScanReport.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
-import { latestScan, reportFromView, unscannedFeatures } from "@/lib/scanner";
+import { latestScan, reportFromView, requestLadder, unscannedFeatures } from "@/lib/scanner";
 import { GRADE_RULE } from "@/scanner/grade";
 import type { Server } from "@/schema";
 
@@ -15,6 +15,7 @@ const { server } = Astro.props as { server: Server };
 const data = getDataset();
 const view = latestScan(data, server);
 const report = reportFromView(view, "1970-01-01T00:00:00Z");
+const ladder = requestLadder(view);
 const unscanned = unscannedFeatures(data);
 const repo = "https://github.com/letsauthlab/letsauth";
 const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.label.toLowerCase();
@@ -54,7 +55,7 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
 
     {
       server.withdrawn ? (
-        <section class="card notice" aria-labelledby="withdrawn">
+        <section class="notice" aria-labelledby="withdrawn">
           <h2 id="withdrawn">Withdrawn from the atlas</h2>
           <p>
             This server was withdrawn on <time datetime={server.withdrawn.at}>{server.withdrawn.at}</time>{" "}
@@ -63,10 +64,10 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
         </section>
       ) : (
         <>
-          <ScanReport report={report} scannedAt={view.scannedAt} />
+          <ScanReport report={report} ladder={ladder} scannedAt={view.scannedAt} />
 
           <div class="after">
-            <section class="card" aria-labelledby="rule-title">
+            <section class="panel" aria-labelledby="rule-title">
               <h2 id="rule-title">How the grade is derived</h2>
               <ol class="rule">{GRADE_RULE.map((line) => <li>{line}</li>)}</ol>
               <p class="muted">
@@ -74,17 +75,17 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
                 servers. <a href="/mcp/scanner/#grade-rule">About the scanner</a>.
               </p>
             </section>
-            <section class="card" aria-labelledby="not-title">
+            <section aria-labelledby="not-title">
               <h2 id="not-title">Not checked by the scanner</h2>
               <p class="muted">
                 These requirements need a token, a scope or a reading of the implementation. Their cells on the <a href={`/mcp/servers/${server.id}/`}>atlas page</a>{" "}
                 come from documentation and manual checks.
               </p>
-              <ul class="unscanned">
+              <ul class="rows unscanned">
                 {unscanned.map((f) => (
-                  <li>
+                  <li class="rows__head">
                     <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
-                    <span class="pill">{f.observable}</span>
+                    <span class="chip">{f.observable}</span>
                   </li>
                 ))}
               </ul>
@@ -112,42 +113,37 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
   }
   .after {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-    gap: var(--space-4);
-    margin: var(--space-6) 0 var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: var(--space-5) var(--space-6);
+    align-items: start;
+    margin: var(--space-7) 0 var(--space-5);
   }
   .after h2 {
-    font-size: var(--text-md);
-    margin-bottom: var(--space-3);
+    font-size: var(--h3);
+    margin: 0 0 var(--space-3);
   }
   .rule {
     padding-left: 1.3em;
-    font-size: var(--text-sm);
+    font-size: var(--small);
     margin-bottom: var(--space-3);
   }
   .rule li {
     margin-bottom: var(--space-1);
   }
   .rule li::marker {
-    font-family: var(--font-mono);
-    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
   }
   .muted {
-    font-size: var(--text-sm);
+    font-size: var(--small);
+    color: var(--ink-2);
   }
   .unscanned {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
+    font-size: var(--small);
   }
-  .unscanned li {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
+  .unscanned > li {
+    margin: 0;
+    padding: var(--space-2) 0;
   }
   .self {
     margin: 0;
