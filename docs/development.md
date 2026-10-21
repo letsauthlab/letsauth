@@ -103,13 +103,15 @@ stored override, without JavaScript; the header and footer share it.
 Two scripts derive everything else from those SVGs, the design tokens and the data, with no
 network request. Both need Playwright's Chromium (`pnpm exec playwright install chromium`):
 
-- `pnpm generate:brand` after changing the SVGs: the adaptive favicon (follows the system theme),
-  the 180×180 Apple touch icon and the 1200×630 social card, the last two on an opaque light
-  surface.
+- `pnpm generate:brand` after changing the SVGs, the tokens or the data: the adaptive favicon
+  (follows the system theme), the 180×180 Apple touch icon and the 1200×630 social card, the
+  last two on the light ground. The card is the home hero: wordmark, headline and the current
+  matrix on a plate.
 - `pnpm generate:readme` after changing the brand, the tokens or the data: the README's hero and
   how-it-works pictures under `docs/assets/readme/`, one light and one dark SVG each. GitHub
   renders a README image without the site's CSS, so the script resolves every token to a plain
-  colour per scheme and draws the atlas thumbnail from the real matrix.
+  colour per scheme and draws the matrix thumbnail from the real data, with the marks of
+  `MatrixThumb`.
 
 ## Working with coding agents
 

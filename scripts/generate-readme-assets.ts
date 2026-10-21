@@ -11,25 +11,20 @@ import { mapRelations, specNodes } from "../src/lib/standards";
 // public/brand. No network request is made.
 
 const TOKENS = [
-  "bg",
-  "bg-elevated",
-  "bg-sunken",
+  "ground",
+  "ground-2",
   "ink",
-  "ink-muted",
-  "ink-faint",
-  "line",
-  "line-strong",
-  "accent",
-  "accent-strong",
-  "accent-2",
+  "ink-2",
+  "rule",
+  "rule-strong",
+  "signal",
   "status-supported",
   "status-partial",
   "status-unsupported",
   "status-unknown",
-  "status-unknown-soft",
 ] as const;
 type Token = (typeof TOKENS)[number];
-type Palette = Record<Token, string> & { glow: string; shadow: string };
+type Palette = Record<Token, string>;
 
 const tokens = readFileSync("src/styles/tokens.css", "utf8");
 const wordmark = readFileSync("public/brand/wordmark.svg", "utf8");
@@ -72,12 +67,7 @@ async function resolvePalettes(): Promise<Record<"light" | "dark", Palette>> {
           }),
         TOKENS,
       );
-      const values = Object.fromEntries(raw.map(([n, px]) => [n, toHex(px)]));
-      out[scheme] = {
-        ...(values as Record<Token, string>),
-        glow: scheme === "light" ? "rgba(70,170,160,0.28)" : "rgba(90,200,180,0.16)",
-        shadow: scheme === "light" ? "rgba(30,30,50,0.12)" : "rgba(0,0,0,0.5)",
-      };
+      out[scheme] = Object.fromEntries(raw.map(([n, px]) => [n, toHex(px)])) as Palette;
       await page.close();
     }
     return out;
@@ -97,7 +87,7 @@ const rows = matrix.columns.map((f) =>
     if (status === "partial") return "P";
     if (status === "unsupported") return "U";
     if (status === "not-applicable") return "-";
-    return cell?.observation ? "u" : ".";
+    return (cell?.derived ?? true) ? "." : "u";
   }),
 );
 const counts = {
@@ -107,14 +97,17 @@ const counts = {
   specs: specNodes(data).length,
   relations: mapRelations(data).length,
 };
+const HEADLINE = "Agent authorization, on the record";
 
-const DISPLAY = `Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif`;
-const BODY = `Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif`;
+const SANS = `Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif`;
 const MONO = `'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace`;
 
-const dots = (id: string, t: Palette) =>
-  `<pattern id="${id}" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.2" cy="1.2" r="1.2" fill="${t.line}"/></pattern>`;
-
+/*
+ * The home hero as a picture, on the site's surfaces: a flat ground, the wordmark, eyebrow,
+ * headline and lede at the left, and the matrix on a plate at the right with the marks of
+ * MatrixThumb (an observed status filled, a recorded unknown a dashed ring, a derived unknown
+ * a faint dot, not applicable a dash). No glow, shadow or texture.
+ */
 function hero(t: Palette, mark: string): string {
   const W = 1200;
   const H = 420;
@@ -123,92 +116,92 @@ function hero(t: Palette, mark: string): string {
   const STEP = CELL + GAP;
   const cols = matrix.rows.length;
   const gridW = cols * STEP - GAP;
-  const winX = 690;
-  const winY = 54;
-  const winW = 462;
-  const winH = 334;
-  const gx = winX + (winW - gridW) / 2;
-  const gy = winY + 44;
+  const gridH = rows.length * STEP - GAP;
+  const plateW = 476;
+  const plateX = W - 48 - plateW;
+  const headH = 40;
+  const footH = 40;
+  const plateH = headH + 16 + gridH + 16 + footH;
+  const plateY = (H - plateH) / 2;
+  const gx = plateX + (plateW - gridW) / 2;
+  const gy = plateY + headH + 16;
   let cells = "";
   rows.forEach((r, y) => {
     r.forEach((ch, x) => {
-      if (ch === "-") return;
-      const fill =
-        ch === "S"
-          ? t["status-supported"]
-          : ch === "P"
-            ? t["status-partial"]
-            : ch === "U"
-              ? t["status-unsupported"]
-              : ch === "u"
-                ? "none"
-                : t["status-unknown-soft"];
-      const stroke =
-        ch === "u"
-          ? ` stroke="${t["status-unknown"]}" stroke-width="1" stroke-dasharray="2 1.6"`
-          : "";
-      cells += `<rect x="${(gx + x * STEP).toFixed(1)}" y="${(gy + y * STEP).toFixed(1)}" width="${CELL}" height="${CELL}" rx="2" fill="${fill}"${stroke}/>`;
+      const cx = gx + x * STEP;
+      const cy = gy + y * STEP;
+      const at = (dx: number, dy: number) =>
+        `x="${(cx + dx).toFixed(1)}" y="${(cy + dy).toFixed(1)}"`;
+      if (ch === ".") {
+        cells += `<circle cx="${(cx + CELL / 2).toFixed(1)}" cy="${(cy + CELL / 2).toFixed(1)}" r="1.2" fill="${t["status-unknown"]}" fill-opacity="0.45"/>`;
+      } else if (ch === "u") {
+        cells += `<rect ${at(0.75, 0.75)} width="${CELL - 1.5}" height="${CELL - 1.5}" rx="2" fill="none" stroke="${t["status-unknown"]}" stroke-width="1" stroke-dasharray="2 1.6"/>`;
+      } else if (ch === "-") {
+        cells += `<rect ${at(2, CELL / 2 - 0.75)} width="${CELL - 4}" height="1.5" fill="${t["rule-strong"]}"/>`;
+      } else {
+        const fill =
+          ch === "S"
+            ? t["status-supported"]
+            : ch === "P"
+              ? t["status-partial"]
+              : t["status-unsupported"];
+        cells += `<rect ${at(0, 0)} width="${CELL}" height="${CELL}" rx="2" fill="${fill}"/>`;
+      }
     });
   });
-  const caption = `${counts.servers} servers × ${counts.features} requirements`;
+  const footY = plateY + plateH - footH;
+  const legend = (
+    [
+      ["supported", `<rect width="9" height="9" rx="2" fill="${t["status-supported"]}"/>`],
+      ["partial", `<rect width="9" height="9" rx="2" fill="${t["status-partial"]}"/>`],
+      ["unsupported", `<rect width="9" height="9" rx="2" fill="${t["status-unsupported"]}"/>`],
+      [
+        "unknown",
+        `<rect x="0.5" y="0.5" width="8" height="8" rx="2" fill="none" stroke="${t["status-unknown"]}" stroke-dasharray="2 1.6"/>`,
+      ],
+      [
+        "no observation",
+        `<circle cx="4.5" cy="4.5" r="1.4" fill="${t["status-unknown"]}" fill-opacity="0.45"/>`,
+      ],
+    ] as const
+  ).reduce(
+    (acc, [label, glyph]) => {
+      acc.out += `<g transform="translate(${acc.x} 0)">${glyph}<text x="14" y="9">${label}</text></g>`;
+      acc.x += 22 + label.length * 6.4;
+      return acc;
+    },
+    { x: 0, out: "" },
+  ).out;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="t d">
-  <title id="t">letsauth: authentication for agents, measured instead of asserted</title>
-  <desc id="d">The letsauth wordmark beside a thumbnail of the MCP auth atlas: ${counts.servers} public MCP servers across, ${counts.features} requirements of the MCP Authorization specification down, each observed cell coloured by status.</desc>
-  <defs>
-    <linearGradient id="accentText" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${t.accent}"/><stop offset="1" stop-color="${t["accent-strong"]}"/></linearGradient>
-    ${dots("dots", t)}
-    <radialGradient id="glow" cx="0.5" cy="0" r="0.8"><stop offset="0" stop-color="${t.glow}"/><stop offset="1" stop-color="${t.glow}" stop-opacity="0"/></radialGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="${t.shadow}"/></filter>
-    <clipPath id="win"><rect x="${winX}" y="${winY}" width="${winW}" height="${winH}" rx="18"/></clipPath>
-  </defs>
-  <rect width="${W}" height="${H}" rx="24" fill="${t.bg}"/>
-  <rect width="${W}" height="${H}" rx="24" fill="url(#dots)"/>
-  <rect x="560" y="-120" width="640" height="360" fill="url(#glow)"/>
+  <title id="t">letsauth: ${HEADLINE.toLowerCase()}</title>
+  <desc id="d">The letsauth wordmark and the headline beside a thumbnail of the MCP server matrix: ${counts.servers} public MCP servers across, ${counts.features} requirements of the MCP Authorization specification down, each observed cell marked by status.</desc>
+  <rect width="${W}" height="${H}" rx="14" fill="${t.ground}" stroke="${t.rule}"/>
 
-  <g transform="translate(56 50) scale(0.6875)">${mark}</g>
+  <g transform="translate(48 48) scale(0.55)">${mark}</g>
 
-  <g font-family="${MONO}" font-size="11.5" letter-spacing="2.2" fill="${t.accent}">
-    <line x1="56" y1="140" x2="76" y2="140" stroke="${t.accent}" stroke-width="1.2"/>
-    <text x="86" y="144">AN INDEPENDENT LAB FOR AGENT AUTH</text>
+  <text x="48" y="146" font-family="${SANS}" font-size="15" fill="${t["ink-2"]}">An independent lab for agent authorization</text>
+  <g font-family="${SANS}" font-weight="600" font-size="46" letter-spacing="-1.4" fill="${t.ink}">
+    <text x="46" y="200">Agent authorization,</text>
+    <text x="46" y="250">on the record</text>
   </g>
-  <g font-family="${DISPLAY}" font-weight="700" font-size="46" letter-spacing="-1.6" fill="${t.ink}">
-    <text x="54" y="196">Authentication for agents,</text>
-    <text x="54" y="246"><tspan fill="url(#accentText)">measured</tspan> instead of asserted.</text>
+  <g font-family="${SANS}" font-size="16" fill="${t["ink-2"]}">
+    <text x="48" y="298">One open dataset of what the agent protocols require</text>
+    <text x="48" y="322">and what public servers do. Each requirement cites a</text>
+    <text x="48" y="346">specification revision, each status a dated observation.</text>
   </g>
-  <g font-family="${BODY}" font-size="16" fill="${t["ink-muted"]}">
-    <text x="56" y="292">One open dataset of what the agent protocols require</text>
-    <text x="56" y="316">and what real servers do. Every claim cites a revision,</text>
-    <text x="56" y="340">every status cites an observation. The data is yours.</text>
-  </g>
-  <g font-family="${MONO}" font-size="11.5" fill="${t["ink-muted"]}">
-    <circle cx="61" cy="370" r="3" fill="${t.accent}"/><text x="72" y="374">Data CC BY 4.0</text>
-    <circle cx="196" cy="370" r="3" fill="${t.accent}"/><text x="207" y="374">Code MIT</text>
-    <circle cx="289" cy="370" r="3" fill="${t.accent}"/><text x="300" y="374">Hosted in the EU</text>
-    <circle cx="432" cy="370" r="3" fill="${t.accent}"/><text x="443" y="374">No server contacted at build</text>
-  </g>
+  <text x="48" y="384" font-family="${MONO}" font-size="12" fill="${t["ink-2"]}">Data CC BY 4.0 · Code MIT · Hosted in the EU</text>
 
-  <g filter="url(#shadow)">
-    <rect x="${winX}" y="${winY}" width="${winW}" height="${winH}" rx="18" fill="${t["bg-elevated"]}" stroke="${t.line}"/>
-  </g>
-  <g clip-path="url(#win)">
-    <rect x="${winX}" y="${winY}" width="${winW}" height="34" fill="${t["bg-sunken"]}"/>
-    <line x1="${winX}" y1="${winY + 34.5}" x2="${winX + winW}" y2="${winY + 34.5}" stroke="${t.line}"/>
-  </g>
-  <g fill="${t["line-strong"]}"><circle cx="${winX + 18}" cy="${winY + 17}" r="4"/><circle cx="${winX + 32}" cy="${winY + 17}" r="4"/><circle cx="${winX + 46}" cy="${winY + 17}" r="4"/></g>
-  <text x="${winX + 64}" y="${winY + 21}" font-family="${MONO}" font-size="11" fill="${t["ink-muted"]}">atlas/mcp · ${revision.id} · ${caption}</text>
+  <rect x="${plateX + 0.5}" y="${plateY + 0.5}" width="${plateW - 1}" height="${plateH - 1}" rx="14" fill="${t["ground-2"]}"/>
+  <rect x="${plateX + 1}" y="${plateY + headH}" width="${plateW - 2}" height="${footY - plateY - headH}" fill="${t.ground}" stroke="${t.rule}"/>
+  <rect x="${plateX + 0.5}" y="${plateY + 0.5}" width="${plateW - 1}" height="${plateH - 1}" rx="14" fill="none" stroke="${t.rule}"/>
+  <text x="${plateX + 16}" y="${plateY + 25}" font-family="${SANS}" font-size="13" fill="${t.ink}">MCP servers <tspan dx="8" font-family="${MONO}" font-size="12" fill="${t["ink-2"]}">${revision.id} · ${counts.servers} × ${counts.features}</tspan></text>
   ${cells}
-  <g font-family="${MONO}" font-size="10.5" fill="${t["ink-muted"]}">
-    <g transform="translate(${winX + 22} ${winY + winH - 24})">
-      <rect width="9" height="9" rx="2" fill="${t["status-supported"]}"/><text x="14" y="9">supported</text>
-      <rect x="96" width="9" height="9" rx="2" fill="${t["status-partial"]}"/><text x="110" y="9">partial</text>
-      <rect x="174" width="9" height="9" rx="2" fill="${t["status-unsupported"]}"/><text x="188" y="9">unsupported</text>
-      <rect x="282" width="9" height="9" rx="2" fill="none" stroke="${t["status-unknown"]}" stroke-dasharray="2 1.6"/><text x="296" y="9">unknown</text>
-    </g>
-  </g>
+  <g font-family="${SANS}" font-size="11" fill="${t["ink-2"]}" transform="translate(${plateX + 16} ${footY + 15})">${legend}</g>
 </svg>
 `;
 }
 
+/* How the lab works: sources, the one model, the views, as hairline boxes on the ground. */
 function flow(t: Palette): string {
   const W = 1200;
   const H = 300;
@@ -221,25 +214,23 @@ function flow(t: Palette): string {
     lines: string[],
     accent = false,
   ) => `
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${t["bg-elevated"]}" stroke="${accent ? t.accent : t.line}" stroke-width="${accent ? 1.5 : 1}"/>
-    <text x="${x + 18}" y="${y + 30}" font-family="${DISPLAY}" font-weight="700" font-size="17" letter-spacing="-0.3" fill="${t.ink}">${title}</text>
-    ${lines.map((l, i) => `<text x="${x + 18}" y="${y + 56 + i * 20}" font-family="${BODY}" font-size="13.5" fill="${t["ink-muted"]}">${l}</text>`).join("")}`;
+    <rect x="${x + 0.5}" y="${y + 0.5}" width="${w - 1}" height="${h - 1}" rx="10" fill="${accent ? t["ground-2"] : t.ground}" stroke="${accent ? t.signal : t.rule}" stroke-width="${accent ? 1.5 : 1}"/>
+    <text x="${x + 18}" y="${y + 30}" font-family="${SANS}" font-weight="600" font-size="17" letter-spacing="-0.3" fill="${t.ink}">${title}</text>
+    ${lines.map((l, i) => `<text x="${x + 18}" y="${y + 56 + i * 20}" font-family="${SANS}" font-size="13" fill="${t["ink-2"]}">${l}</text>`).join("")}`;
   const arrow = (x1: number, y1: number, x2: number, y2: number) =>
-    `<path d="M${x1} ${y1} C ${x1 + 40} ${y1}, ${x2 - 40} ${y2}, ${x2} ${y2}" fill="none" stroke="${t["line-strong"]}" stroke-width="1.6" marker-end="url(#arr)"/>`;
+    `<path d="M${x1} ${y1} C ${x1 + 40} ${y1}, ${x2 - 40} ${y2}, ${x2} ${y2}" fill="none" stroke="${t["rule-strong"]}" stroke-width="1.5" marker-end="url(#arr)"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="t2 d2">
   <title id="t2">How the lab works</title>
-  <desc id="d2">Specifications and dated observations from vendor documentation and the passive scanner flow as pull requests into one YAML dataset, which the static build renders as the atlases, the scanner reports and the JSON exports.</desc>
+  <desc id="d2">Specifications and dated observations from vendor documentation and the passive scanner flow as pull requests into one YAML dataset, which the static build renders as the server matrix, the standards map, the scanner reports and the JSON exports.</desc>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${t["line-strong"]}"/></marker>
-    ${dots("dots2", t)}
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${t["rule-strong"]}"/></marker>
   </defs>
-  <rect width="${W}" height="${H}" rx="24" fill="${t.bg}"/>
-  <rect width="${W}" height="${H}" rx="24" fill="url(#dots2)"/>
+  <rect width="${W}" height="${H}" rx="14" fill="${t.ground}" stroke="${t.rule}"/>
 
-  <g font-family="${MONO}" font-size="11" letter-spacing="2" fill="${t.accent}">
-    <text x="48" y="44">SOURCES</text>
-    <text x="492" y="44">ONE MODEL</text>
-    <text x="846" y="44">MANY VIEWS</text>
+  <g font-family="${SANS}" font-size="13" fill="${t["ink-2"]}">
+    <text x="48" y="44">Sources</text>
+    <text x="492" y="44">One model</text>
+    <text x="846" y="44">Many views</text>
   </g>
 
   ${box(48, 60, 370, 92, "Specifications", ["MCP Authorization, OAuth, OIDC, WIMSE, A2A, EU acts.", "Every feature cites a revision and a section."])}
@@ -247,8 +238,8 @@ function flow(t: Palette): string {
 
   ${box(492, 86, 290, 128, "data/ · YAML", ["Validated by a Zod schema at build.", "Changed only through reviewed", "pull requests. CC BY 4.0."], true)}
 
-  ${box(846, 50, 306, 64, "MCP auth atlas", ["Servers against requirements."])}
-  ${box(846, 126, 306, 64, "Agent auth atlas", ["The standards map as one graph."])}
+  ${box(846, 50, 306, 64, "MCP servers", ["Servers against requirements."])}
+  ${box(846, 126, 306, 64, "Standards map", ["The specifications as one graph."])}
   ${box(846, 202, 306, 64, "Scanner reports · JSON exports", ["Per server, and the whole dataset."])}
 
   ${arrow(418, 106, 492, 150)}
@@ -257,7 +248,7 @@ function flow(t: Palette): string {
   ${arrow(782, 150, 846, 158)}
   ${arrow(782, 150, 846, 234)}
 
-  <text x="637" y="246" text-anchor="middle" font-family="${MONO}" font-size="10.5" fill="${t["ink-faint"]}">static build · no server contacted</text>
+  <text x="637" y="246" text-anchor="middle" font-family="${MONO}" font-size="10.5" fill="${t["ink-2"]}">static build · no server contacted</text>
 </svg>
 `;
 }
