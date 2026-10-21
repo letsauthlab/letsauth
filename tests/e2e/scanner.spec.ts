@@ -148,6 +148,10 @@ test.describe("scan report page (US2)", () => {
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto(`/mcp/servers/${first.server.id}/scan/`);
+    // contrast is judged on the end state, not on a ladder line still fading in (M12)
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => a.playState !== "running"),
+    );
     await expectNoSeriousA11yViolations(page);
     await hideNightlyData(page);
     await expect(page).toHaveScreenshot("report.png", {
