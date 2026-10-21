@@ -1,0 +1,92 @@
+---
+/*
+ * The whole matrix as a thumbnail: one mark per cell, servers across, requirements down. The
+ * marks keep StatusCell's distinction without colour: an observed status is a filled square, a
+ * recorded unknown a dashed ring, a derived unknown (no observation) a faint dot, not applicable
+ * a dash. Carries `view-transition-name: matrix`, so the home plate morphs into the matrix on
+ * /mcp/ when that page names its table the same way (plan 016, M2).
+ */
+import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+
+interface Props {
+  /** The revision whose matrix to draw; the current one by default. */
+  revisionId?: string;
+}
+
+const data = getDataset();
+const revisionId = Astro.props.revisionId ?? currentRevision(data).id;
+const matrix = matrixFor(data, revisionId);
+
+const CELL = 12;
+const STEP = CELL + 3;
+const width = matrix.rows.length * STEP - 3;
+const height = matrix.columns.length * STEP - 3;
+// one-letter classes keep the page small: supported, partial, unsupported (x)
+const MARK = { supported: "s", partial: "p", unsupported: "x" } as const;
+let observed = 0;
+for (const cell of matrix.cells.values()) if (cell.observation) observed += 1;
+---
+
+<svg
+  class="matrix-thumb"
+  viewBox={`0 0 ${width} ${height}`}
+  width={width}
+  height={height}
+  role="img"
+  aria-label={`Thumbnail of the matrix: ${matrix.rows.length} servers across, ${matrix.columns.length} requirements down, ${observed} cells observed.`}
+>
+  {
+    matrix.columns.map((feature, y) =>
+      matrix.rows.map((server, x) => {
+        const cell = matrix.cells.get(cellKey(server.id, feature.id));
+        const status = cell?.status ?? "unknown";
+        const cx = x * STEP;
+        const cy = y * STEP;
+        if (status === "unknown" && (cell?.derived ?? true))
+          return <circle class="d" cx={cx + 6} cy={cy + 6} r="1.6" />;
+        if (status === "unknown")
+          return <rect class="u" x={cx + 1} y={cy + 1} width="10" height="10" rx="3" />;
+        if (status === "not-applicable")
+          return <rect class="n" x={cx + 3} y={cy + 5} width="6" height="2" />;
+        return <rect class={MARK[status]} x={cx} y={cy} width={CELL} height={CELL} rx="3" />;
+      }),
+    )
+  }
+</svg>
+
+<style is:global>
+  /* global so the hundreds of marks carry no scoping attribute; every selector is namespaced */
+  .matrix-thumb {
+    display: block;
+    width: 100%;
+    height: auto;
+    view-transition-name: matrix;
+  }
+  .matrix-thumb .s {
+    fill: var(--ok);
+  }
+  .matrix-thumb .p {
+    fill: var(--caution);
+  }
+  .matrix-thumb .u {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 1.5;
+    stroke-dasharray: 2.5 2;
+  }
+  .matrix-thumb .d {
+    fill: var(--ink-2);
+    opacity: 0.45;
+  }
+  .matrix-thumb .n {
+    fill: var(--rule-strong);
+  }
+  .matrix-thumb .x {
+    fill: var(--threat);
+  }
+  ::view-transition-group(matrix) {
+    animation-duration: var(--dur-slow);
+    animation-timing-function: var(--ease);
+  }
+</style>

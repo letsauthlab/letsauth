@@ -59,6 +59,18 @@ apart from marking their secondary buttons `quiet`.
 - [x] W2-T13 `docs/design.md`: the `--lede` token, the layers and the surface list with the deprecated aliases
 - [x] W2-T14 Screenshot baselines: every page changes; to be refreshed through the `refresh-screenshots` label on the pull request, not from a local browser
 
+## WP3: Home page
+
+The home page as a statement, the matrix on its plate, the facts, an index of the five products
+and the latest observations. No boxes, no icons, one filled button.
+
+- [x] W3-T01 `src/components/MatrixThumb.astro` (new): the whole matrix as one SVG, servers across and requirements down; observed statuses as filled squares, a recorded unknown as a dashed ring, a derived one as a faint dot, not applicable as a dash, so the StatusCell distinction holds without colour; one-letter classes and a namespaced global style so the marks carry no scoping attribute; `view-transition-name: matrix` with a `--dur-slow` group (M2), ready for `MatrixPage.astro` to name its table the same way in WP4
+- [x] W3-T02 `src/components/Facts.astro` (new): the `.facts` row with the figures in the HTML; an inline script (384 B gzip) resets them to 0 and counts up over 600ms with an ease-out once the row is half in view, through one `IntersectionObserver`; nothing runs under reduced motion or without the observer; each figure reserves the width of its final value, so counting moves nothing (CLS 0); `beforeprint` restores the final figures (M3)
+- [x] W3-T03 `src/pages/index.astro`: statement head (eyebrow, an 18ch h1 at `--h1-home`, a two-sentence lede, one filled and one quiet button), the matrix on a `.plate` with one caption line (servers × requirements, last observation date, link) and a key, the facts over a rule, the five products as `.rows` with counts from the dataset, the latest observations as `.rows` with a `StatusCell` each (newest per server, six servers), and a `page-foot`; the gradient word, the window chrome, the glow, the hover lift, the three "how" boxes and the "refuses to be" section are gone
+- [x] W3-T04 Home copy rewritten per section 8: no slogan, no triad, no banned phrase; `check:prose` reports nothing for `index.astro`; every number is rendered from `getDataset()`
+- [x] W3-T05 `tests/e2e/home.spec.ts` (new): the five products and their counts, one filled button, no script file or island, every matrix cell drawn and named `matrix`, the count-up waiting at 0 out of view and ending at the dataset's figures, the final figures at once under reduced motion, the h1 in two lines at 1440px and four at 360px, no sideways scroll at 320px, the figures present without JavaScript, axe and a screenshot
+- [x] W3-T06 Screenshot baselines: `home.spec.ts` is new; its three baselines come from the `refresh-screenshots` label on the pull request, not from a local browser
+
 ## WP7: Scanner pages
 
 The scanner overview and the per-server report on the new surfaces; the request ladder as a
