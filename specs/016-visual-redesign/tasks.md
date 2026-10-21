@@ -111,3 +111,23 @@ together. The former layout's side-by-side split comes back in the new tone.
 - [x] W3-T08 The facts as one band between two rules, equal columns with a hairline between each (two by two below 64rem)
 - [x] W3-T09 "What the lab publishes" (numbered `.rows`, counts as `.chip`) and "Latest observations" (on a `.panel`, with the seed note and a quiet small button) side by side above 64rem, each under an eyebrow
 - [x] W3-T10 `tests/e2e/home.spec.ts`: the two sections sit side by side at 1440px; selectors follow the new markup; baselines refreshed through the `refresh-screenshots` label
+
+## WP6: Explorer and breach anatomy
+
+The chain on a plate with hairline lifelines and the stepper in an `.explainer`; Play, the step
+reveal, the token rail and the toggle rails; breach pages on `.rows`, `.panel` and a
+`.timeline`; the copy of these pages and of their YAML.
+
+- [x] W6-T01 `src/components/ChainPage.astro`: the chain on a `.plate` (clipped, so the actor head stays sticky) with a `--ground-2` head and no blur; lanes as 1px `--rule` lifelines; arrows 1.5px `--ink-2`, the current one 2px `--signal` with a filled numeral; toggled steps carry a 2px rail and arrow in the toggle's ink (`--toggle-attack`, `--toggle-misconfiguration`); removed steps struck with dashed arrows; a self arrow in the last lane loops left so it stays inside the plate; the toggle notice is the shared `.notice` (`.caution` for misconfiguration), tinted in oklab; tags are `.chip`; the list no longer collides with the shared `.steps` surface
+- [x] W6-T02 M5: once the reader steps, the current arrow draws in (`scaleX`, 300ms) and its body rises 8px (220ms); later steps dim through an opacity transition at `--dur`
+- [x] W6-T03 M6 in `src/components/Explorer.svelte`: Play advances every 2.5 s after it is pressed, stops at the last step, pauses on any pointer, key, wheel or touch input other than pressing Play itself, and is not offered under reduced motion (`reducedMotion()` from `src/lib/motion.ts`); Next is the one filled button, Previous and Play are `quiet`
+- [x] W6-T04 M7 in `src/components/TokenView.astro`: claims on `--code-bg` with a 2px rail on every added, changed or removed claim, marked at build time as `data-changed` (from `diffClaims`, already pure and unit tested); the island only toggles `is-fresh` on the current step, which starts the rail in `--signal` and settles it on `--rule` over 480ms
+- [x] W6-T05 M8: on a toggle page the rails of the touched steps light up once on load, 40ms apart and no later than 400ms, in CSS alone
+- [x] W6-T06 M2: the scenario title on `/explorer/` and the h1 of its scenario and toggle pages share a `view-transition-name`
+- [x] W6-T07 `src/pages/explorer/index.astro`: scenarios as `.rows` with actors as a plain line and toggles as wrapping links with a kind dot and a key; "How to read a chain" as a `.panel`; this fixes the horizontal scroll at 320px (nowrap pills in a grid item)
+- [x] W6-T08 `src/pages/breaches/index.astro`: entries as `.rows` with the class as a `.chip`; `src/pages/breaches/[id].astro`: facts in a `.panel`, a `.timeline` ordered list with a `time` element for the disclosure and the fix as its second entry, controls as `.rows`, the replay as a `.panel`
+- [x] W6-T09 M13: the timeline rail draws in from the top (`scaleY`, 480ms) and its entries fade in behind it, once, on load
+- [x] W6-T10 Copy: explorer and breach heads, ledes and how-to text rewritten to section 8 (no slogan heads, no semicolons, no "X, not Y"); semicolons removed from the `summary` and `note` fields of `data/scenarios/*.yaml` and `data/vulnerabilities/*.yaml`, citations and messages untouched
+- [x] W6-T11 `tests/e2e/explorer.spec.ts`, `breaches.spec.ts`: no horizontal scroll at 320px on every explorer and breach page; Play never starts by itself, advances when pressed and pauses on a key; the token diff is in the markup without JavaScript; reduced-motion end states for M5, M6, M7, M8 and M13; the timeline holds a `time` element; axe runs on the settled breach page
+- [x] W6-T13 Breach layout rework after review: the entry page puts the account (summary after its first sentence, the missing control, the replay as a rail in the toggle's ink) at reading width beside a sticky facts panel (timeline, affects, sources as short labels); the index is a ledger with the date, class and id in a narrow column beside each entry and its missing control and replay as labelled lines
+- [x] W6-T12 Screenshot baselines for `explorer.spec.ts` and `breaches.spec.ts`: refreshed through the `refresh-screenshots` label on the pull request

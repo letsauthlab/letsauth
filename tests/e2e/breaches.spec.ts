@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { breachList, missingControls } from "../../src/lib/breaches";
 import { getDataset } from "../../src/lib/data";
-import { expectNoSeriousA11yViolations } from "./helpers";
+import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const breaches = breachList(data);
@@ -112,18 +112,34 @@ test.describe("breach page (US2)", () => {
     await expect(page.locator("#replay a[data-replay]")).toHaveCount(0);
   });
 
-  test("has no horizontal page scroll at phone width", async ({ page }) => {
-    await page.setViewportSize({ width: 412, height: 900 });
+  test("has no horizontal page scroll at 320px", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const path of ["/breaches/", ...breaches.map((b) => `/breaches/${b.vulnerability.id}/`)]) {
+      await page.goto(path);
+      const [scroll, inner] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        window.innerWidth,
+      ]);
+      expect(scroll, path).toBeLessThanOrEqual(inner);
+    }
+  });
+
+  test("the timeline is an ordered list of dated entries that skips its draw-in under reduced motion (M13)", async ({
+    page,
+  }) => {
     await page.goto(`/breaches/${v.id}/`);
-    const [scroll, inner] = await page.evaluate(() => [
-      document.documentElement.scrollWidth,
-      window.innerWidth,
-    ]);
-    expect(scroll).toBeLessThanOrEqual(inner);
+    const timeline = page.locator("#timeline ol.timeline");
+    await expect(timeline.locator("> li").first().locator("time")).toHaveAttribute(
+      "datetime",
+      v.disclosed,
+    );
+    await expectEndStateUnderReducedMotion(page, "#timeline ol.timeline");
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto(`/breaches/${v.id}/`);
+    // the timeline fades in (M13); axe measures contrast on the settled page
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
     await expectNoSeriousA11yViolations(page);
     await expect(page).toHaveScreenshot("breach.png", { fullPage: false });
   });

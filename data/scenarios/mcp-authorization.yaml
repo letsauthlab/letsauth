@@ -42,7 +42,7 @@ steps:
     message: "401 with WWW-Authenticate: Bearer resource_metadata=\"…/.well-known/oauth-protected-resource/mcp\""
     note: >
       The server must point at its protected resource metadata, either in this challenge or at
-      the well-known location; this server does both.
+      the well-known location. This server does both.
     cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization Server Discovery › Protected Resource Metadata Discovery Requirements" }
   - id: fetch-prm
     from: client
@@ -54,7 +54,7 @@ steps:
     to: client
     message: "resource: https://mcp.tasks.example/mcp, authorization_servers: [https://auth.tasks.example]"
     note: >
-      The resource identifier is what the client will ask the token to be bound to; the
+      The resource identifier is what the client will ask the token to be bound to. The
       authorization server list is where it will ask.
     cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization Server Discovery › Authorization Server Location" }
   - id: fetch-as-metadata
@@ -67,7 +67,7 @@ steps:
     to: client
     message: "issuer, endpoints, code_challenge_methods_supported: [S256], client_id_metadata_document_supported: true"
     note: >
-      The issuer must match the URL the client asked; the client keeps the metadata keyed by
+      The issuer must match the URL the client asked. The client keeps the metadata keyed by
       that issuer.
     cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization Server Discovery › Authorization Server Metadata Discovery" }
   - id: authorization-request
@@ -92,7 +92,7 @@ steps:
     message: "Redirect with code, state and iss=https://auth.tasks.example"
     note: >
       The client compares iss byte for byte with the issuer it discovered before it uses the
-      code; a mismatch means the response came from somewhere else.
+      code. A mismatch means the response came from somewhere else.
     cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization › Authorization Response Validation" }
   - id: token-request
     from: client
@@ -119,7 +119,7 @@ steps:
         exp: 1790000000
         iat: 1789996400
         jti: 7f2c
-      note: Shown in the RFC 9068 JWT profile; an opaque token would carry the same binding on the server side.
+      note: Shown in the RFC 9068 JWT profile. An opaque token would carry the same binding on the server side.
   - id: bearer-call
     from: client
     to: server
@@ -179,8 +179,8 @@ toggles:
     summary: >
       The MCP server forwards the token it received to the Tasks API instead of obtaining one
       of its own. The API now sees a token whose audience is the MCP server, issued to the agent
-      host; if it accepts it, the agent host's token works against an API it was never
-      authorized for, and the API cannot tell the server's calls from the client's.
+      host. If the API accepts it, the agent host's token works against an API it was never
+      authorized for. The API cannot tell the server's calls from the client's.
     cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Access Token Privilege Restriction" }
     violates: [mcp.rs.no-passthrough, mcp.rs.audience-validation]
     replaces:
@@ -190,7 +190,7 @@ toggles:
           to: api
           message: "GET /tasks with Authorization: Bearer <the client's access token>, unchanged"
           note: >
-            The token's audience is still the MCP server. An API that checks aud rejects it; one
+            The token's audience is still the MCP server. An API that checks aud rejects it. One
             that does not now trusts a token it never issued for itself.
           cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Access Token Privilege Restriction" }
           token:
