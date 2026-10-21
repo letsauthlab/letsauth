@@ -163,3 +163,4 @@ Items from the redesign review, one pull request each, in order.
 
 - [x] R-01 PR #58 merged: matrix and feature baselines refreshed
 - [x] R-02 Small fixes: `.notice`, `.notice.caution` and `.card.notice` tint in oklab, not oklch (the toggle notice in `ChainPage.astro` keeps its local tint in the kind's ink); the link after "in the" on `/explorer/` and after "See" on `/standards/` no longer loses its space to HTML compression; the entry-format `pre` on `/contribute/` is focusable (axe scrollable-region-focusable)
+- [x] R-03 Nav wording: the primary and footer navigation read Servers, Standards, Explorer, Breaches, Contribute (Scanner stays in the footer); every `<Crumbs>` trail, the page-foot cross link on `/standards/` and the 404 buttons use the same words; `/mcp/` and `/standards/` take Servers and Standards as `<title>` and eyebrow. "Atlas" stays the product word in ledes and body copy

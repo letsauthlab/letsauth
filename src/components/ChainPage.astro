@@ -58,10 +58,10 @@ function arrow(from: string, to: string) {
       trail={
         toggle
           ? [
-              { href: "/explorer/", label: "Delegation chain explorer" },
+              { href: "/explorer/", label: "Explorer" },
               { href: `/explorer/${scenario.id}/`, label: scenario.title },
             ]
-          : [{ href: "/explorer/", label: "Delegation chain explorer" }]
+          : [{ href: "/explorer/", label: "Explorer" }]
       }
       current={toggle ? toggle.name : scenario.title}
     />

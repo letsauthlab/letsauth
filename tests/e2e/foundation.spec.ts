@@ -97,7 +97,7 @@ test.describe("foundation pages", () => {
     const current = page
       .getByRole("navigation", { name: "Primary" })
       .locator('a[aria-current="page"]');
-    await expect(current).toHaveText("Breach anatomy");
+    await expect(current).toHaveText("Breaches");
     await expect(current).toBeInViewport({ ratio: 1 });
     expect(await current.evaluate((el) => getComputedStyle(el).borderBottomWidth)).toBe("2px");
   });
