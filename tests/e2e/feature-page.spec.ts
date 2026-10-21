@@ -56,6 +56,16 @@ test.describe("feature page (US3)", () => {
     }
   });
 
+  test("has no horizontal page scroll at 320px (016 WP4)", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(`/mcp/features/${feature.id}/`);
+    const [scroll, inner] = await page.evaluate(() => [
+      document.documentElement.scrollWidth,
+      window.innerWidth,
+    ]);
+    expect(scroll).toBeLessThanOrEqual(inner ?? 0);
+  });
+
   test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto(`/mcp/features/${feature.id}/`);
     await expectNoSeriousA11yViolations(page);

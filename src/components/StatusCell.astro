@@ -15,151 +15,166 @@ const meta = STATUS_META[status];
 const title = derived ? `${meta.label} (no observation recorded)` : meta.label;
 ---
 
-<span
-  class:list={["status", `status-${status}`, variant, { derived }]}
-  data-status={status}
-  title={title}
->
-  <span class="glyph" aria-hidden="true">
-    {
-      status === "supported" && (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
-        </svg>
-      )
-    }
-    {
-      status === "partial" && (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="8" cy="8" r="4.6" />
-          <path d="M8 3.4a4.6 4.6 0 0 1 0 9.2Z" fill="currentColor" stroke="none" />
-        </svg>
-      )
-    }
-    {
-      status === "unsupported" && (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />
-        </svg>
-      )
-    }
-    {
-      status === "unknown" && (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="8" cy="8" r="4.2" stroke-dasharray="2.2 2" />
-        </svg>
-      )
-    }
-    {
-      status === "not-applicable" && (
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M4.5 8h7" />
-        </svg>
-      )
-    }
-  </span>
-  <span class:list={["text", { "visually-hidden": variant === "cell" }]}>
-    {meta.label}{derived && variant === "label" ? <span class="note"> no observation</span> : ""}
-  </span>
-</span>
+{
+  /*
+   * One element per glyph, drawn with its own background, border and ::after, so the matrix
+   * carries no SVG per cell (016 WP4). The cell variant names itself as an image; the label
+   * variant puts the same glyph before the status word.
+   */
+  variant === "cell" ? (
+    <span
+      class:list={["status-cell", `status-${status}`, { derived }]}
+      data-status={status}
+      title={title}
+      role="img"
+      aria-label={title}
+    />
+  ) : (
+    <span class="status-label" data-status={status} title={title}>
+      <span class:list={["status-cell", `status-${status}`, { derived }]} aria-hidden="true" />
+      {meta.label}
+      {derived && <span class="status-label__note"> no observation</span>}
+    </span>
+  )
+}
 
-<style>
-  .status {
-    --c: var(--status-unknown);
-    --c-soft: var(--status-unknown-soft);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45em;
-    color: var(--c);
-    font-weight: 500;
-    font-size: var(--text-sm);
-    line-height: 1;
-  }
-  .status.label {
-    white-space: nowrap;
-  }
-  .status.label .text {
-    color: var(--ink);
-  }
-  .note {
-    color: var(--ink-faint);
-    font-weight: 400;
-    font-size: var(--text-xs);
-  }
+<style is:global>
+  @layer reset, tokens, base, layout, components, product, utilities, print;
 
-  /* the chip */
-  .glyph {
-    --size: 1.5rem;
-    flex: none;
-    display: inline-grid;
-    place-items: center;
-    width: var(--size);
-    height: var(--size);
-    border-radius: 7px;
-    color: var(--status-on);
-    background: var(--c);
-    box-shadow:
-      inset 0 1px 0 0 color-mix(in oklch, white 22%, transparent),
-      0 1px 2px color-mix(in oklch, var(--c) 35%, transparent);
-    transition:
-      transform var(--dur-fast) var(--ease),
-      box-shadow var(--dur-fast) var(--ease);
-  }
-  .glyph svg {
-    width: calc(var(--size) * 0.68);
-    height: calc(var(--size) * 0.68);
-  }
-  .label .glyph {
-    --size: 1.15rem;
-    border-radius: 5px;
-  }
-  .label .glyph svg {
-    width: calc(var(--size) * 0.78);
-    height: calc(var(--size) * 0.78);
-  }
+  /*
+   * Status glyphs (plan 3.2). Observed statuses are a filled square with the glyph on it; a
+   * recorded unknown is a dashed ring, a derived one a faint dot, not applicable a dash. The
+   * shapes differ, so the five read apart without colour. Borders and backgrounds only: an image
+   * mask or a grid per glyph cost the matrix a tenth of a second.
+   */
+  @layer product {
+    .status-cell {
+      --c: var(--status-unknown);
+      --on: var(--status-on);
+      --size: 1.25rem;
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 22%;
+      background-color: var(--c);
+      vertical-align: middle;
+    }
 
-  .status-supported {
-    --c: var(--status-supported);
-    --c-soft: var(--status-supported-soft);
-  }
-  .status-partial {
-    --c: var(--status-partial);
-    --c-soft: var(--status-partial-soft);
-  }
-  .status-unsupported {
-    --c: var(--status-unsupported);
-    --c-soft: var(--status-unsupported-soft);
-  }
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      font-size: var(--small);
+      font-weight: 500;
+      line-height: 1;
+      color: var(--ink);
+      white-space: nowrap;
+      vertical-align: middle;
+    }
 
-  /* an unknown someone recorded: a dashed ring. One nobody recorded: a faint dot. */
-  .status-unknown,
-  .status-not-applicable {
-    --c: var(--status-unknown);
-    --c-soft: var(--status-unknown-soft);
-  }
-  .status-unknown .glyph,
-  .status-not-applicable .glyph {
-    background: transparent;
-    box-shadow: none;
-    color: var(--c);
-  }
-  .status-unknown.derived .glyph svg {
-    display: none;
-  }
-  .status-unknown.derived .glyph::before {
-    content: "";
-    width: 0.3rem;
-    height: 0.3rem;
-    border-radius: 50%;
-    background: var(--ink-faint);
-    opacity: 0.45;
-  }
-  .status-unknown.derived.label .glyph::before {
-    width: 0.4rem;
-    height: 0.4rem;
-    opacity: 0.6;
-  }
-  .status-not-applicable .glyph {
-    opacity: 0.55;
+    .status-label > .status-cell {
+      --size: 1rem;
+    }
+
+    .status-label__note {
+      color: var(--ink-2);
+      font-weight: 400;
+      font-size: var(--tiny);
+    }
+
+    /*
+     * The glyphs are background layers on the chip itself: no pseudo-element and no transform,
+     * so a cell stays one plain box. --bar is a 2px stripe along a box's diagonal.
+     */
+    .status-supported,
+    .status-partial,
+    .status-unsupported {
+      --bar: transparent calc(50% - 1.1px), var(--on) calc(50% - 1.1px) calc(50% + 1.1px),
+        transparent calc(50% + 1.1px);
+      background-repeat: no-repeat;
+    }
+
+    /* supported: a check, two stripes meeting at its foot */
+    .status-supported {
+      --c: var(--status-supported);
+      background-image:
+        linear-gradient(to bottom left, var(--bar)), linear-gradient(to bottom right, var(--bar));
+      background-size:
+        24% 24%,
+        40% 44%;
+      background-position:
+        24% 66%,
+        78% 30%;
+    }
+
+    /* partial: a ring, half filled */
+    .status-partial {
+      --c: var(--status-partial);
+      background-image:
+        radial-gradient(
+          circle closest-side,
+          transparent calc(100% - 1.6px),
+          var(--on) calc(100% - 1.6px) 100%,
+          transparent 100%
+        ),
+        radial-gradient(
+          circle calc(var(--size) * 0.31) at left center,
+          var(--on) calc(100% - 0.5px),
+          transparent 100%
+        );
+      background-size:
+        62% 62%,
+        31% 62%;
+      /* the half disc's box starts at the chip's centre */
+      background-position:
+        center,
+        calc(var(--size) / 2) 50%;
+    }
+
+    /* unsupported: a cross */
+    .status-unsupported {
+      --c: var(--status-unsupported);
+      background-image:
+        linear-gradient(to bottom left, var(--bar)), linear-gradient(to bottom right, var(--bar));
+      background-size: 50% 50%;
+      background-position: center;
+    }
+
+    /* outline-only forms: the shape alone, centred in the same footprint */
+    .status-unknown {
+      --inset: calc(var(--size) * 0.14);
+      width: calc(var(--size) - 2 * var(--inset));
+      height: calc(var(--size) - 2 * var(--inset));
+      margin: var(--inset);
+      border: 1.5px dashed var(--c);
+      border-radius: 50%;
+      background: none;
+    }
+
+    .status-unknown.derived {
+      --inset: calc(var(--size) * 0.37);
+      border: 0;
+      background-color: color-mix(in oklch, var(--c) 45%, transparent);
+    }
+
+    .status-not-applicable {
+      --c: var(--status-not-applicable);
+      width: calc(var(--size) * 0.45);
+      height: 2px;
+      margin: calc((var(--size) - 2px) / 2) calc(var(--size) * 0.275);
+      border-radius: 1px;
+    }
+
+    @media (forced-colors: active) {
+      .status-cell {
+        forced-color-adjust: none;
+        --c: CanvasText;
+        --on: Canvas;
+      }
+    }
   }
 </style>

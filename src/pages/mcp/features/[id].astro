@@ -54,7 +54,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "MCP auth atlas" }]} current={feature.name} />
     <header class="page-head">
-      <p class="eyebrow">{PARTY_LABEL[feature.party]} · {CATEGORY_LABEL[feature.category]}</p>
+      <p class="eyebrow">{PARTY_LABEL[feature.party]} / {CATEGORY_LABEL[feature.category]}</p>
       <h1>{feature.name}</h1>
       <p class="lede">{feature.description}</p>
       <p class="page-head__meta">
@@ -74,8 +74,8 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
       </p>
     </header>
 
-    <div class="grid">
-      <section class="card" aria-labelledby="definition">
+    <div class="split">
+      <section aria-labelledby="definition">
         <h2 id="definition">In revision {revision.id}</h2>
         {
           entry ? (
@@ -110,8 +110,9 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
         }
       </section>
 
-      <section class="card" aria-labelledby="levels">
+      <section aria-labelledby="levels">
         <h2 id="levels">Level by revision</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="levels">
         <table class="levels">
           <thead>
             <tr>
@@ -128,7 +129,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
                   <tr>
                     <th scope="row">
                       <a href={r.id === revision.id ? "/mcp/" : `/mcp/revisions/${r.id}/`}>{r.id}</a>
-                      {r.status === "current" && <span class="pill">current</span>}
+                      {r.status === "current" && <span class="chip signal">current</span>}
                     </th>
                     <td>
                       {e ? (
@@ -147,6 +148,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
             }
           </tbody>
         </table>
+        </div>
       </section>
     </div>
 
@@ -158,8 +160,8 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
           <p class="share-line">
             {share.share === null ? (
               <>
-                <strong>No server has been observed yet</strong> for this feature. The share is
-                not computed from unknowns.
+                <strong>No server has been observed yet</strong> for this feature. Servers with no
+                observation on record do not count towards a share.
               </>
             ) : (
               <>
@@ -174,9 +176,9 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
             </span>
           </p>
           <div class="bar" role="img" aria-label={`Supported ${share.supported}, partial ${share.partial}, unsupported ${share.unsupported}, unknown ${share.unknown}, not applicable ${share.notApplicable}`}>
-            <span class="seg supported" style={`flex-basis:${pct(share.supported)}%`} />
-            <span class="seg partial" style={`flex-basis:${pct(share.partial)}%`} />
-            <span class="seg unsupported" style={`flex-basis:${pct(share.unsupported)}%`} />
+            {share.supported > 0 && <span class="seg supported" style={`flex-basis:${pct(share.supported)}%`} />}
+            {share.partial > 0 && <span class="seg partial" style={`flex-basis:${pct(share.partial)}%`} />}
+            {share.unsupported > 0 && <span class="seg unsupported" style={`flex-basis:${pct(share.unsupported)}%`} />}
             {known === 0 && <span class="seg empty" style="flex-basis:100%" />}
           </div>
           <div class="status-lists">
@@ -206,59 +208,70 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
 </Base>
 
 <style>
-  .grid {
+  /* code inside the small key/value text keeps to the 13px floor */
+  .kv code {
+    font-size: max(var(--tiny), 0.875em);
+  }
+  /* two sections side by side where they fit, stacked where they do not (320px included) */
+  .split {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: var(--space-5) var(--space-7);
     margin-bottom: var(--space-8);
   }
-  .card h2 {
-    font-size: var(--text-md);
+  .split > section {
+    min-width: 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+  }
+  .split h2 {
+    font-size: var(--h3);
     margin-bottom: var(--space-4);
   }
   .note {
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
+    color: var(--ink-2);
+    font-size: var(--small);
+  }
+  .table-scroll {
+    overflow-x: auto;
   }
   .levels {
     margin: 0;
   }
   .levels th[scope="row"] {
-    text-transform: none;
-    letter-spacing: 0;
     color: var(--ink);
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: var(--small);
     font-weight: 500;
     white-space: nowrap;
   }
   .levels tbody tr:last-child > * {
     border-bottom: 0;
   }
-  .levels .pill {
+  .levels .chip {
     margin-left: var(--space-2);
   }
   .adoption h2 {
-    font-size: var(--text-xl);
+    font-size: var(--h2);
   }
   .share-line {
     max-width: none;
   }
   .share-line strong {
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
-    font-weight: 700;
+    font-size: var(--h1);
+    font-weight: 600;
     letter-spacing: var(--tracking-tight);
     line-height: 1;
     margin-right: var(--space-2);
   }
+  /* the share as one bar; a feature nobody observed shows an empty dashed track */
   .bar {
     display: flex;
     gap: 2px;
     height: 0.75rem;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     overflow: hidden;
-    background: var(--bg-sunken);
+    background: var(--ground-3);
     margin: var(--space-4) 0 var(--space-6);
     max-width: 48rem;
   }
@@ -277,30 +290,26 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     background: var(--status-unsupported);
   }
   .seg.empty {
-    background: repeating-linear-gradient(
-      -45deg,
-      transparent 0 6px,
-      var(--status-unknown-soft) 6px 12px
-    );
+    border: 1px dashed var(--rule-strong);
+    border-radius: inherit;
+    background: var(--ground);
   }
   .status-lists {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: var(--space-5) var(--space-6);
   }
   .status-lists section {
-    padding: var(--space-4);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm), var(--inset-highlight);
+    min-width: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule);
   }
   .status-lists h3 {
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--small);
     margin-bottom: var(--space-3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-soft);
   }
   .status-lists ul {
     list-style: none;
@@ -308,7 +317,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     margin: 0;
     columns: 2;
     column-gap: var(--space-4);
-    font-size: var(--text-sm);
+    font-size: var(--small);
   }
   .status-lists li {
     break-inside: avoid;
@@ -320,7 +329,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     text-decoration: none;
   }
   .status-lists li a:hover {
-    color: var(--accent);
+    color: var(--signal);
     text-decoration: underline;
   }
 </style>

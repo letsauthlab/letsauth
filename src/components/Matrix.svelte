@@ -7,6 +7,7 @@
 import { onMount } from "svelte";
 
 let dialog: HTMLDialogElement;
+let heading: HTMLHeadingElement;
 let detailHost: HTMLDivElement;
 let opener: HTMLElement | null = null;
 
@@ -35,6 +36,7 @@ onMount(() => {
   const rows = Array.from(table.querySelectorAll<HTMLTableRowElement>("tbody tr[data-server]"));
   const total = rows.length;
   const tbody = table.querySelector("tbody");
+  const featureCol = table.querySelector<HTMLTableColElement>(".matrix__feature-col");
   // the server-rendered order is alphabetical; grouping keeps it inside each group
   const alphabetical = [...rows];
   // group labels and order, read from the filter options so the island carries no copy of them
@@ -56,14 +58,21 @@ onMount(() => {
     group: controls.group?.value ?? "",
   });
 
+  // whether the rows are out of their server-rendered order, so A to Z has something to undo
+  let grouped = false;
+
   /** Re-orders the rows by a class and inserts one header row per non-empty group (009). */
   function regroup(by: string, columns: number) {
     if (!tbody) return;
-    for (const tr of tbody.querySelectorAll("tr.group")) tr.remove();
     if (by !== "access" && by !== "auth") {
+      if (!grouped) return;
+      for (const tr of tbody.querySelectorAll("tr.group")) tr.remove();
       for (const tr of alphabetical) tbody.appendChild(tr);
+      grouped = false;
       return;
     }
+    grouped = true;
+    for (const tr of tbody.querySelectorAll("tr.group")) tr.remove();
     for (const g of groupMeta(by)) {
       const members = alphabetical.filter((tr) => tr.dataset[by] === g.value && !tr.hidden);
       if (members.length === 0) continue;
@@ -88,6 +97,9 @@ onMount(() => {
     for (const tr of alphabetical) if (tr.hidden) tbody.appendChild(tr);
   }
 
+  // the feature columns shown last time, so a change of rows alone leaves the cells untouched
+  let shownFeatures = heads.map((th) => th.dataset.feature ?? "").join(" ");
+
   function apply(pushUrl = true) {
     const s = state();
     const visibleFeatures = new Set<string>();
@@ -110,17 +122,26 @@ onMount(() => {
       gh.hidden = n === 0;
       if (n > 0) gh.colSpan = n;
     }
+    const featureKey = [...visibleFeatures].join(" ");
+    const columnsChanged = featureKey !== shownFeatures;
+    shownFeatures = featureKey;
     let shown = 0;
     for (const tr of rows) {
       const match =
         (!s.q || (tr.dataset.name ?? "").includes(s.q)) &&
         (!s.access || tr.dataset.access === s.access) &&
         (!s.auth || tr.dataset.auth === s.auth);
-      tr.hidden = !match;
+      if (tr.hidden === match) tr.hidden = !match;
       if (match) shown += 1;
+      if (!columnsChanged) continue;
       for (const td of tr.querySelectorAll<HTMLTableCellElement>("td[data-feature]")) {
         td.hidden = !visibleFeatures.has(td.dataset.feature ?? "");
       }
+    }
+    if (columnsChanged) {
+      // the table's layout is fixed: its width and the feature column follow the columns shown
+      table.style.setProperty("--cols", String(visibleFeatures.size));
+      if (featureCol) featureCol.span = Math.max(visibleFeatures.size, 1);
     }
     regroup(s.group, visibleFeatures.size);
     if (count) {
@@ -135,14 +156,18 @@ onMount(() => {
     }
   }
 
-  // restore from the URL
+  // restore from the URL; with nothing to restore, the server-rendered table is already right
   const initial = new URLSearchParams(location.search);
+  let restored = false;
   for (const key of PARAMS) {
     const v = initial.get(key);
     const el = controls[key];
-    if (v && el) el.value = v;
+    if (v && el) {
+      el.value = v;
+      restored = true;
+    }
   }
-  apply(false);
+  if (restored) apply(false);
   table.dataset.enhanced = "true";
 
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -173,6 +198,7 @@ onMount(() => {
     opener = summary;
     detailHost.replaceChildren(content.cloneNode(true));
     dialog.showModal();
+    heading.focus();
   });
   dialog.addEventListener("close", () => {
     opener?.focus();
@@ -187,7 +213,7 @@ onMount(() => {
 <dialog bind:this={dialog} class="cell-dialog" aria-labelledby="cell-dialog-title">
   <div class="cell-dialog__inner">
     <div class="cell-dialog__bar">
-      <h2 id="cell-dialog-title">Observation</h2>
+      <h2 id="cell-dialog-title" tabindex="-1" bind:this={heading}>Observation</h2>
       <form method="dialog">
         <button type="submit" class="button small quiet" aria-label="Close">Close</button>
       </form>
@@ -197,30 +223,47 @@ onMount(() => {
 </dialog>
 
 <style>
+  /*
+   * M10: the backdrop fades in and the panel rises 8px over --dur, from @starting-style. Flat:
+   * the backdrop veils the page in its own ground instead of a shadow lifting the panel.
+   */
   .cell-dialog {
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    background: var(--ground-2);
     color: var(--ink);
     padding: 0;
     width: min(34rem, calc(100vw - 2rem));
-    box-shadow: var(--shadow-lg);
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--dur) var(--ease),
+      translate var(--dur) var(--ease),
+      overlay var(--dur) allow-discrete,
+      display var(--dur) allow-discrete;
   }
-  .cell-dialog[open] {
-    animation: dialog-in var(--dur) var(--ease-out);
+  .cell-dialog:not([open]) {
+    opacity: 0;
+    translate: 0 8px;
   }
   .cell-dialog::backdrop {
-    background: oklch(10% 0.02 265 / 45%);
-    backdrop-filter: blur(4px);
+    background: color-mix(in oklch, var(--ground) 78%, transparent);
+    opacity: 1;
+    transition:
+      opacity var(--dur) var(--ease),
+      overlay var(--dur) allow-discrete,
+      display var(--dur) allow-discrete;
   }
-  @keyframes dialog-in {
-    from {
+  .cell-dialog:not([open])::backdrop {
+    opacity: 0;
+  }
+  @starting-style {
+    .cell-dialog[open] {
       opacity: 0;
-      transform: translateY(8px) scale(0.98);
+      translate: 0 8px;
     }
-    to {
-      opacity: 1;
-      transform: none;
+    .cell-dialog[open]::backdrop {
+      opacity: 0;
     }
   }
   .cell-dialog__inner {
@@ -234,13 +277,17 @@ onMount(() => {
     margin-bottom: var(--space-4);
   }
   .cell-dialog__bar h2 {
-    font-size: var(--text-2xs);
-    font-family: var(--font-mono);
+    font-size: var(--small);
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    color: var(--ink-muted);
+    color: var(--ink-2);
     margin: 0;
+  }
+  .cell-dialog__bar h2:focus {
+    outline: none;
+  }
+  .cell-dialog__bar h2:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
   }
   .cell-dialog__bar form {
     margin: 0;
