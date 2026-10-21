@@ -83,3 +83,13 @@ transcript with the line-by-line reveal (M12); the 320px overflow on `/mcp/scann
 - [x] W7-T05 `src/pages/mcp/scanner/index.astro`: "What it reads" is the ladder of one example scan as a `.transcript`, built from the scanner's own URL rules; status and grade rule as `.panel`s; the run-it-yourself note says the site never scans on request; grids use `min(100%, …)` so nothing is wider than the viewport at 320px; three missing spaces after line breaks restored
 - [x] W7-T06 `tests/e2e/scanner.spec.ts`: no page scroll at 320 and 412px on both pages; no form, input or scan button; the transcript matches `requestLadder` line by line with JavaScript off and ends with the grade; the reveal runs once with the grade last; reduced motion shows the end state
 - [x] W7-T07 Screenshot baselines: the `refresh-screenshots` run on the pull request found `scanner.png` and `report.png` unchanged (both are viewport shots, the head is above the changes and the report is masked), so none were committed
+
+### WP3 follow-up: one page, not a stack of sections
+
+After review, the merged home page read as unfinished: loose sections with nothing tying them
+together. The former layout's side-by-side split comes back in the new tone.
+
+- [x] W3-T07 `src/pages/index.astro`: statement and matrix plate side by side above 64rem, as before; the plate gets a head (product and revision, link) and a foot (size, last observation, key) on its own rules, with the grid on `--ground`
+- [x] W3-T08 The facts as one band between two rules, equal columns with a hairline between each (two by two below 64rem)
+- [x] W3-T09 "What the lab publishes" (numbered `.rows`, counts as `.chip`) and "Latest observations" (on a `.panel`, with the seed note and a quiet small button) side by side above 64rem, each under an eyebrow
+- [x] W3-T10 `tests/e2e/home.spec.ts`: the two sections sit side by side at 1440px; selectors follow the new markup; baselines refreshed through the `refresh-screenshots` label
