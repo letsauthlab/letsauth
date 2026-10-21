@@ -3,7 +3,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="docs/assets/readme/hero-light.svg">
-  <img alt="letsauth: authentication for agents, measured instead of asserted. Beside the wordmark, a thumbnail of the MCP auth atlas: 39 public MCP servers across, 23 requirements down, each observed cell coloured by status." src="docs/assets/readme/hero-light.svg" width="100%">
+  <img alt="letsauth: agent authorization, on the record. Beside the wordmark, a thumbnail of the MCP server matrix: 39 public MCP servers across, 23 requirements down, each observed cell marked by status." src="docs/assets/readme/hero-light.svg" width="100%">
 </picture>
 
 <br>
@@ -78,7 +78,7 @@ the data.
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/how-it-works-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="docs/assets/readme/how-it-works-light.svg">
-  <img alt="Specifications and dated observations from vendor documentation and the passive scanner flow as pull requests into one YAML dataset, which the static build renders as the atlases, the scanner reports and the JSON exports." src="docs/assets/readme/how-it-works-light.svg" width="100%">
+  <img alt="Specifications and dated observations from vendor documentation and the passive scanner flow as pull requests into one YAML dataset, which the static build renders as the server matrix, the standards map, the scanner reports and the JSON exports." src="docs/assets/readme/how-it-works-light.svg" width="100%">
 </picture>
 
 One shared model, many views. Specifications, features, servers, observations and the relations

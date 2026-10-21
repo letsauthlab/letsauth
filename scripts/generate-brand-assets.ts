@@ -1,11 +1,17 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { cellKey, currentRevision, matrixFor } from "../src/lib/atlas";
+import { getDataset } from "../src/lib/data";
 
-// Run with `pnpm generate:brand` after changing public/brand. No network requests are made.
+// Run with `pnpm generate:brand` after changing public/brand, the tokens or the data. No network
+// requests are made.
 const icon = readFileSync("public/brand/icon.svg", "utf8");
 const iconDark = readFileSync("public/brand/icon-dark.svg", "utf8");
 const wordmark = readFileSync("public/brand/wordmark.svg", "utf8");
 const tokens = readFileSync("src/styles/tokens.css", "utf8");
+const data = getDataset();
+const revision = currentRevision(data);
+const matrix = matrixFor(data, revision.id);
 const svgUrl = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 const fontUrl = (family: string) =>
   `data:font/woff2;base64,${readFileSync(
@@ -29,42 +35,64 @@ try {
   // Opaque square with safe inset; iOS supplies its own rounded mask.
   await page.setViewportSize({ width: 180, height: 180 });
   await page.setContent(`<style>${tokens}
-    body{margin:0;background:var(--bg);display:grid;place-items:center;width:180px;height:180px}
+    body{margin:0;background:var(--ground);display:grid;place-items:center;width:180px;height:180px}
     img{width:144px;height:144px}
     </style><img src="${svgUrl(icon)}" alt="">`);
   await page.screenshot({ path: "public/apple-touch-icon.png" });
 
-  // Recreate the social card from vector assets, self-hosted fonts and shared design tokens.
-  const cells = Array.from({ length: 72 }, (_, i) => {
-    const status = ["supported", "supported", "unknown", "supported", "partial", "unknown"][
-      (i * 7 + Math.floor(i / 9)) % 6
-    ];
-    return `<i style="background:var(--status-${status})"></i>`;
-  }).join("");
+  // The social card is the home hero at 1200 × 630: wordmark, eyebrow, headline, and the current
+  // matrix on a plate with the marks of MatrixThumb. Flat grounds and hairlines, as on the site.
+  const MARK = { supported: "s", partial: "p", unsupported: "x" } as const;
+  const marks = matrix.columns
+    .flatMap((feature) =>
+      matrix.rows.map((server) => {
+        const cell = matrix.cells.get(cellKey(server.id, feature.id));
+        const status = cell?.status ?? "unknown";
+        if (status === "unknown" && (cell?.derived ?? true)) return `<i class="d"></i>`;
+        if (status === "unknown") return `<i class="u"></i>`;
+        if (status === "not-applicable") return `<i class="n"></i>`;
+        return `<i class="${MARK[status]}"></i>`;
+      }),
+    )
+    .join("");
   await page.setViewportSize({ width: 1200, height: 630 });
   await page.setContent(`<style>${tokens}
     @font-face{font-family:Display;src:url('${fontUrl("geist")}');font-weight:100 900}
     @font-face{font-family:Mono;src:url('${fontUrl("geist-mono")}');font-weight:100 900}
     *{box-sizing:border-box}
-    body{margin:0;width:1200px;height:630px;padding:64px 80px;background:
-      radial-gradient(ellipse at 12% 0%,var(--accent-glow),transparent 55%),
-      radial-gradient(circle at 1px 1px,var(--line) 1px,transparent 0),var(--bg);
-      background-size:100% 100%,22px 22px;color:var(--ink)}
-    .logo{display:block;width:300px;height:auto}
-    h1{position:absolute;top:190px;left:80px;margin:0;width:720px;
-      font:700 70px/1.1 Display;letter-spacing:-2px}
-    em{font-style:normal;color:var(--accent)}
-    .matrix{position:absolute;right:72px;top:166px;display:grid;
-      grid-template-columns:repeat(9,26px);gap:7px;padding:24px;
-      background:var(--bg-elevated);border:1px solid var(--line);border-radius:24px;
-      box-shadow:var(--shadow-lg)}
-    i{display:block;width:26px;height:26px;border-radius:6px}
-    footer{position:absolute;bottom:68px;left:80px;font:22px Mono;color:var(--ink-muted)}
+    body{margin:0;width:1200px;height:630px;padding:56px 64px;background:var(--ground);
+      color:var(--ink);font-family:Display;display:grid;grid-template-columns:1fr 500px;
+      gap:56px;align-items:center}
+    .logo{position:absolute;top:56px;left:64px;width:220px;height:auto}
+    .eyebrow{margin:0 0 18px;font-size:22px;color:var(--ink-2)}
+    h1{margin:0;font-weight:600;font-size:68px;line-height:1.05;letter-spacing:-0.03em;
+      text-wrap:balance}
+    .site{position:absolute;bottom:56px;left:64px;font:22px Mono;color:var(--ink-2)}
+    .plate{background:var(--ground-2);border:1px solid var(--rule);border-radius:14px;
+      overflow:hidden}
+    .head,.foot{display:flex;gap:12px;align-items:baseline;padding:14px 18px;font-size:17px}
+    .head{border-bottom:1px solid var(--rule)}
+    .head span{font:15px Mono;color:var(--ink-2)}
+    .grid{display:grid;grid-template-columns:repeat(${matrix.rows.length},1fr);gap:3px;
+      padding:20px 18px;background:var(--ground)}
+    .foot{border-top:1px solid var(--rule);color:var(--ink-2);font-size:15px}
+    i{display:block;aspect-ratio:1;border-radius:3px}
+    .s{background:var(--ok)}.p{background:var(--caution)}.x{background:var(--threat)}
+    .u{border:1.5px dashed var(--ink-2)}
+    .d{background:radial-gradient(circle,var(--ink-2) 22%,transparent 26%);opacity:.45}
+    .n{background:linear-gradient(var(--rule-strong),var(--rule-strong)) center/50% 2px no-repeat}
     </style>
     <img class="logo" src="${svgUrl(wordmark)}" alt="letsauth">
-    <h1>Authentication for<br>agents, <em>measured</em><br>instead of asserted.</h1>
-    <div class="matrix">${cells}</div>
-    <footer>letsauth.eu · an independent lab for agent auth</footer>`);
+    <div>
+      <p class="eyebrow">An independent lab for agent authorization</p>
+      <h1>Agent authorization, on the record</h1>
+    </div>
+    <div class="plate">
+      <div class="head">MCP servers <span>${revision.id}</span></div>
+      <div class="grid">${marks}</div>
+      <div class="foot">${matrix.rows.length} servers × ${matrix.columns.length} requirements</div>
+    </div>
+    <p class="site">letsauth.eu</p>`);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: "public/og.png" });
 } finally {

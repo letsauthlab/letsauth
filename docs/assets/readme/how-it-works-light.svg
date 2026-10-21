@@ -1,51 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="t2 d2">
   <title id="t2">How the lab works</title>
-  <desc id="d2">Specifications and dated observations from vendor documentation and the passive scanner flow as pull requests into one YAML dataset, which the static build renders as the atlases, the scanner reports and the JSON exports.</desc>
+  <desc id="d2">Specifications and dated observations from vendor documentation and the passive scanner flow as pull requests into one YAML dataset, which the static build renders as the server matrix, the standards map, the scanner reports and the JSON exports.</desc>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#bcb7ac"/></marker>
-    <pattern id="dots2" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.2" cy="1.2" r="1.2" fill="#dedad2"/></pattern>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#82878c"/></marker>
   </defs>
-  <rect width="1200" height="300" rx="24" fill="#f9f7f1"/>
-  <rect width="1200" height="300" rx="24" fill="url(#dots2)"/>
+  <rect width="1200" height="300" rx="14" fill="#f9fafc" stroke="#d4d8db"/>
 
-  <g font-family="'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="11" letter-spacing="2" fill="#006b5d">
-    <text x="48" y="44">SOURCES</text>
-    <text x="492" y="44">ONE MODEL</text>
-    <text x="846" y="44">MANY VIEWS</text>
+  <g font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">
+    <text x="48" y="44">Sources</text>
+    <text x="492" y="44">One model</text>
+    <text x="846" y="44">Many views</text>
   </g>
 
   
-    <rect x="48" y="60" width="370" height="92" rx="14" fill="#fefdfa" stroke="#dedad2" stroke-width="1"/>
-    <text x="66" y="90" font-family="'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.3" fill="#17181f">Specifications</text>
-    <text x="66" y="116" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">MCP Authorization, OAuth, OIDC, WIMSE, A2A, EU acts.</text><text x="66" y="136" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">Every feature cites a revision and a section.</text>
+    <rect x="48.5" y="60.5" width="369" height="91" rx="10" fill="#f9fafc" stroke="#d4d8db" stroke-width="1"/>
+    <text x="66" y="90" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="600" font-size="17" letter-spacing="-0.3" fill="#1c2024">Specifications</text>
+    <text x="66" y="116" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">MCP Authorization, OAuth, OIDC, WIMSE, A2A, EU acts.</text><text x="66" y="136" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">Every feature cites a revision and a section.</text>
   
-    <rect x="48" y="168" width="370" height="92" rx="14" fill="#fefdfa" stroke="#dedad2" stroke-width="1"/>
-    <text x="66" y="198" font-family="'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.3" fill="#17181f">Observations</text>
-    <text x="66" y="224" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">Vendor docs read by hand, public metadata read by</text><text x="66" y="244" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">the nightly scanner. Dated, with evidence, append-only.</text>
+    <rect x="48.5" y="168.5" width="369" height="91" rx="10" fill="#f9fafc" stroke="#d4d8db" stroke-width="1"/>
+    <text x="66" y="198" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="600" font-size="17" letter-spacing="-0.3" fill="#1c2024">Observations</text>
+    <text x="66" y="224" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">Vendor docs read by hand, public metadata read by</text><text x="66" y="244" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">the nightly scanner. Dated, with evidence, append-only.</text>
 
   
-    <rect x="492" y="86" width="290" height="128" rx="14" fill="#fefdfa" stroke="#006b5d" stroke-width="1.5"/>
-    <text x="510" y="116" font-family="'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.3" fill="#17181f">data/ · YAML</text>
-    <text x="510" y="142" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">Validated by a Zod schema at build.</text><text x="510" y="162" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">Changed only through reviewed</text><text x="510" y="182" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">pull requests. CC BY 4.0.</text>
+    <rect x="492.5" y="86.5" width="289" height="127" rx="10" fill="#eef0f3" stroke="#006855" stroke-width="1.5"/>
+    <text x="510" y="116" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="600" font-size="17" letter-spacing="-0.3" fill="#1c2024">data/ · YAML</text>
+    <text x="510" y="142" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">Validated by a Zod schema at build.</text><text x="510" y="162" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">Changed only through reviewed</text><text x="510" y="182" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">pull requests. CC BY 4.0.</text>
 
   
-    <rect x="846" y="50" width="306" height="64" rx="14" fill="#fefdfa" stroke="#dedad2" stroke-width="1"/>
-    <text x="864" y="80" font-family="'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.3" fill="#17181f">MCP auth atlas</text>
-    <text x="864" y="106" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">Servers against requirements.</text>
+    <rect x="846.5" y="50.5" width="305" height="63" rx="10" fill="#f9fafc" stroke="#d4d8db" stroke-width="1"/>
+    <text x="864" y="80" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="600" font-size="17" letter-spacing="-0.3" fill="#1c2024">MCP servers</text>
+    <text x="864" y="106" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">Servers against requirements.</text>
   
-    <rect x="846" y="126" width="306" height="64" rx="14" fill="#fefdfa" stroke="#dedad2" stroke-width="1"/>
-    <text x="864" y="156" font-family="'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.3" fill="#17181f">Agent auth atlas</text>
-    <text x="864" y="182" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">The standards map as one graph.</text>
+    <rect x="846.5" y="126.5" width="305" height="63" rx="10" fill="#f9fafc" stroke="#d4d8db" stroke-width="1"/>
+    <text x="864" y="156" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="600" font-size="17" letter-spacing="-0.3" fill="#1c2024">Standards map</text>
+    <text x="864" y="182" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">The specifications as one graph.</text>
   
-    <rect x="846" y="202" width="306" height="64" rx="14" fill="#fefdfa" stroke="#dedad2" stroke-width="1"/>
-    <text x="864" y="232" font-family="'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.3" fill="#17181f">Scanner reports · JSON exports</text>
-    <text x="864" y="258" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" fill="#50525b">Per server, and the whole dataset.</text>
+    <rect x="846.5" y="202.5" width="305" height="63" rx="10" fill="#f9fafc" stroke="#d4d8db" stroke-width="1"/>
+    <text x="864" y="232" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="600" font-size="17" letter-spacing="-0.3" fill="#1c2024">Scanner reports · JSON exports</text>
+    <text x="864" y="258" font-family="Geist, Inter, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#565b62">Per server, and the whole dataset.</text>
 
-  <path d="M418 106 C 458 106, 452 150, 492 150" fill="none" stroke="#bcb7ac" stroke-width="1.6" marker-end="url(#arr)"/>
-  <path d="M418 214 C 458 214, 452 150, 492 150" fill="none" stroke="#bcb7ac" stroke-width="1.6" marker-end="url(#arr)"/>
-  <path d="M782 150 C 822 150, 806 82, 846 82" fill="none" stroke="#bcb7ac" stroke-width="1.6" marker-end="url(#arr)"/>
-  <path d="M782 150 C 822 150, 806 158, 846 158" fill="none" stroke="#bcb7ac" stroke-width="1.6" marker-end="url(#arr)"/>
-  <path d="M782 150 C 822 150, 806 234, 846 234" fill="none" stroke="#bcb7ac" stroke-width="1.6" marker-end="url(#arr)"/>
+  <path d="M418 106 C 458 106, 452 150, 492 150" fill="none" stroke="#82878c" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M418 214 C 458 214, 452 150, 492 150" fill="none" stroke="#82878c" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M782 150 C 822 150, 806 82, 846 82" fill="none" stroke="#82878c" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M782 150 C 822 150, 806 158, 846 158" fill="none" stroke="#82878c" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M782 150 C 822 150, 806 234, 846 234" fill="none" stroke="#82878c" stroke-width="1.5" marker-end="url(#arr)"/>
 
-  <text x="637" y="246" text-anchor="middle" font-family="'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" fill="#61626c">static build · no server contacted</text>
+  <text x="637" y="246" text-anchor="middle" font-family="'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" fill="#565b62">static build · no server contacted</text>
 </svg>
