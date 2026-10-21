@@ -13,13 +13,20 @@ const { status, derived = false, variant = "cell" } = Astro.props;
 
 const meta = STATUS_META[status];
 const title = derived ? `${meta.label} (no observation recorded)` : meta.label;
+// the glyph on a filled chip: one path, stroked (check, cross) or filled (ring with a half disc)
+const GLYPH: Partial<Record<ObservationStatus, string>> = {
+  supported: "M4.2 8.4 6.9 11 11.8 5.2",
+  partial: "M8 3.4a4.6 4.6 0 1 0 0 9.2a4.6 4.6 0 1 0 0-9.2ZM8 5a3 3 0 0 0 0 6Z",
+  unsupported: "M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6",
+};
+const glyph = GLYPH[status];
 ---
 
 {
   /*
-   * One element per glyph, drawn with its own background, border and ::after, so the matrix
-   * carries no SVG per cell (016 WP4). The cell variant names itself as an image; the label
-   * variant puts the same glyph before the status word.
+   * The chip is one element; only the three observed statuses add a one-path SVG for their
+   * glyph (a check drawn from CSS stripes did not join cleanly at 20px). The cell variant names
+   * itself as an image; the label variant puts the same glyph before the status word.
    */
   variant === "cell" ? (
     <span
@@ -28,10 +35,22 @@ const title = derived ? `${meta.label} (no observation recorded)` : meta.label;
       title={title}
       role="img"
       aria-label={title}
-    />
+    >
+      {glyph && (
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d={glyph} />
+        </svg>
+      )}
+    </span>
   ) : (
     <span class="status-label" data-status={status} title={title}>
-      <span class:list={["status-cell", `status-${status}`, { derived }]} aria-hidden="true" />
+      <span class:list={["status-cell", `status-${status}`, { derived }]} aria-hidden="true">
+        {glyph && (
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d={glyph} />
+        </svg>
+      )}
+      </span>
       {meta.label}
       {derived && <span class="status-label__note"> no observation</span>}
     </span>
@@ -44,8 +63,8 @@ const title = derived ? `${meta.label} (no observation recorded)` : meta.label;
   /*
    * Status glyphs (plan 3.2). Observed statuses are a filled square with the glyph on it; a
    * recorded unknown is a dashed ring, a derived one a faint dot, not applicable a dash. The
-   * shapes differ, so the five read apart without colour. Borders and backgrounds only: an image
-   * mask or a grid per glyph cost the matrix a tenth of a second.
+   * shapes differ, so the five read apart without colour. No masks, pseudo-elements or
+   * transforms: across the matrix's 900 cells each of those cost measurable blocking time.
    */
   @layer product {
     .status-cell {
@@ -86,62 +105,33 @@ const title = derived ? `${meta.label} (no observation recorded)` : meta.label;
       font-size: var(--tiny);
     }
 
-    /*
-     * The glyphs are background layers on the chip itself: no pseudo-element and no transform,
-     * so a cell stays one plain box. --bar is a 2px stripe along a box's diagonal.
-     */
-    .status-supported,
-    .status-partial,
-    .status-unsupported {
-      --bar: transparent calc(50% - 1.1px), var(--on) calc(50% - 1.1px) calc(50% + 1.1px),
-        transparent calc(50% + 1.1px);
-      background-repeat: no-repeat;
-    }
-
-    /* supported: a check, two stripes meeting at its foot */
+    /* supported, partial, unsupported: the glyph is a 16-unit path on the chip */
     .status-supported {
       --c: var(--status-supported);
-      background-image:
-        linear-gradient(to bottom left, var(--bar)), linear-gradient(to bottom right, var(--bar));
-      background-size:
-        24% 24%,
-        40% 44%;
-      background-position:
-        24% 66%,
-        78% 30%;
     }
 
-    /* partial: a ring, half filled */
     .status-partial {
       --c: var(--status-partial);
-      background-image:
-        radial-gradient(
-          circle closest-side,
-          transparent calc(100% - 1.6px),
-          var(--on) calc(100% - 1.6px) 100%,
-          transparent 100%
-        ),
-        radial-gradient(
-          circle calc(var(--size) * 0.31) at left center,
-          var(--on) calc(100% - 0.5px),
-          transparent 100%
-        );
-      background-size:
-        62% 62%,
-        31% 62%;
-      /* the half disc's box starts at the chip's centre */
-      background-position:
-        center,
-        calc(var(--size) / 2) 50%;
     }
 
-    /* unsupported: a cross */
     .status-unsupported {
       --c: var(--status-unsupported);
-      background-image:
-        linear-gradient(to bottom left, var(--bar)), linear-gradient(to bottom right, var(--bar));
-      background-size: 50% 50%;
-      background-position: center;
+    }
+
+    .status-cell > svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: var(--on);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .status-partial > svg {
+      fill: var(--on);
+      fill-rule: evenodd;
+      stroke: none;
     }
 
     /* outline-only forms: the shape alone, centred in the same footprint */

@@ -68,141 +68,99 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     <p class="eyebrow">MCP auth atlas</p>
     <h1>Who supports what in <span class="nowrap">MCP Authorization</span></h1>
     <p class="lede">
-      The public MCP servers we list, against the requirements MCP Authorization{" "}
-      {matrix.revision.id} puts on servers and their authorization servers. Each cell opens the observation behind it.
+      The public MCP servers we list, against what MCP Authorization {matrix.revision.id} requires
+      of servers and their authorization servers. Each cell opens the observation behind it.
     </p>
-    <dl class="facts" aria-label="Atlas at a glance">
-      <div>
-        <dt>Servers</dt>
-        <dd class="num">{matrix.rows.length}</dd>
-      </div>
-      <div>
-        <dt>Requirements</dt>
-        <dd class="num">{matrix.columns.length}</dd>
-      </div>
-      <div>
-        <dt>Cells observed</dt>
-        <dd class="num">{observedCells}<span class="of"> / {totalCells}</span></dd>
-      </div>
-      <div>
-        <dt>Access</dt>
-        <dd class="words" data-classes="access">{classWords(accessCounts, ACCESS_LABEL)}</dd>
-      </div>
-      <div>
-        <dt>Auth</dt>
-        <dd class="words" data-classes="auth">{classWords(authCounts, AUTH_LABEL)}</dd>
-      </div>
-    </dl>
+    <p class="page-head__meta revision-line" aria-label="Specification revision">
+      <span>
+        Revision <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
+        <span class:list={["chip", { signal: isCurrent }]}>
+          {isCurrent ? "current" : matrix.revision.status}
+        </span>
+      </span>
+      <span>
+        published <time datetime={matrix.revision.date}>{matrix.revision.date}</time>
+      </span>
+      <a href={matrix.revision.url} rel="noopener">{spec.name} {matrix.revision.id}</a>
+      <a href="/standards/mcp-authorization/">About this specification</a>
+      {
+        revisions
+          .filter((r) => r.id !== revisionId)
+          .map((r) => (
+            <a class="revision-other" href={hrefFor(r.id)}>
+              Revision {r.id}
+            </a>
+          ))
+      }
+      {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
+    </p>
   </header>
 
-  <div class="revision-bar" aria-label="Specification revision">
-    <div class="revision-bar__id">
-      <span class="revision-label">Revision</span>
-      <strong class="revision-id" data-revision>{matrix.revision.id}</strong>
-      <span class:list={["chip", { signal: isCurrent }]}>
-        {isCurrent ? "current" : matrix.revision.status}
-      </span>
-      <span class="revision-date">
-        Published <time datetime={matrix.revision.date}>{matrix.revision.date}</time>
-        {" · "}
-        <a href={matrix.revision.url} rel="noopener">{spec.name} {matrix.revision.id}</a>
-        {" · "}
-        <a href="/standards/mcp-authorization/">About this specification</a>
-      </span>
-    </div>
-    <nav class="revision-switch" aria-label="Other revisions">
-      <span class="segmented">
-        {
-          revisions.map((r) =>
-            r.id === revisionId ? (
-              <span class="segmented__item current" aria-current="page">
-                {r.id}
-              </span>
-            ) : (
-              <a class="segmented__item" href={hrefFor(r.id)}>
-                {r.id}
-              </a>
-            ),
-          )
-        }
-      </span>
-      {
-        diff && (
-          <a class="button small quiet" href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>
-            What changed since {diff.from.id}
-          </a>
-        )
-      }
-    </nav>
-  </div>
-
-  <form id="matrix-filters" class="toolbar explainer" method="get" action={hrefFor(revisionId)}>
-    <div class="field search">
-      <label for="f-q">Search servers</label>
-      <div class="search__box">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input id="f-q" name="q" type="search" placeholder="e.g. stripe" autocomplete="off" />
-      </div>
-    </div>
-    <div class="field">
-      <label for="f-access">Access</label>
-      <select id="f-access" name="access">
-        <option value="">Any access</option>
-        {accessCounts.map((c) => <option value={c.value}>{ACCESS_LABEL[c.value]} ({c.count})</option>)}
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-auth">Auth</label>
-      <select id="f-auth" name="auth">
-        <option value="">Any auth</option>
-        {authCounts.map((c) => <option value={c.value}>{AUTH_LABEL[c.value]} ({c.count})</option>)}
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-group">Group rows</label>
-      <select id="f-group" name="group">
-        <option value="">A to Z</option>
-        <option value="access">By access</option>
-        <option value="auth">By auth</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-level">Level</label>
-      <select id="f-level" name="level">
-        <option value="">All levels</option>
-        {levels.filter((l) => usedLevels.has(l)).map((l) => <option value={l}>{l}</option>)}
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-category">Category</label>
-      <select id="f-category" name="category">
-        <option value="">All categories</option>
-        {usedCategories.map((c) => <option value={c}>{CATEGORY_LABEL[c]}</option>)}
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-party">Party</label>
-      <select id="f-party" name="party">
-        <option value="">Both parties</option>
-        <option value="mcp-server">{PARTY_LABEL["mcp-server"]}</option>
-        <option value="authorization-server">{PARTY_LABEL["authorization-server"]}</option>
-      </select>
-    </div>
-    <div class="field actions">
-      <button type="submit" class="button small">Apply</button>
-      <button type="reset" class="button small quiet">Reset</button>
-    </div>
-    <p id="matrix-count" class="count" aria-live="polite">
-      {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
-      {matrix.columns.length} features
-    </p>
-  </form>
-
-  <section class="legend" aria-label="Legend">
-    <ul class="legend__statuses">
+  <div class="matrix-bar">
+    <details class="filters" id="matrix-filter-panel">
+      <summary class="button small quiet">Filter and group</summary>
+      <form id="matrix-filters" class="toolbar explainer" method="get" action={hrefFor(revisionId)}>
+        <div class="field search">
+          <label for="f-q">Search servers</label>
+          <div class="search__box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input id="f-q" name="q" type="search" placeholder="e.g. stripe" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-access">Access</label>
+          <select id="f-access" name="access">
+            <option value="">Any access</option>
+            {accessCounts.map((c) => <option value={c.value}>{ACCESS_LABEL[c.value]} ({c.count})</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-auth">Auth</label>
+          <select id="f-auth" name="auth">
+            <option value="">Any auth</option>
+            {authCounts.map((c) => <option value={c.value}>{AUTH_LABEL[c.value]} ({c.count})</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-group">Group rows</label>
+          <select id="f-group" name="group">
+            <option value="">A to Z</option>
+            <option value="access">By access</option>
+            <option value="auth">By auth</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-level">Level</label>
+          <select id="f-level" name="level">
+            <option value="">All levels</option>
+            {levels.filter((l) => usedLevels.has(l)).map((l) => <option value={l}>{l}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-category">Category</label>
+          <select id="f-category" name="category">
+            <option value="">All categories</option>
+            {usedCategories.map((c) => <option value={c}>{CATEGORY_LABEL[c]}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-party">Party</label>
+          <select id="f-party" name="party">
+            <option value="">Both parties</option>
+            <option value="mcp-server">{PARTY_LABEL["mcp-server"]}</option>
+            <option value="authorization-server">{PARTY_LABEL["authorization-server"]}</option>
+          </select>
+        </div>
+        <div class="field actions">
+          <button type="submit" class="button small">Apply</button>
+          <button type="reset" class="button small quiet">Reset</button>
+        </div>
+      </form>
+    </details>
+    <ul class="legend__statuses" aria-label="Legend">
       {
         STATUS_ORDER.map((s) => (
           <li>
@@ -214,6 +172,16 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
         <StatusCell status="unknown" derived variant="label" />
       </li>
     </ul>
+    <p id="matrix-count" class="count matrix-bar__count" aria-live="polite">
+      {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
+      {matrix.columns.length} features
+    </p>
+  </div>
+
+  <MatrixTable matrix={matrix} diff={diff} scans={scans} />
+  <Matrix client:idle />
+
+  <section class="legend" aria-label="Reading the matrix">
     <p class="legend__note">
       <span class="level level-MUST">MUST</span>, <span class="level level-SHOULD">SHOULD</span>
       {" and "}
@@ -255,8 +223,28 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     </dl>
   </section>
 
-  <MatrixTable matrix={matrix} diff={diff} scans={scans} />
-  <Matrix client:idle />
+  <dl class="facts atlas-facts" aria-label="Atlas at a glance">
+    <div>
+      <dt>Servers</dt>
+      <dd class="num">{matrix.rows.length}</dd>
+    </div>
+    <div>
+      <dt>Requirements</dt>
+      <dd class="num">{matrix.columns.length}</dd>
+    </div>
+    <div>
+      <dt>Cells observed</dt>
+      <dd class="num">{observedCells}<span class="of"> / {totalCells}</span></dd>
+    </div>
+    <div>
+      <dt>Access</dt>
+      <dd class="words" data-classes="access">{classWords(accessCounts, ACCESS_LABEL)}</dd>
+    </div>
+    <div>
+      <dt>Auth</dt>
+      <dd class="words" data-classes="auth">{classWords(authCounts, AUTH_LABEL)}</dd>
+    </div>
+  </dl>
 
   <footer class="page-foot prose">
     <p>
@@ -278,67 +266,56 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     white-space: nowrap;
   }
 
-  /* the revision line: what the matrix is measured against, and the way to the others */
-  .revision-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3) var(--space-5);
-    padding: var(--space-3) 0;
-    border-block: 1px solid var(--rule);
-    font-size: var(--small);
-    margin-bottom: var(--space-5);
-  }
-  .revision-bar__id {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-3);
-  }
-  .revision-label {
-    font-size: var(--tiny);
-    font-weight: 500;
-    color: var(--ink-2);
+  /* the revision the matrix is measured against, and the way to the others, as the head's meta line */
+  .revision-line {
+    column-gap: var(--space-5);
   }
   .revision-id {
     font-family: var(--font-mono);
-    font-size: 1rem;
     font-weight: 600;
+    color: var(--ink);
   }
-  .revision-date {
-    color: var(--ink-2);
-  }
-  .revision-switch {
+
+  /*
+   * The bar right above the matrix: the filters folded into one button, the status legend and
+   * the live count. The matrix stays the first thing under the head; opened, the filters take
+   * the bar's full width.
+   */
+  .matrix-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-3) var(--space-5);
+    margin: var(--space-6) 0 var(--space-4);
   }
-  .segmented {
-    display: inline-flex;
-    padding: 2px;
-    border-radius: var(--radius);
-    border: 1px solid var(--rule-strong);
+  .filters > summary {
+    list-style: none;
   }
-  .segmented__item {
-    font-family: var(--font-mono);
-    font-size: var(--tiny);
-    font-weight: 500;
-    padding: 0.4em 0.8em;
-    border-radius: calc(var(--radius) - 3px);
-    color: var(--ink-2);
-    text-decoration: none;
-    transition:
-      color var(--dur-fast) var(--ease),
-      background-color var(--dur-fast) var(--ease);
+  .filters > summary::-webkit-details-marker {
+    display: none;
   }
-  .segmented__item:hover {
-    color: var(--ink);
+  .filters > summary::after {
+    content: "";
+    width: 0.4em;
+    height: 0.4em;
+    margin: -0.2em 0 0 0.15em;
+    border: solid currentColor;
+    border-width: 0 1.5px 1.5px 0;
+    rotate: 45deg;
   }
-  .segmented__item.current {
-    background: var(--ground-3);
-    color: var(--ink);
+  .filters[open] {
+    order: 2;
+    flex-basis: 100%;
+  }
+  .filters[open] > summary::after {
+    margin-top: 0.2em;
+    rotate: -135deg;
+  }
+  .filters[open] > .toolbar {
+    margin: var(--space-3) 0 0;
+  }
+  .matrix-bar__count {
+    margin: 0 0 0 auto;
   }
 
   /* the filters: the part of the page the reader operates, so it sits in an explainer */
@@ -347,7 +324,6 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     flex-wrap: wrap;
     align-items: end;
     gap: var(--space-3) var(--space-4);
-    margin-bottom: var(--space-5);
   }
   .search__box {
     position: relative;
@@ -368,17 +344,19 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     flex-direction: row;
     align-items: end;
   }
-  .count {
-    margin-bottom: 0.45em;
-  }
 
   .legend {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3) var(--space-6);
     align-items: center;
-    margin-bottom: var(--space-5);
+    margin: var(--space-5) 0 var(--space-6);
     font-size: var(--small);
+  }
+  .atlas-facts {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--rule);
+    margin-bottom: var(--space-6);
   }
   .legend__statuses {
     list-style: none;
@@ -425,8 +403,14 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   }
 
   @media (max-width: 40rem) {
-    .count {
+    .matrix-bar {
+      gap: var(--space-2) var(--space-4);
+    }
+    .matrix-bar__count {
       margin-left: 0;
+    }
+    .legend__statuses {
+      gap: var(--space-2) var(--space-3);
     }
     .search__box input {
       min-width: 0;

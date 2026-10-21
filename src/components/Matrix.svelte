@@ -167,7 +167,12 @@ onMount(() => {
       restored = true;
     }
   }
-  if (restored) apply(false);
+  if (restored) {
+    apply(false);
+    // a filtered view opens the folded filters, so the reader sees what is applied
+    const panel = form.closest("details");
+    if (panel) panel.open = true;
+  }
   table.dataset.enhanced = "true";
 
   let timer: ReturnType<typeof setTimeout> | undefined;

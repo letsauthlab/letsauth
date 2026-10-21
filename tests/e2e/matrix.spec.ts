@@ -288,6 +288,8 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("has no serious accessibility violations", async ({ page }) => {
+    // axe walks every cell and its observation, which takes most of the default 30 s on a busy runner
+    test.slow();
     await page.goto("/mcp/");
     await expectNoSeriousA11yViolations(page);
   });

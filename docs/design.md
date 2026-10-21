@@ -49,9 +49,10 @@ The sRGB column is for places that cannot read a token, such as the `theme-color
 | not applicable | `--status-not-applicable` | `--rule-strong` | dash | faint |
 
 A filled chip draws its glyph in `--status-on`, which is `--on-signal`. `unknown` is never
-styled as a failure. `StatusCell` draws every form on one element, from its background, border
-and gradient layers, with no SVG, pseudo-element, mask or transform: the matrix renders about
-nine hundred of them, and each of those costs showed up in its blocking time.
+styled as a failure. `StatusCell` draws each form on one element from its background and border;
+the three observed statuses add a one-path SVG for the check, half disc or cross. No mask,
+pseudo-element or transform: the matrix renders about nine hundred of them, and each of those
+showed up in its blocking time.
 
 Requirement levels: `--level-must` is `--threat`, `--level-should` `--caution`, `--level-may`
 `--boundary`, `--level-deprecated` `--ink-2` (with strikethrough). Explorer toggle kinds:

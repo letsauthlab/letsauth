@@ -215,6 +215,9 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     .matrix-scroll {
       /* positioned so visually-hidden (absolute) labels inside the table stay inside the clip */
       position: relative;
+      /* as wide as the table, up to the column: no empty strip to the right of the last column */
+      width: fit-content;
+      max-width: 100%;
       overflow-x: auto;
       overscroll-behavior-x: contain;
       border-block: 1px solid var(--rule);
@@ -233,7 +236,6 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
      */
     .matrix-clip {
       width: max-content;
-      min-width: 100%;
       overflow: clip;
       isolation: isolate;
     }
