@@ -61,12 +61,12 @@ try {
     @font-face{font-family:Mono;src:url('${fontUrl("geist-mono")}');font-weight:100 900}
     *{box-sizing:border-box}
     body{margin:0;width:1200px;height:630px;padding:56px 64px;background:var(--ground);
-      color:var(--ink);font-family:Display;display:grid;grid-template-columns:1fr 500px;
-      gap:56px;align-items:center}
+      color:var(--ink);font-family:Display;display:grid;grid-template-columns:1fr 460px;
+      gap:48px;align-items:center}
     .logo{position:absolute;top:56px;left:64px;width:220px;height:auto}
     .eyebrow{margin:0 0 18px;font-size:22px;color:var(--ink-2)}
-    h1{margin:0;font-weight:600;font-size:68px;line-height:1.05;letter-spacing:-0.03em;
-      text-wrap:balance}
+    h1{margin:0;font-weight:600;font-size:58px;line-height:1.08;letter-spacing:-0.03em;
+      white-space:nowrap}
     .site{position:absolute;bottom:56px;left:64px;font:22px Mono;color:var(--ink-2)}
     .plate{background:var(--ground-2);border:1px solid var(--rule);border-radius:14px;
       overflow:hidden}
@@ -85,7 +85,7 @@ try {
     <img class="logo" src="${svgUrl(wordmark)}" alt="letsauth">
     <div>
       <p class="eyebrow">An independent lab for agent authorization</p>
-      <h1>Agent authorization, on the record</h1>
+      <h1>Agent authorization,<br>on the record</h1>
     </div>
     <div class="plate">
       <div class="head">MCP servers <span>${revision.id}</span></div>
