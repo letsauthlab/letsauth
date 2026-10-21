@@ -79,6 +79,14 @@ test.describe("spec page (US2)", () => {
     }
   });
 
+  test("the title carries the view transition name the map hands over (M2)", async ({ page }) => {
+    await page.goto(`/standards/${mcp.id}/`);
+    const name = await page
+      .locator(".page-head h1")
+      .evaluate((el) => getComputedStyle(el).viewTransitionName);
+    expect(name).toBe("spec-title");
+  });
+
   test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto("/standards/rfc8693/");
     await expectNoSeriousA11yViolations(page);

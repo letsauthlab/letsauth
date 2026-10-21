@@ -11,12 +11,12 @@ import { BODY_ORDER, compareSpecs } from "./standards";
  * one column stack top to bottom in `compareSpecs` order.
  */
 
-export const NODE_W = 176;
-export const NODE_H = 58;
+export const NODE_W = 200;
+export const NODE_H = 68;
 export const COL_GAP = 84;
 export const ROW_GAP = 14;
 export const LANE_GAP = 26;
-export const LANE_LABEL_W = 108;
+export const LANE_LABEL_W = 120;
 export const PAD = 16;
 
 export interface PlacedNode {

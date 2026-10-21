@@ -19,19 +19,17 @@ const date = (d: string) =>
 
 <Base
   title="Breach anatomy"
-  description={`${breaches.length} published vulnerabilities and incidents in how agents were authorized, each traced to the control that was missing, the atlas requirements that name it and, where one exists, a replay in the delegation chain explorer.`}
+  description={`${breaches.length} published vulnerabilities and incidents in how agents were authorized, each traced to the control that was missing and the atlas requirements that name it.`}
   path="/breaches/"
 >
   <div class="wrap">
     <header class="page-head">
       <p class="eyebrow">Breach anatomy</p>
-      <h1>What actually broke, traced to the control that was missing</h1>
+      <h1>Published failures in how agents were authorized</h1>
       <p class="lede">
-        Each entry is a published vulnerability or incident in how an agent system was
-        authorized, written from its advisory. It names the class of failure, the requirements
-        in the MCP auth atlas that stand for the missing control, and how many listed servers
-        meet them today. Where the explorer has a toggle for the pattern, the entry links to that
-        replay. Nothing here goes beyond what the advisory states.
+        Each entry is a vulnerability or incident written from its advisory, with the control
+        that was missing and the MCP auth atlas requirements that stand for it. Where the
+        explorer has a toggle for the pattern, the entry links to that replay.
       </p>
       <dl class="facts" aria-label="Breach anatomy at a glance">
         <div>
@@ -49,44 +47,57 @@ const date = (d: string) =>
       </dl>
     </header>
 
-    <ol id="breach-list" class="breaches" role="list">
+    <ol id="breach-list" class="rows breaches" role="list">
       {
         breaches.map(({ vulnerability: v, features, replay }) => (
-          <li class="breach card" data-breach={v.id} data-class={v.class}>
-            <p class="breach__meta">
-              <span class="pill">{VULNERABILITY_CLASS_LABEL[v.class]}</span>
+          <li class="breach" data-breach={v.id} data-class={v.class}>
+            <p class="breach__when">
               <time datetime={v.disclosed}>{date(v.disclosed)}</time>
+              <span class="chip">{VULNERABILITY_CLASS_LABEL[v.class]}</span>
               <span class="breach__id">{v.id}</span>
             </p>
-            <h2>
-              <a href={`/breaches/${v.id}/`}>{v.title}</a>
-            </h2>
-            <p class="breach__affects">{v.affects[0]}</p>
-            <p class="breach__links">
-              {features.length > 0 ? (
-                <span>
-                  {features.map((f, i) => (
-                    <>
-                      {i > 0 && ", "}
-                      <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
-                      <span class="breach__party"> {PARTY_LABEL[f.party]}</span>
-                    </>
-                  ))}
-                </span>
-              ) : (
-                <span class="muted">No atlas requirement covers this control yet</span>
-              )}
-              {replay && (
-                <a
-                  class:list={["replay", `kind-${replay.toggle.kind}`]}
-                  href={`/explorer/${replay.scenario.id}/${replay.toggle.id}/`}
-                  data-replay={replay.toggle.id}
-                >
-                  Replay: {replay.toggle.name}
-                  <span class="replay__kind">{TOGGLE_KIND_LABEL[replay.toggle.kind]}</span>
-                </a>
-              )}
-            </p>
+            <div class="breach__body">
+              <h2 class="rows__title">
+                <a href={`/breaches/${v.id}/`}>{v.title}</a>
+              </h2>
+              <p class="breach__affects">
+                {v.affects[0]}
+              </p>
+              <dl class="breach__links">
+                <div>
+                  <dt>Missing control</dt>
+                  <dd>
+                    {features.length > 0 ? (
+                      features.map((f, i) => (
+                        <>
+                          {i > 0 && ", "}
+                          <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
+                          <span class="breach__party"> {PARTY_LABEL[f.party]}</span>
+                        </>
+                      ))
+                    ) : (
+                      <span class="muted">No atlas requirement covers this control yet</span>
+                    )}
+                  </dd>
+                </div>
+                {replay && (
+                  <div>
+                    <dt>Replay</dt>
+                    <dd>
+                      <a
+                        class:list={["replay", `kind-${replay.toggle.kind}`]}
+                        href={`/explorer/${replay.scenario.id}/${replay.toggle.id}/`}
+                        data-replay={replay.toggle.id}
+                      >
+                        <span class="replay__dot" aria-hidden="true" />
+                        {replay.toggle.name}
+                        <span class="visually-hidden">({TOGGLE_KIND_LABEL[replay.toggle.kind]})</span>
+                      </a>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
           </li>
         ))
       }
@@ -96,15 +107,15 @@ const date = (d: string) =>
       <h2>How to read an entry</h2>
       <p>
         The class says which kind of control failed. The requirements are the atlas rows that
-        stand for that control under the current MCP Authorization revision; the entry's page
-        says how many listed servers support each, so a breach reads as "this is what happens
-        when that cell is empty". A replay is a toggle in the explorer that turns the same
-        pattern on in a baseline chain, step by step, with the token at each hop. Entries are
-        written from the advisory and link to it; the dates are the advisory's.
+        stand for that control under the current MCP Authorization revision. The entry's page
+        says how many listed servers support each, so a breach shows what happens when that cell
+        is empty. A replay is a toggle in the explorer that turns the same pattern on in a
+        baseline chain, with the token at each hop. Entries link to their advisory, and the dates
+        are the advisory's.
       </p>
       <p>
-        Entries are data: one YAML file each under <code>data/vulnerabilities/</code>, validated
-        against the shared model, open under CC BY 4.0. To add one, open a pull request with the
+        Each entry is one YAML file under <code>data/vulnerabilities/</code>, validated against
+        the shared model and open under CC BY 4.0. To add one, open a pull request with the
         advisory as its first source.
       </p>
       <p class="page-foot__links">
@@ -116,87 +127,86 @@ const date = (d: string) =>
 </Base>
 
 <style>
-  .breaches {
-    list-style: none;
-    margin: var(--space-6) 0 0;
-    padding: 0;
+  /* a ledger: the date and class in a narrow column, the entry beside it at reading width */
+  .breach {
     display: grid;
-    gap: var(--space-4);
+    grid-template-columns: 10rem minmax(0, var(--measure));
+    gap: var(--space-2) var(--space-6);
   }
-  .breach__meta {
+  .breach__when {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
-    margin: 0 0 var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-    max-width: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding-top: 0.2em;
+  }
+  .rows .breach__when {
+    margin: 0;
+    color: var(--ink-2);
+  }
+  .breach .rows__title {
+    margin-bottom: var(--space-1);
   }
   .breach__id {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-faint);
-  }
-  .breach h2 {
-    margin: 0 0 var(--space-2);
-    font-size: var(--text-xl);
-  }
-  .breach h2 a {
-    color: var(--ink);
-    text-decoration: none;
-  }
-  .breach h2 a:hover {
-    text-decoration: underline;
-  }
-  .breach__affects {
-    margin: 0 0 var(--space-3);
-    color: var(--ink-muted);
+    font-size: var(--tiny);
+    overflow-wrap: anywhere;
   }
   .breach__links {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-4);
+    display: grid;
+    gap: var(--space-1);
+    margin: var(--space-3) 0 0;
+    font-size: var(--small);
+  }
+  .breach__links > div {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+  }
+  .breach__links dt {
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+  .breach__links dd {
     margin: 0;
-    font-size: var(--text-sm);
-    max-width: none;
   }
   .breach__party {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
+    font-size: var(--tiny);
+    color: var(--ink-2);
   }
-  .muted {
-    color: var(--ink-muted);
+  .kind-attack {
+    --kind: var(--toggle-attack);
+  }
+  .kind-misconfiguration {
+    --kind: var(--toggle-misconfiguration);
   }
   .replay {
     display: inline-flex;
-    align-items: center;
+    align-items: baseline;
     gap: 0.5em;
-    padding: 0.35em 0.8em;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--bg-elevated);
-    color: var(--ink);
-    text-decoration: none;
-    font-weight: 500;
   }
-  .replay:hover {
-    border-color: var(--line-strong);
+  .replay__dot {
+    flex: none;
+    align-self: center;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--kind);
   }
-  .replay__kind {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+  @media (max-width: 48rem) {
+    .breach {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .breach__when {
+      flex-direction: row;
+      align-items: center;
+    }
   }
-  .replay.kind-attack .replay__kind {
-    color: var(--status-unsupported);
-  }
-  .replay.kind-misconfiguration .replay__kind {
-    color: var(--status-partial);
+  @media (max-width: 30rem) {
+    .breach__links > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
   }
 </style>

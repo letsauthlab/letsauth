@@ -9,9 +9,9 @@ summary: >
   from wherever they were presented, so a credential issued to one agent vendor became a key to
   every tenant that had connected it. Salesloft and Salesforce revoked all Drift tokens on 20
   August. Short-lived, sender-constrained tokens and a narrow scope per integration limit what a
-  stolen token can do; this incident is why those controls exist.
+  stolen token can do. This incident is why those controls exist.
 disclosed: 2025-08-26
-fixed: All Drift access and refresh tokens revoked on 20 August 2025; the integration removed from the Salesforce AppExchange
+fixed: All Drift access and refresh tokens revoked on 20 August 2025, and the integration removed from the Salesforce AppExchange
 affects:
   - Salesloft Drift integrations with Salesforce and, for a few accounts, Google Workspace
   - More than 700 organizations that had connected Drift
