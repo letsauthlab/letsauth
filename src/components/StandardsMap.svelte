@@ -1,7 +1,7 @@
 <script lang="ts">
 /**
- * Progressive enhancement over the server-rendered standards map. The SVG and the spec list in
- * the DOM are the source of truth: this island only hides edges, nodes and list entries that
+ * Progressive enhancement over the server-rendered standards map. The two drawings (wide and
+ * stacked, one shown by width) and the spec list in the DOM are the source of truth: this island only hides edges, nodes and list entries that
  * fall outside the filter, syncs the query string, and highlights a node's neighbourhood on
  * hover and focus. Without JS the page is complete. It also hands the followed node or list entry
  * to the cross-document view transition, so it grows into the spec page's title (plan 016, M2).
@@ -17,12 +17,13 @@ onMount(() => {
 
   const typeBoxes = Array.from(form.querySelectorAll<HTMLInputElement>("input[name='type']"));
   const bodyBoxes = Array.from(form.querySelectorAll<HTMLInputElement>("input[name='body']"));
-  const nodes = Array.from(svg.querySelectorAll<SVGElement>("a[data-spec]"));
-  const edges = Array.from(svg.querySelectorAll<SVGElement>("path[data-relation]"));
+  const nodes = Array.from(document.querySelectorAll<SVGElement>(".map-svg a[data-spec]"));
+  const edges = Array.from(document.querySelectorAll<SVGElement>(".map-svg path[data-relation]"));
   const entries = Array.from(document.querySelectorAll<HTMLElement>("#spec-list [data-spec]"));
   const groups = Array.from(document.querySelectorAll<HTMLElement>("#spec-list [data-body-group]"));
-  const totalSpecs = nodes.length;
-  const totalRelations = edges.length;
+  // both drawings hold every node and edge, so the totals come from the wide one
+  const totalSpecs = svg.querySelectorAll("a[data-spec]").length;
+  const totalRelations = svg.querySelectorAll("path[data-relation]").length;
 
   const checked = (boxes: HTMLInputElement[]) =>
     new Set(boxes.filter((b) => b.checked).map((b) => b.value));
@@ -46,7 +47,7 @@ onMount(() => {
         shownNodes.has(edge.dataset.from ?? "") &&
         shownNodes.has(edge.dataset.to ?? "");
       edge.classList.toggle("is-hidden", !show);
-      if (show) shownEdges += 1;
+      if (show && svg.contains(edge)) shownEdges += 1;
     }
     for (const entry of entries) entry.hidden = !shownNodes.has(entry.dataset.spec ?? "");
     for (const group of groups) {

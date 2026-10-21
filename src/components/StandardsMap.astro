@@ -13,11 +13,19 @@ import type { RelationType } from "@/schema";
 import MaturityTag from "./MaturityTag.astro";
 
 interface Props {
+  /** the wide drawing: lanes in rows, dependency depth in columns */
   layout: Layout;
+  /** the phone drawing: one column with relations as arcs (layoutStacked) */
+  stacked: Layout;
 }
 
-const { layout } = Astro.props;
-const { nodes, edges, lanes, width, height } = layout;
+const { layout, stacked } = Astro.props;
+const { nodes, edges } = layout;
+// both drawings are in the HTML; CSS shows one by width, so each keeps its own marker ids
+const drawings = [
+  { id: "map", prefix: "", layout, stacked: false },
+  { id: "map-stacked", prefix: "s-", layout: stacked, stacked: true },
+];
 const byId = new Map(nodes.map((n) => [n.spec.id, n.spec]));
 const specs = nodes.map((n) => n.spec);
 const relations = edges.map((e) => e.relation);
@@ -28,9 +36,6 @@ const usedMaturities = MATURITY_ORDER.filter((m) => specs.some((s) => s.maturity
 // M4: the longest builds-on chain draws in from the oldest document to the newest
 const spine = buildsOnSpine(specs, relations);
 const spineStep = new Map(spine.map((r, i) => [`${r.from}|${r.type}|${r.to}`, i]));
-const spineEdges = edges.filter((e) =>
-  spineStep.has(`${e.relation.from}|${e.relation.type}|${e.relation.to}`),
-);
 const spineFirst = spine[0] ? byId.get(spine[0].to) : undefined;
 const spineLast = spine.at(-1) ? byId.get(spine.at(-1)?.from ?? "") : undefined;
 
@@ -53,159 +58,171 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     id="map-frame"
     tabindex="0"
     role="region"
-    aria-label="Standards map, scrolls horizontally"
+    aria-label="Standards map"
   >
-    <svg
-      id="map"
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-labelledby="map-title"
-      data-nodes={nodes.length}
-      data-edges={edges.length}
-    >
-      <title id="map-title">
-        Specifications for agent authorization, one node each, grouped by publishing body in
-        rows and by what they build on in columns, with their relations drawn as lines.
-      </title>
-      <defs>
-        {
-          directed.flatMap((t) => [`arrow-${t}`, `arrow-${t}-full`]).map((id) => (
-            <marker
-              id={id}
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="7"
-              markerHeight="7"
-              orient="auto-start-reverse"
-            >
-              <path
-                d="M0,0 L10,5 L0,10 z"
-                class:list={["arrow", `arrow-${id.replace(/^arrow-|-full$/g, "")}`, { full: id.endsWith("-full") }]}
-              />
-            </marker>
-          ))
-        }
-      </defs>
+    {
+      drawings.map((drawing) => (
+        <svg
+          id={drawing.id}
+          class:list={["map-svg", drawing.stacked ? "map-svg--stacked" : "map-svg--wide"]}
+          viewBox={`0 0 ${drawing.layout.width} ${drawing.layout.height}`}
+          width={drawing.layout.width}
+          height={drawing.layout.height}
+          xmlns="http://www.w3.org/2000/svg"
+          aria-labelledby={`${drawing.id}-title`}
+          data-nodes={drawing.layout.nodes.length}
+          data-edges={drawing.layout.edges.length}
+        >
+          <title id={`${drawing.id}-title`}>
+            {drawing.stacked
+              ? "Specifications for agent authorization, one node each, stacked by publishing body, with their relations drawn as arcs on the right."
+              : "Specifications for agent authorization, one node each, grouped by publishing body in rows and by what they build on in columns, with their relations drawn as lines."}
+          </title>
+          <defs>
+            {directed
+              .flatMap((t) => [`arrow-${t}`, `arrow-${t}-full`])
+              .map((id) => (
+                <marker
+                  id={`${drawing.prefix}${id}`}
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="7"
+                  markerHeight="7"
+                  orient="auto-start-reverse"
+                >
+                  <path
+                    d="M0,0 L10,5 L0,10 z"
+                    class:list={[
+                      "arrow",
+                      `arrow-${id.replace(/^arrow-|-full$/g, "")}`,
+                      { full: id.endsWith("-full") },
+                    ]}
+                  />
+                </marker>
+              ))}
+          </defs>
 
-      <g class="lanes" aria-hidden="true">
-        {
-          lanes.map((lane, i) => (
-            <g class="lane" data-body={lane.body}>
-              {i > 0 && (
-                <line
-                  x1={PAD / 2}
-                  x2={width - PAD / 2}
-                  y1={lane.y - 13}
-                  y2={lane.y - 13}
-                  class="lane-rule"
+          <g class="lanes" aria-hidden="true">
+            {drawing.layout.lanes.map((lane, i) => (
+              <g class="lane" data-body={lane.body}>
+                {i > 0 && (
+                  <line
+                    x1={PAD / 2}
+                    x2={drawing.layout.width - PAD / 2}
+                    y1={lane.y - 13}
+                    y2={lane.y - 13}
+                    class="lane-rule"
+                  />
+                )}
+                {drawing.stacked ? (
+                  <text x={PAD} y={lane.y + 14} class="lane-label">
+                    {BODY_LABEL[lane.body]}
+                  </text>
+                ) : (
+                  <text x={PAD} y={lane.y + 14} class="lane-label">
+                    {wrapLabel(BODY_LABEL[lane.body], 12, 2).map((line, j) => (
+                      <tspan x={PAD} dy={j === 0 ? 0 : 17}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                )}
+              </g>
+            ))}
+          </g>
+
+          <g class="edges" aria-hidden="true">
+            {drawing.layout.edges
+              .filter((e) => spineStep.has(key(e)))
+              .map((e) => (
+                <path
+                  class="spine-halo"
+                  d={e.d}
+                  pathLength="1"
+                  style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
                 />
-              )}
-              <text x={PAD} y={lane.y + 14} class="lane-label">
-                {wrapLabel(BODY_LABEL[lane.body], 12, 2).map((line, j) => (
-                  <tspan x={PAD} dy={j === 0 ? 0 : 17}>
-                    {line}
-                  </tspan>
-                ))}
-              </text>
-            </g>
-          ))
-        }
-      </g>
-
-      <g class="edges" aria-hidden="true">
-        {
-          spineEdges.map((e) => (
-            <path
-              class="spine-halo"
-              d={e.d}
-              pathLength="1"
-              style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
-            />
-          ))
-        }
-        {
-          edges.map((e) => {
-            const step = spineStep.get(key(e));
-            const onSpine = step !== undefined;
-            return (
-              <path
-                class:list={[
-                  "edge",
-                  `edge-${e.relation.type}`,
-                  { symmetric: e.symmetric, spine: onSpine },
-                ]}
-                d={e.d}
-                pathLength={onSpine ? "1" : undefined}
-                style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
-                data-relation={key(e)}
-                data-type={e.relation.type}
-                data-from={e.relation.from}
-                data-to={e.relation.to}
-                marker-end={
-                  e.symmetric
-                    ? undefined
-                    : `url(#arrow-${e.relation.type}${onSpine ? "-full" : ""})`
-                }
-              >
-                <title>
-                  {edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}
-                </title>
-              </path>
-            );
-          })
-        }
-      </g>
-
-      <g class="nodes">
-        {
-          nodes.map((n) => {
-            const lines = wrapLabel(n.spec.name, 24, 2);
-            const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
-            const tag = MATURITY_TAG[n.spec.maturity];
-            return (
-              <a
-                href={`/standards/${n.spec.id}/`}
-                class:list={["node", `maturity-${n.spec.maturity}`]}
-                data-spec={n.spec.id}
-                data-body={n.spec.body}
-                data-maturity={n.spec.maturity}
-                aria-label={label}
-              >
-                <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-box" />
-                <rect
-                  x={n.x + 10}
-                  y={n.y + 9}
-                  width={chipWidth(tag)}
-                  height="19"
-                  rx="9.5"
+              ))}
+            {drawing.layout.edges.map((e) => {
+              const step = spineStep.get(key(e));
+              const onSpine = step !== undefined;
+              return (
+                <path
                   class:list={[
-                    "node-chip",
-                    { draft: draft.has(n.spec.maturity) },
+                    "edge",
+                    `edge-${e.relation.type}`,
+                    { symmetric: e.symmetric, spine: onSpine },
                   ]}
-                />
-                <text x={n.x + 18} y={n.y + 23} class="node-tag">
-                  {tag}
-                </text>
-                <text x={n.x + 10} y={n.y + 46} class="node-name">
-                  {lines.map((line, i) => (
-                    <tspan x={n.x + 10} dy={i === 0 ? 0 : 16}>
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-              </a>
-            );
-          })
-        }
-      </g>
-    </svg>
+                  d={e.d}
+                  pathLength={onSpine ? "1" : undefined}
+                  style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
+                  data-relation={key(e)}
+                  data-type={e.relation.type}
+                  data-from={e.relation.from}
+                  data-to={e.relation.to}
+                  marker-end={
+                    e.symmetric
+                      ? undefined
+                      : `url(#${drawing.prefix}arrow-${e.relation.type}${onSpine ? "-full" : ""})`
+                  }
+                >
+                  <title>
+                    {edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}
+                  </title>
+                </path>
+              );
+            })}
+          </g>
+
+          <g class="nodes">
+            {drawing.layout.nodes.map((n) => {
+              const lines = wrapLabel(n.spec.name, drawing.stacked ? 30 : 24, 2);
+              const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
+              const tag = MATURITY_TAG[n.spec.maturity];
+              return (
+                <a
+                  href={`/standards/${n.spec.id}/`}
+                  class:list={["node", `maturity-${n.spec.maturity}`]}
+                  data-spec={n.spec.id}
+                  data-body={n.spec.body}
+                  data-maturity={n.spec.maturity}
+                  aria-label={label}
+                >
+                  <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-box" />
+                  <rect
+                    x={n.x + 10}
+                    y={n.y + 9}
+                    width={chipWidth(tag)}
+                    height="19"
+                    rx="9.5"
+                    class:list={["node-chip", { draft: draft.has(n.spec.maturity) }]}
+                  />
+                  <text x={n.x + 18} y={n.y + 23} class="node-tag">
+                    {tag}
+                  </text>
+                  <text x={n.x + 10} y={n.y + 46} class="node-name">
+                    {lines.map((line, i) => (
+                      <tspan x={n.x + 10} dy={i === 0 ? 0 : 16}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                </a>
+              );
+            })}
+          </g>
+        </svg>
+      ))
+    }
   </div>
   <figcaption id="map-caption">
-    Rows are publishing bodies. A specification sits one column right of what it builds on,
-    profiles or replaces.{" "}
+    <span class="map-only-wide">
+      Rows are publishing bodies. A specification sits one column right of what it builds on,
+      profiles or replaces.
+    </span>
+    <span class="map-only-stacked">
+      Specifications stack by publishing body, and the arcs on the right are their relations.
+    </span>{" "}
     {
       spineFirst && spineLast && (
         <>
@@ -261,18 +278,47 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
   .map {
     margin: 0 0 var(--space-6);
   }
+  /*
+   * Wide screens: the whole drawing at the column's width, so the page scrolls and the frame
+   * does not; below 60rem of drawing it keeps that width and scrolls sideways. Phones get the
+   * stacked drawing at full width instead (follow-up 4).
+   */
   .map-frame {
     padding: 0;
-    overflow: auto;
-    max-height: 80vh;
+    overflow-x: auto;
+  }
+  .map-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--font-body);
+  }
+  .map-svg--wide {
+    min-width: 60rem;
+  }
+  .map-svg--stacked {
+    max-width: 30rem;
+    margin-inline: auto;
+  }
+  .map-svg--stacked,
+  .map-only-stacked {
+    display: none;
+  }
+  @media (max-width: 40rem) {
+    .map-svg--wide,
+    .map-only-wide {
+      display: none;
+    }
+    .map-svg--stacked {
+      display: block;
+    }
+    .map-only-stacked {
+      display: inline;
+    }
   }
   .map-frame:focus-visible {
     outline: 2px solid var(--signal);
     outline-offset: 3px;
-  }
-  svg {
-    display: block;
-    font-family: var(--font-body);
   }
   figcaption {
     margin-top: var(--space-3);
@@ -458,29 +504,41 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
    * Filtering and the neighbourhood highlight, driven by the island. Hidden items keep their box
    * (visibility, not display) so the spine's one-time draw-in does not restart on a filter.
    */
-  :global(#map .is-hidden) {
+  :global(.map-svg .is-hidden) {
     visibility: hidden;
   }
-  :global(#map .is-far) {
+  :global(.map-svg .is-far) {
     opacity: 0.18;
   }
-  :global(#map .edge.is-near) {
+  :global(.map-svg .edge.is-near) {
     --edge: var(--c);
     stroke-width: 2.5;
   }
   :global(#map .edge-builds-on.is-near) {
     marker-end: url(#arrow-builds-on-full);
   }
+  :global(#map-stacked .edge-builds-on.is-near) {
+    marker-end: url(#s-arrow-builds-on-full);
+  }
   :global(#map .edge-profiles.is-near) {
     marker-end: url(#arrow-profiles-full);
+  }
+  :global(#map-stacked .edge-profiles.is-near) {
+    marker-end: url(#s-arrow-profiles-full);
   }
   :global(#map .edge-replaces.is-near) {
     marker-end: url(#arrow-replaces-full);
   }
+  :global(#map-stacked .edge-replaces.is-near) {
+    marker-end: url(#s-arrow-replaces-full);
+  }
   :global(#map .edge-references.is-near) {
     marker-end: url(#arrow-references-full);
   }
-  :global(#map .node.is-near .node-box) {
+  :global(#map-stacked .edge-references.is-near) {
+    marker-end: url(#s-arrow-references-full);
+  }
+  :global(.map-svg .node.is-near .node-box) {
     stroke: var(--ink);
     stroke-width: 1.5;
   }

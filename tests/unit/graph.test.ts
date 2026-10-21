@@ -4,8 +4,10 @@ import {
   dependencyDepths,
   LANE_LABEL_W,
   layoutGraph,
+  layoutStacked,
   NODE_W,
   PAD,
+  STACK_W,
   wrapLabel,
 } from "@/lib/graph";
 import type { Relation, Spec } from "@/schema";
@@ -135,6 +137,45 @@ describe("layoutGraph", () => {
     expect(JSON.stringify(again.nodes.map((n) => [n.spec.id, n.x, n.y]))).toBe(
       JSON.stringify(layout.nodes.map((n) => [n.spec.id, n.x, n.y])),
     );
+  });
+});
+
+describe("layoutStacked", () => {
+  const layout = layoutStacked(specs, relations);
+  const node = (id: string) => {
+    const n = layout.nodes.find((p) => p.spec.id === id);
+    if (!n) throw new Error(`node ${id} not placed`);
+    return n;
+  };
+
+  it("places every spec once in one column, lanes in BODY_ORDER", () => {
+    expect(layout.nodes.map((n) => n.spec.id).sort()).toEqual(specs.map((s) => s.id).sort());
+    expect(new Set(layout.nodes.map((n) => n.x))).toEqual(new Set([PAD]));
+    expect(layout.lanes.map((l) => l.body)).toEqual([
+      "ietf-oauth",
+      "openid",
+      "mcp",
+      "a2a",
+      "vendor",
+    ]);
+    const ys = layout.nodes.map((n) => n.y);
+    expect(new Set(ys).size).toBe(ys.length);
+  });
+
+  it("orders a lane by dependency depth, so a builds-on chain reads downwards", () => {
+    expect(node("oauth").y).toBeLessThan(node("pkce").y);
+  });
+
+  it("keeps every arc inside the drawing's width, on the nodes' right edge", () => {
+    expect(layout.width).toBe(STACK_W);
+    expect(layout.edges).toHaveLength(relations.length);
+    for (const e of layout.edges) {
+      const numbers = e.d.match(/[\d.]+/g)?.map(Number) ?? [];
+      const xs = numbers.filter((_, i) => i % 2 === 0);
+      expect(xs[0]).toBe(e.from.x + e.from.w);
+      expect(xs.at(-1)).toBe(e.to.x + e.to.w);
+      expect(e.mid.x).toBeLessThan(STACK_W - PAD / 2);
+    }
   });
 });
 

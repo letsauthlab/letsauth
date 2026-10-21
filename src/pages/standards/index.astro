@@ -4,7 +4,7 @@ import StandardsMap from "@/components/StandardsMap.astro";
 import StandardsMapIsland from "@/components/StandardsMap.svelte";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
-import { layoutGraph } from "@/lib/graph";
+import { layoutGraph, layoutStacked } from "@/lib/graph";
 import { BODY_LABEL, FAMILY_LABEL, RELATION_LABEL } from "@/lib/labels";
 import {
   currentRevisionOf,
@@ -20,6 +20,7 @@ const data = getDataset();
 const nodes = specNodes(data);
 const relations = mapRelations(data);
 const layout = layoutGraph(nodes, relations);
+const stacked = layoutStacked(nodes, relations);
 const groups = specsByBody(nodes);
 const withdrawn = withdrawnSpecs(data);
 const recent = recentlyRevised(data, 5);
@@ -36,14 +37,64 @@ const repo = "https://github.com/letsauthlab/letsauth";
   <div class="wrap">
     <header class="page-head">
       <p class="eyebrow">Standards</p>
-      <h1>The standards that decide how agents are authorized, and how they relate</h1>
+      <h1>The standards map</h1>
       <p class="lede">
-        This map shows the specifications for agent authorization and the typed relations
-        between them, as recorded in the atlas data files. It covers OAuth extensions, workload
-        identity drafts, agent protocols, credential formats and EU acts.
+        This map shows the {nodes.length} specifications for agent authorization from{" "}
+        {bodies.length} publishing bodies and the {relations.length} typed relations between them,
+        as recorded in the atlas data files. It covers OAuth extensions, workload identity drafts,
+        agent protocols, credential formats and EU acts.
       </p>
-      <p class="page-head__meta recent">
-        <span>Recently revised</span>
+      <div class="page-head__meta map-bar">
+        <details class="disclosure" id="map-filter-panel">
+          <summary class="button small quiet">Filter</summary>
+          <form id="map-filters" class="filters explainer" method="get" action="/standards/">
+            <fieldset>
+              <legend>Relation types</legend>
+              {
+                usedTypes.map((t) => (
+                  <label class="check">
+                    <input type="checkbox" name="type" value={t} />
+                    {RELATION_LABEL[t].forward}
+                  </label>
+                ))
+              }
+            </fieldset>
+            <fieldset>
+              <legend>Publishing bodies</legend>
+              {
+                bodies.map((b) => (
+                  <label class="check">
+                    <input type="checkbox" name="body" value={b} />
+                    {BODY_LABEL[b]}
+                  </label>
+                ))
+              }
+            </fieldset>
+            <div class="actions">
+              <button type="submit" class="button small">Apply</button>
+              <button type="reset" class="button small quiet">Reset</button>
+            </div>
+          </form>
+        </details>
+        <p id="map-count" class="count" aria-live="polite">
+          {nodes.length} of {nodes.length} specifications, {relations.length} of{" "}
+          {relations.length} relations
+        </p>
+        <noscript>
+          <p class="note" data-noscript-note>
+            Filtering needs JavaScript. The full map and list are shown below.
+          </p>
+        </noscript>
+      </div>
+    </header>
+
+    <StandardsMap layout={layout} stacked={stacked} />
+    <StandardsMapIsland client:idle />
+
+    <section id="spec-list" class="list" aria-labelledby="list-title">
+      <h2 id="list-title">Every specification on the map</h2>
+      <p class="recent">
+        <span>Recently revised:</span>
         {
           recent.map(({ spec, revision }, i) => (
             <span>
@@ -54,65 +105,6 @@ const repo = "https://github.com/letsauthlab/letsauth";
           ))
         }
       </p>
-      <dl class="facts" aria-label="Map at a glance">
-        <div>
-          <dt>Specifications</dt>
-          <dd class="num">{nodes.length}</dd>
-        </div>
-        <div>
-          <dt>Relations</dt>
-          <dd class="num">{relations.length}</dd>
-        </div>
-        <div>
-          <dt>Publishing bodies</dt>
-          <dd class="num">{bodies.length}</dd>
-        </div>
-      </dl>
-    </header>
-
-    <form id="map-filters" class="filters explainer" method="get" action="/standards/">
-      <fieldset>
-        <legend>Relation types</legend>
-        {
-          usedTypes.map((t) => (
-            <label class="check">
-              <input type="checkbox" name="type" value={t} />
-              {RELATION_LABEL[t].forward}
-            </label>
-          ))
-        }
-      </fieldset>
-      <fieldset>
-        <legend>Publishing bodies</legend>
-        {
-          bodies.map((b) => (
-            <label class="check">
-              <input type="checkbox" name="body" value={b} />
-              {BODY_LABEL[b]}
-            </label>
-          ))
-        }
-      </fieldset>
-      <div class="actions">
-        <button type="submit" class="button small">Apply</button>
-        <button type="reset" class="button small quiet">Reset</button>
-        <p id="map-count" class="count" aria-live="polite">
-          {nodes.length} of {nodes.length} specifications, {relations.length} of{" "}
-          {relations.length} relations
-        </p>
-      </div>
-      <noscript>
-        <p class="note" data-noscript-note>
-          Filtering needs JavaScript. The full map and list are shown below.
-        </p>
-      </noscript>
-    </form>
-
-    <StandardsMap layout={layout} />
-    <StandardsMapIsland client:idle />
-
-    <section id="spec-list" class="list" aria-labelledby="list-title">
-      <h2 id="list-title">Every specification on the map</h2>
       {
         groups.map((g) => (
           <section class="body-group" data-body-group={g.body} aria-labelledby={`body-${g.body}`}>
@@ -187,15 +179,31 @@ const repo = "https://github.com/letsauthlab/letsauth";
 </Base>
 
 <style>
+  .recent {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    max-width: none;
+    margin: 0 0 var(--space-6);
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
   .recent time {
     font-family: var(--font-mono);
     font-size: var(--tiny);
+  }
+  /* the head ends on the filter button and the live count; the map follows directly */
+  .map-bar .count {
+    margin: 0;
+  }
+  /* opened, the panel takes the full width under the button and the count follows it */
+  .map-bar:has(.disclosure[open]) .count {
+    order: 3;
   }
   .filters {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-4) var(--space-6);
-    margin-bottom: var(--space-5);
   }
   fieldset {
     border: 0;
@@ -293,10 +301,5 @@ const repo = "https://github.com/letsauthlab/letsauth";
   }
   .meta a {
     color: var(--ink-2);
-  }
-  @media (max-width: 40rem) {
-    .count {
-      margin-left: 0;
-    }
   }
 </style>

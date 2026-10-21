@@ -76,10 +76,46 @@ test.describe("standards map (US1)", () => {
     });
   }
 
+  test("the map comes right after the head, the filters fold behind one button (follow-up 4)", async ({
+    page,
+  }) => {
+    await page.goto("/standards/");
+    expect((await page.locator("h1").textContent())?.trim().length).toBeLessThan(24);
+    await expect(page.locator("#map-filters")).toBeHidden();
+    const head = await page.locator(".page-head").boundingBox();
+    const frame = await page.locator("#map-frame").boundingBox();
+    expect((frame?.y ?? 0) - ((head?.y ?? 0) + (head?.height ?? 0))).toBeLessThan(80);
+    await page.locator("#map-filter-panel > summary").click();
+    await expect(page.locator("#map-filters")).toBeVisible();
+  });
+
+  test("the frame shows the whole drawing with no inner vertical scroll (follow-up 4)", async ({
+    page,
+  }) => {
+    await page.goto("/standards/");
+    const [scrollHeight, clientHeight] = await page
+      .locator("#map-frame")
+      .evaluate((el) => [el.scrollHeight, el.clientHeight]);
+    expect(scrollHeight).toBeLessThanOrEqual(clientHeight + 1);
+  });
+
+  test("phones get the stacked drawing at full width (follow-up 4)", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/standards/");
+    await expect(page.locator("#map")).toBeHidden();
+    await expect(page.locator("#map-stacked")).toBeVisible();
+    await expect(page.locator("#map-stacked a[data-spec]")).toHaveCount(nodes.length);
+    await expect(page.locator("#map-stacked path[data-relation]")).toHaveCount(relations.length);
+    const [scroll, inner] = await page
+      .locator("#map-frame")
+      .evaluate((el) => [el.scrollWidth, el.clientWidth]);
+    expect(scroll).toBeLessThanOrEqual(inner ?? 0);
+  });
+
   test("the builds-on spine draws in once, from the oldest document (M4)", async ({ page }) => {
     test.skip(spine.length === 0, "no builds-on chain in the seed data");
     await page.goto("/standards/");
-    const edges = page.locator("#map path.edge.spine");
+    const edges = page.locator(".map-svg:visible path.edge.spine");
     await expect(edges).toHaveCount(spine.length);
     const runs = await edges.evaluateAll((els) =>
       els.flatMap((el) =>
@@ -99,7 +135,7 @@ test.describe("standards map (US1)", () => {
 
   test("under reduced motion the spine is drawn complete with no halo (M4)", async ({ page }) => {
     await page.goto("/standards/");
-    await expectEndStateUnderReducedMotion(page, "#map");
+    await expectEndStateUnderReducedMotion(page, "#map-frame");
     const offsets = await page
       .locator("#map path.edge.spine")
       .evaluateAll((els) => els.map((el) => getComputedStyle(el).strokeDashoffset));
@@ -136,6 +172,7 @@ test.describe("standards map (US1)", () => {
     const ownEdges = relations.filter((r) => ownIds.has(r.from) && ownIds.has(r.to));
     await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
+    await page.locator("#map-filter-panel > summary").click();
     await page.locator(`#map-filters input[name='body'][value='${body}']`).check();
     await expect(page.locator("#map a[data-spec]:not(.is-hidden)")).toHaveCount(own.length);
     await expect(page.locator("#map path[data-relation]:not(.is-hidden)")).toHaveCount(
@@ -152,14 +189,15 @@ test.describe("standards map (US1)", () => {
     test.skip(!rel, "no relation in the seed data");
     await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
-    const node = page.locator(`#map a[data-spec="${rel?.from}"]`);
+    const map = page.locator(".map-svg:visible");
+    const node = map.locator(`a[data-spec="${rel?.from}"]`);
     await node.scrollIntoViewIfNeeded();
     await node.hover();
-    await expect(page.locator(`#map a[data-spec="${rel?.to}"]`)).toHaveClass(/is-near/);
+    await expect(map.locator(`a[data-spec="${rel?.to}"]`)).toHaveClass(/is-near/);
     await expect(
-      page.locator(`#map path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
+      map.locator(`path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
     ).toHaveClass(/is-near/);
-    expect(await page.locator("#map a[data-spec].is-far").count()).toBeGreaterThan(0);
+    expect(await map.locator("a[data-spec].is-far").count()).toBeGreaterThan(0);
   });
 
   test("keyboard focus on a node highlights its neighbourhood as hover does", async ({ page }) => {
@@ -167,14 +205,15 @@ test.describe("standards map (US1)", () => {
     test.skip(!rel, "no relation in the seed data");
     await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
-    await page.locator(`#map a[data-spec="${rel?.from}"]`).focus();
-    await expect(page.locator(`#map a[data-spec="${rel?.to}"]`)).toHaveClass(/is-near/);
+    const map = page.locator(".map-svg:visible");
+    await map.locator(`a[data-spec="${rel?.from}"]`).focus();
+    await expect(map.locator(`a[data-spec="${rel?.to}"]`)).toHaveClass(/is-near/);
     await expect(
-      page.locator(`#map path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
+      map.locator(`path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
     ).toHaveClass(/is-near/);
-    expect(await page.locator("#map a[data-spec].is-far").count()).toBeGreaterThan(0);
-    await page.locator(`#map a[data-spec="${rel?.from}"]`).blur();
-    await expect(page.locator("#map .is-far")).toHaveCount(0);
+    expect(await map.locator("a[data-spec].is-far").count()).toBeGreaterThan(0);
+    await map.locator(`a[data-spec="${rel?.from}"]`).blur();
+    await expect(page.locator(".map-svg .is-far")).toHaveCount(0);
   });
 
   test("the legend explains relations by line and maturity by chip", async ({ page }) => {

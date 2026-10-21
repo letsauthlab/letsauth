@@ -190,6 +190,76 @@ export function layoutGraph(specs: Spec[], relations: Relation[]): Layout {
   return { nodes, edges, lanes, columns, width, height };
 }
 
+/** Stacked layout (phones): one column, a header row per lane, relations as arcs on the right. */
+export const STACK_W = 360;
+export const STACK_NODE_W = 236;
+export const STACK_LANE_HEAD = 30;
+
+/**
+ * The same map for a narrow screen: an arc diagram. Lanes stack top to bottom in BODY_ORDER with
+ * their label above them; inside a lane, specs run in dependency depth, then `compareSpecs`
+ * order, so a builds-on chain reads downwards. Every relation leaves and joins a node's right
+ * edge and bows out by its length, so short arcs nest inside long ones.
+ */
+export function layoutStacked(specs: Spec[], relations: Relation[]): Layout {
+  const sorted = [...specs].sort(compareSpecs);
+  const depth = dependencyDepths(sorted, relations);
+  const placed = new Map<string, PlacedNode>();
+  const nodes: PlacedNode[] = [];
+  const lanes: Lane[] = [];
+  let y = PAD;
+  for (const body of BODY_ORDER) {
+    const inLane = sorted
+      .filter((s) => s.body === body)
+      .sort((a, b) => (depth.get(a.id) ?? 0) - (depth.get(b.id) ?? 0) || compareSpecs(a, b));
+    if (inLane.length === 0) continue;
+    const height = STACK_LANE_HEAD + inLane.length * NODE_H + (inLane.length - 1) * ROW_GAP;
+    lanes.push({ body, y, height });
+    inLane.forEach((spec, i) => {
+      const node: PlacedNode = {
+        spec,
+        x: PAD,
+        y: y + STACK_LANE_HEAD + i * (NODE_H + ROW_GAP),
+        w: STACK_NODE_W,
+        h: NODE_H,
+        depth: depth.get(spec.id) ?? 0,
+      };
+      placed.set(spec.id, node);
+      nodes.push(node);
+    });
+    y += height + LANE_GAP;
+  }
+  const height = y - LANE_GAP + PAD;
+  const room = STACK_W - PAD - STACK_NODE_W - 8;
+  const span = Math.max(1, height - 2 * PAD);
+
+  const edges: PlacedEdge[] = [];
+  for (const relation of relations) {
+    const from = placed.get(relation.from);
+    const to = placed.get(relation.to);
+    if (!from || !to) continue;
+    const down = to.y > from.y;
+    const p0 = { x: from.x + from.w, y: from.y + from.h / 2 + (down ? 10 : -10) };
+    const p3 = { x: to.x + to.w, y: to.y + to.h / 2 + (down ? -10 : 10) };
+    // a cubic's bulge is 3/4 of its control offset: scale so the longest arc fills the room
+    const bow = (4 / 3) * (12 + (room - 12) * Math.sqrt(Math.abs(p3.y - p0.y) / span));
+    const p1 = { x: p0.x + bow, y: p0.y };
+    const p2 = { x: p3.x + bow, y: p3.y };
+    const d = `M${round(p0.x)},${round(p0.y)} C${round(p1.x)},${round(p1.y)} ${round(p2.x)},${round(p2.y)} ${round(p3.x)},${round(p3.y)}`;
+    const m = bezier(p0, p1, p2, p3, 0.5);
+    edges.push({
+      relation,
+      from,
+      to,
+      symmetric: isSymmetric(relation.type),
+      d,
+      mid: { x: round(m.x), y: round(m.y) },
+    });
+  }
+  nodes.sort((a, b) => compareSpecs(a.spec, b.spec));
+  return { nodes, edges, lanes, columns: 1, width: STACK_W, height };
+}
+
 /** Greedy word wrap for node labels; the last line gets an ellipsis when the name does not fit. */
 export function wrapLabel(name: string, maxChars = 24, maxLines = 2): string[] {
   const words = name.split(/\s+/).filter(Boolean);
