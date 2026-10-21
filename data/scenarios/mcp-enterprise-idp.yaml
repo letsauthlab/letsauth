@@ -86,13 +86,13 @@ steps:
         jti: 3a9e
         exp: 1789996700
         iat: 1789996400
-      note: The required claims are iss, sub, aud, client_id, jti, exp and iat; scope and resource are optional and carry what the policy allowed.
+      note: The required claims are iss, sub, aud, client_id, jti, exp and iat. Scope and resource are optional and carry what the policy allowed.
   - id: access-token-request
     from: client
     to: as
     message: "POST /token: grant_type=jwt-bearer, assertion=<ID-JAG>, client authentication"
     note: >
-      The grant is presented as an assertion; the host authenticates with the credentials it
+      The grant is presented as an assertion. The host authenticates with the credentials it
       holds at this authorization server.
     cites: { spec: id-jag, revision: draft-04, section: "4.4. Access Token Request" }
   - id: validate-jag
@@ -149,7 +149,7 @@ toggles:
     summary: >
       The resource authorization server ignores the scope in the grant and issues the access
       token with everything the host's client registration allows. The identity provider's
-      policy said tasks:read; the token says tasks:read tasks:write tasks:admin. Each hop that
+      policy said tasks:read. The token says tasks:read tasks:write tasks:admin. Each hop that
       widens scope defeats the one before it.
     cites: { spec: id-jag, revision: draft-04, section: "4.4.1. Processing Rules" }
     replaces:
@@ -209,7 +209,7 @@ toggles:
           message: "POST /token: grant_type=jwt-bearer, assertion=<an ID-JAG issued for https://auth.notes.example>"
           note: >
             The grant is genuine, signed by the trusted identity provider, unexpired, for the
-            right user; only its audience is another server.
+            right user. Only its audience is another server.
           cites: { spec: id-jag, revision: draft-04, section: "3.1. ID-JAG Claims" }
           token:
             name: An ID-JAG for another authorization server

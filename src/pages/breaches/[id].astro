@@ -37,56 +37,68 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
       <p class="lede">{v.summary}</p>
     </header>
 
-    <section class="card" aria-label="Facts">
-      <dl class="kv">
-        <dt>Class</dt>
-        <dd><span class="pill accent" data-class={v.class}>{VULNERABILITY_CLASS_LABEL[v.class]}</span></dd>
-        <dt>Disclosed</dt>
-        <dd><time datetime={v.disclosed}>{date}</time></dd>
-        {
-          v.fixed && (
-            <>
-              <dt>Fixed</dt>
-              <dd>{v.fixed}</dd>
-            </>
-          )
-        }
-        <dt>Affects</dt>
-        <dd>
-          <ul class="plain" role="list">
-            {v.affects.map((a) => <li>{a}</li>)}
-          </ul>
-        </dd>
-        <dt>Sources</dt>
-        <dd>
-          <ul class="plain" role="list">
-            {
-              v.sources.map((s) => (
-                <li>
-                  <a href={s} rel="noopener">{s}</a>
-                  <span class="host"> {host(s)}</span>
-                </li>
-              ))
-            }
-          </ul>
-        </dd>
-      </dl>
-    </section>
+    <div class="overview">
+      <section class="panel" aria-label="Facts">
+        <dl class="kv">
+          <dt>Class</dt>
+          <dd><span class="chip signal" data-class={v.class}>{VULNERABILITY_CLASS_LABEL[v.class]}</span></dd>
+          <dt>Affects</dt>
+          <dd>
+            <ul class="plain" role="list">
+              {v.affects.map((a) => <li>{a}</li>)}
+            </ul>
+          </dd>
+          <dt>Sources</dt>
+          <dd>
+            <ul class="plain" role="list">
+              {
+                v.sources.map((s) => (
+                  <li>
+                    <a href={s} rel="noopener">{s}</a>
+                    <span class="host"> {host(s)}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </dl>
+      </section>
+
+      <section id="timeline" class="events" aria-labelledby="timeline-title">
+        <h2 id="timeline-title">Timeline</h2>
+        <ol class="timeline" role="list">
+          <li>
+            <time datetime={v.disclosed}>{date}</time>
+            <p>Disclosed in the advisory from {host(v.sources[0] ?? "https://example.org")}.</p>
+          </li>
+          {
+            v.fixed && (
+              <li>
+                <span class="timeline__label">After disclosure</span>
+                <p>Fixed: {v.fixed}.</p>
+              </li>
+            )
+          }
+        </ol>
+      </section>
+    </div>
 
     <section id="controls" class="controls" aria-labelledby="controls-title">
       <h2 id="controls-title">The control that was missing</h2>
       {
         controls.length > 0 ? (
-          <ul role="list" class="controls__list">
+          <ul role="list" class="rows controls__list">
             {controls.map((c) => {
               const current = c.feature.revisions.at(-1);
               return (
-                <li data-feature={c.feature.id} class="card">
-                  <p class="controls__name">
-                    <a href={`/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
-                    <span class="party">{PARTY_LABEL[c.feature.party]}</span>
+                <li data-feature={c.feature.id}>
+                  <div class="rows__head">
+                    <p class="controls__name">
+                      <a href={`/mcp/features/${c.feature.id}/`}>{c.feature.name}</a>
+                      <span class="party">{PARTY_LABEL[c.feature.party]}</span>
+                    </p>
                     {current && <span class:list={["level", `level-${current.level}`]}>{current.level}</span>}
-                  </p>
+                  </div>
                   <p class="controls__text">{c.feature.description}</p>
                   {current && (
                     <p class="controls__cite">
@@ -105,8 +117,8 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
         ) : (
           <p class="controls__none" data-no-controls>
             No requirement in the MCP auth atlas stands for this control yet. The summary above
-            says what it is; a requirement is added to the atlas when a specification revision
-            states it, not before.
+            says what it is. A requirement joins the atlas when a specification revision states
+            it.
           </p>
         )
       }
@@ -116,12 +128,12 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
       <h2 id="replay-title">Replay in the explorer</h2>
       {
         replay ? (
-          <div class="card">
+          <div class:list={["panel", `kind-${replay.toggle.kind}`]}>
+            <p class="replay__kind">{TOGGLE_KIND_LABEL[replay.toggle.kind]}</p>
             <p class="replay__head">
               <a href={`/explorer/${replay.scenario.id}/${replay.toggle.id}/`} data-replay={replay.toggle.id}>
                 {replay.scenario.title} · {replay.toggle.name}
               </a>
-              <span class:list={["replay__kind", `kind-${replay.toggle.kind}`]}>{TOGGLE_KIND_LABEL[replay.toggle.kind]}</span>
             </p>
             <p class="replay__summary">{replay.toggle.summary}</p>
             <p class="replay__meta">
@@ -143,7 +155,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
         ) : (
           <p class="replay__none" data-no-replay>
             No scenario in the explorer replays this pattern yet. The incident is recorded here
-            from its public notice; a replay follows when a baseline chain exists for it.
+            from its public notice. A replay follows when a baseline chain exists for it.
           </p>
         )
       }
@@ -151,7 +163,7 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
 
     <footer class="page-foot">
       <p>
-        Written from the public notice linked above; the dates and the fixed version are the
+        Written from the public notice linked above. The dates and the fixed version are the
         advisory's. To correct this entry, edit its data file and open a pull request.
       </p>
       <p class="page-foot__links">
@@ -165,6 +177,12 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
 </Base>
 
 <style>
+  .overview {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
   .plain {
     list-style: none;
     margin: 0;
@@ -177,82 +195,108 @@ const host = (url: string) => new URL(url).hostname.replace(/^www\./, "");
   }
   .host {
     font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    color: var(--ink-faint);
+    font-size: var(--tiny);
+    color: var(--ink-2);
   }
+  .events h2,
+  .controls h2,
+  .replay h2 {
+    font-size: var(--h3);
+    margin-bottom: var(--space-3);
+  }
+  .timeline p {
+    margin: var(--space-1) 0 0;
+    font-size: var(--small);
+  }
+  .timeline__label {
+    display: block;
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+
+  /* M13: the rail draws in from the top, then the dates fade in behind it; once, on load */
+  @media (prefers-reduced-motion: no-preference) {
+    .timeline::before {
+      transform-origin: top;
+      animation: rail-down var(--dur-slow) var(--ease-draw) both;
+    }
+    .timeline > li {
+      animation: fade-in var(--dur) var(--ease) both;
+      animation-delay: calc(var(--dur-slow) * 0.6);
+    }
+    .timeline > li + li {
+      animation-delay: var(--dur-slow);
+    }
+  }
+  @keyframes rail-down {
+    from {
+      transform: scaleY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
   .controls,
   .replay {
     margin-top: var(--space-7);
-  }
-  .controls h2,
-  .replay h2 {
-    font-size: var(--text-lg);
-    margin-bottom: var(--space-3);
-  }
-  .controls__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: var(--space-3);
   }
   .controls__name {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--space-2);
-    margin: 0 0 var(--space-2);
+    margin: 0;
     font-weight: 500;
+    color: var(--ink);
+    font-size: var(--text-body);
     max-width: none;
   }
   .party {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
+    font-size: var(--tiny);
+    color: var(--ink-2);
   }
   .controls__text,
   .replay__summary {
     margin: 0 0 var(--space-2);
-    color: var(--ink-muted);
+    color: var(--ink-2);
   }
   .controls__cite {
     margin: 0 0 var(--space-2);
-    font-size: var(--text-xs);
-    color: var(--ink-muted);
   }
   .controls__counts,
   .replay__meta {
     margin: 0;
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
+    font-size: var(--small);
+    color: var(--ink-2);
     max-width: none;
   }
   .controls__none,
   .replay__none {
-    color: var(--ink-muted);
+    color: var(--ink-2);
   }
-  .replay__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
-    margin: 0 0 var(--space-2);
-    font-weight: 500;
-    font-size: var(--text-md);
-    max-width: none;
+  .kind-attack {
+    --kind: var(--toggle-attack);
+  }
+  .kind-misconfiguration {
+    --kind: var(--toggle-misconfiguration);
   }
   .replay__kind {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    margin: 0 0 var(--space-1);
+    font-size: var(--tiny);
+    font-weight: 600;
+    color: var(--kind);
   }
-  .replay__kind.kind-attack {
-    color: var(--status-unsupported);
+  .replay__head {
+    margin: 0 0 var(--space-2);
+    font-weight: 500;
+    max-width: none;
   }
-  .replay__kind.kind-misconfiguration {
-    color: var(--status-partial);
+  @media (max-width: 48rem) {
+    .overview {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>

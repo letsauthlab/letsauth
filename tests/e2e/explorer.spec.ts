@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
 import { resolveChain, scenarioList } from "../../src/lib/explorer";
-import { expectNoSeriousA11yViolations } from "./helpers";
+import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const scenarios = scenarioList(data);
@@ -146,14 +146,66 @@ test.describe("scenario page (US1)", () => {
     );
   });
 
-  test("has no horizontal page scroll at phone width (FR-011)", async ({ page }) => {
-    await page.setViewportSize({ width: 412, height: 900 });
+  test("has no horizontal page scroll at 320px (FR-011)", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const path of ["/explorer/", ...scenarios.map((s) => `/explorer/${s.scenario.id}/`)]) {
+      await page.goto(path);
+      const [scroll, inner] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        window.innerWidth,
+      ]);
+      expect(scroll, path).toBeLessThanOrEqual(inner);
+    }
+  });
+
+  test("Play never starts by itself, advances when pressed and pauses on any key (M6)", async ({
+    page,
+  }) => {
     await page.goto(`/explorer/${scenario.id}/`);
-    const [scroll, inner] = await page.evaluate(() => [
-      document.documentElement.scrollWidth,
-      window.innerWidth,
-    ]);
-    expect(scroll).toBeLessThanOrEqual(inner);
+    const bar = page.locator("[data-enhanced]");
+    const first = page.locator("#chain-steps li[data-step]").first();
+    await page.waitForTimeout(3000);
+    await expect(first).toHaveAttribute("aria-current", "step");
+    const play = bar.locator("button[data-play]");
+    await expect(play).toHaveText("Play");
+    await play.click();
+    await expect(play).toHaveText("Pause");
+    await expect(page.locator("#chain-steps li[data-step]").nth(1)).toHaveAttribute(
+      "aria-current",
+      "step",
+      { timeout: 4000 },
+    );
+    await page.keyboard.press("Shift");
+    await expect(play).toHaveText("Play");
+  });
+
+  test("the token diff is in the markup before any script runs (M7)", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto(`/explorer/${scenario.id}/`);
+    const changed = chain.steps.reduce(
+      (n, s) =>
+        n +
+        (s.token
+          ? s.token.diff.added.length + s.token.diff.changed.length + s.token.diff.removed.length
+          : 0),
+      0,
+    );
+    await expect(page.locator("#chain-steps [data-token] [data-changed]")).toHaveCount(changed);
+    await context.close();
+  });
+
+  test("under reduced motion, Play is hidden and stepping shows its end state (M5, M6, M7)", async ({
+    page,
+  }) => {
+    const third = chain.steps[2]?.id ?? "";
+    await page.goto(`/explorer/${scenario.id}/#step-${third}`);
+    await expectEndStateUnderReducedMotion(page, "#chain-steps");
+    await expect(page.locator("[data-enhanced]")).toHaveCount(1);
+    await expect(page.locator("button[data-play]")).toHaveCount(0);
+    await page.getByRole("button", { name: "Next step" }).click();
+    await expectEndStateUnderReducedMotion(page, "#chain-steps li[aria-current='step'] .arrow");
+    await expectEndStateUnderReducedMotion(page, "#chain-steps [data-token]");
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
@@ -216,6 +268,18 @@ test.describe("toggle page (US2)", () => {
     await expect(page.locator("#chain-steps li[data-removed]")).toHaveCount(removed.length);
     await expect(page.locator("#chain-steps li.is-removed")).toHaveCount(removed.length);
     await expect(page.locator(`#chain-steps li[data-step="${removed[0]?.id}"] s`)).toHaveCount(1);
+  });
+
+  test("lights the rails of touched steps on load, and not under reduced motion (M8)", async ({
+    page,
+  }) => {
+    await page.goto(`/explorer/${scenario.id}/${passthrough.id}/`);
+    await expectEndStateUnderReducedMotion(page, "#chain-steps li[data-toggled]");
+    const rail = await page
+      .locator("#chain-steps li[data-toggled]")
+      .first()
+      .evaluate((el) => getComputedStyle(el).borderLeftColor);
+    expect(rail).not.toBe("rgba(0, 0, 0, 0)");
   });
 
   test("is accessible in this theme", async ({ page }) => {
