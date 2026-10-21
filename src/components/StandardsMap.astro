@@ -22,6 +22,7 @@ const byId = new Map(nodes.map((n) => [n.spec.id, n.spec]));
 const specs = nodes.map((n) => n.spec);
 const relations = edges.map((e) => e.relation);
 const usedTypes = RELATION_TYPES.filter((t) => relations.some((r) => r.type === t));
+const directed = usedTypes.filter((t) => t !== "competes-with" && t !== "solves-same-problem-as");
 const usedMaturities = MATURITY_ORDER.filter((m) => specs.some((s) => s.maturity === m));
 
 // M4: the longest builds-on chain draws in from the oldest document to the newest
@@ -33,7 +34,6 @@ const spineEdges = edges.filter((e) =>
 const spineFirst = spine[0] ? byId.get(spine[0].to) : undefined;
 const spineLast = spine.at(-1) ? byId.get(spine.at(-1)?.from ?? "") : undefined;
 
-const final = new Set(["published", "in-force"]);
 const draft = new Set(["individual-draft", "working-group-draft", "candidate"]);
 // 13px Geist at weight 500 averages a little under 7px a character
 const chipWidth = (text: string) => Math.round(text.length * 7 + 16);
@@ -71,7 +71,7 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
       </title>
       <defs>
         {
-          ["arrow", "arrow-near", "arrow-spine"].map((id) => (
+          directed.flatMap((t) => [`arrow-${t}`, `arrow-${t}-full`]).map((id) => (
             <marker
               id={id}
               viewBox="0 0 10 10"
@@ -81,7 +81,10 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
               markerHeight="7"
               orient="auto-start-reverse"
             >
-              <path d="M0,0 L10,5 L0,10 z" class={id} />
+              <path
+                d="M0,0 L10,5 L0,10 z"
+                class:list={["arrow", `arrow-${id.replace(/^arrow-|-full$/g, "")}`, { full: id.endsWith("-full") }]}
+              />
             </marker>
           ))
         }
@@ -141,7 +144,11 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
                 data-type={e.relation.type}
                 data-from={e.relation.from}
                 data-to={e.relation.to}
-                marker-end={e.symmetric ? undefined : onSpine ? "url(#arrow-spine)" : "url(#arrow)"}
+                marker-end={
+                  e.symmetric
+                    ? undefined
+                    : `url(#arrow-${e.relation.type}${onSpine ? "-full" : ""})`
+                }
               >
                 <title>
                   {edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}
@@ -176,7 +183,7 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
                   rx="9.5"
                   class:list={[
                     "node-chip",
-                    { final: final.has(n.spec.maturity), draft: draft.has(n.spec.maturity) },
+                    { draft: draft.has(n.spec.maturity) },
                   ]}
                 />
                 <text x={n.x + 18} y={n.y + 23} class="node-tag">
@@ -202,7 +209,7 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     {
       spineFirst && spineLast && (
         <>
-          The darker line is the longest chain of documents that build on each other, from{" "}
+          The bold teal line is the longest chain of documents that build on each other, from{" "}
           {spineFirst.name} to {spineLast.name}.{" "}
         </>
       )
@@ -244,8 +251,9 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     </dl>
   </div>
   <p class="note">
-    Relation types differ by dash pattern and line weight, maturity by the word in the chip. A
-    dashed chip is a draft. Colour only marks the relations of the node in focus.
+    Each relation type has its own colour and its own dash pattern, so the map also reads without
+    colour. Maturity is the word in the chip, and a dashed chip is a draft. Focusing a node shows
+    its relations at full strength and fades the rest.
   </p>
 </section>
 
@@ -284,17 +292,33 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
   }
 
   /*
-   * Edges: one ink at low weight, told apart by dash pattern, line weight and arrowhead
-   * (plan 016, 5.3). Colour is reserved for the neighbourhood of the node in focus.
+   * Edges: each relation type has its own colour and its own dash pattern and weight, so the
+   * types read with colour and still read without it (greyscale, colour blindness). Lines sit at
+   * reduced strength; the spine and the neighbourhood of the node in focus get the full colour.
    */
+  .edge,
+  .arrow {
+    --c: var(--ink-2);
+  }
+  .arrow {
+    fill: color-mix(in oklch, var(--c) 62%, transparent);
+  }
   .edge {
-    --edge: color-mix(in oklch, var(--ink-2) 55%, transparent);
+    --edge: color-mix(in oklch, var(--c) 62%, transparent);
     fill: none;
     stroke: var(--edge);
     stroke-width: 1.5;
     transition:
       opacity var(--dur-fast) var(--ease),
       stroke var(--dur-fast) var(--ease);
+  }
+  .edge-builds-on,
+  .arrow-builds-on {
+    --c: var(--signal);
+  }
+  .edge-profiles,
+  .arrow-profiles {
+    --c: var(--boundary);
   }
   .edge-profiles {
     stroke-dasharray: 7 4;
@@ -308,26 +332,22 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     stroke-width: 2;
   }
   .edge-competes-with {
+    --c: var(--threat);
     stroke-dasharray: 11 3 2 3;
   }
   .edge-solves-same-problem-as {
+    --c: var(--caution);
     stroke-dasharray: 0.5 7;
     stroke-linecap: round;
     stroke-width: 4;
   }
-  .arrow {
-    fill: color-mix(in oklch, var(--ink-2) 55%, transparent);
-  }
-  .arrow-spine {
-    fill: var(--ink-2);
-  }
-  .arrow-near {
-    fill: var(--signal);
+  .arrow.full {
+    fill: var(--c);
   }
 
-  /* the builds-on spine: full ink, drawn in once on load from the oldest end (M4) */
+  /* the builds-on spine: full colour, drawn in once on load from the oldest end (M4) */
   .edge.spine {
-    --edge: var(--ink-2);
+    --edge: var(--c);
     stroke-width: 2;
     stroke-dasharray: 1;
   }
@@ -397,26 +417,34 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     font-weight: 600;
     fill: var(--ink);
   }
-  /* maturity as a chip: the word says it, a dashed outline marks a draft (MaturityTag) */
+  /*
+   * maturity as a chip, matching MaturityTag: the word says it, the colour sorts it at a glance
+   * (published teal, in force blue, candidate amber), a dashed outline marks a draft
+   */
+  .node {
+    --m: var(--ink-2);
+  }
+  .maturity-published {
+    --m: var(--signal);
+  }
+  .maturity-in-force {
+    --m: var(--boundary);
+  }
+  .maturity-candidate {
+    --m: var(--caution);
+  }
   .node-chip {
-    fill: none;
-    stroke: var(--rule-strong);
+    fill: color-mix(in oklch, var(--m) 8%, transparent);
+    stroke: color-mix(in oklch, var(--m) 45%, transparent);
     stroke-width: 1;
   }
   .node-chip.draft {
     stroke-dasharray: 3 2;
   }
-  .node-chip.final {
-    fill: color-mix(in oklch, var(--signal) 8%, transparent);
-    stroke: color-mix(in oklch, var(--signal) 45%, transparent);
-  }
   .node-tag {
     font-size: 13px;
     font-weight: 500;
-    fill: var(--ink-2);
-  }
-  .node-chip.final + .node-tag {
-    fill: var(--signal);
+    fill: var(--m);
   }
   .maturity-expired .node-name,
   .maturity-withdrawn .node-name,
@@ -437,14 +465,23 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     opacity: 0.18;
   }
   :global(#map .edge.is-near) {
-    --edge: var(--signal);
-    stroke-width: 2.25;
+    --edge: var(--c);
+    stroke-width: 2.5;
   }
-  :global(#map .edge.is-near:not(.symmetric)) {
-    marker-end: url(#arrow-near);
+  :global(#map .edge-builds-on.is-near) {
+    marker-end: url(#arrow-builds-on-full);
+  }
+  :global(#map .edge-profiles.is-near) {
+    marker-end: url(#arrow-profiles-full);
+  }
+  :global(#map .edge-replaces.is-near) {
+    marker-end: url(#arrow-replaces-full);
+  }
+  :global(#map .edge-references.is-near) {
+    marker-end: url(#arrow-references-full);
   }
   :global(#map .node.is-near .node-box) {
-    stroke: var(--signal);
+    stroke: var(--ink);
     stroke-width: 1.5;
   }
 
@@ -482,7 +519,7 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     flex: none;
   }
   .sample .edge {
-    --edge: var(--ink-2);
+    --edge: var(--c);
   }
   @media (max-width: 40rem) {
     .legend__list {

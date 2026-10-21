@@ -87,6 +87,7 @@ spec list and spec pages on the shared surfaces. No data change.
 - [x] W5-T08 `src/pages/standards/[id].astro`: the withdrawn/expired notice as `.notice`, revisions as a `.timeline` with `.chip` status, features as `.rows`, eyebrow parts split by ` / `; `src/components/RelationList.astro` as `.rows`; `src/lib/labels.ts` relation descriptions without semicolons
 - [x] W5-T09 `tests/e2e/standards.spec.ts`: no page scroll at 320 and 412px; the spine animates once per edge; reduced motion shows the end state with no halo; keyboard focus highlights the neighbourhood as hover does; the legend counts and a greyscale screenshot of the map; `spec-page.spec.ts`: the title's view transition name
 - [x] W5-T10 Screenshot baselines for the standards and spec pages, plus the new greyscale one, through the `refresh-screenshots` label (the workflow only runs tests whose title contains "looks right", so the greyscale test is named that way)
+- [x] W5-T11 Colour back on the map after review (Jan): each relation type keeps its dash pattern and weight and gets a colour (builds on `--signal`, profiles `--boundary`, competes with `--threat`, solves the same problem as `--caution`, replaces and references `--ink-2`) at 62% strength, full on the spine and on the focused node's relations, with matching arrowheads; maturity chips coloured too (published `--signal`, in force `--boundary`, candidate `--caution`), in the map and in `MaturityTag`. Deviates from plan 5.3, which kept colour for the focus only
 
 ## WP7: Scanner pages
 

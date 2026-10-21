@@ -12,13 +12,12 @@ interface Props {
 
 const { maturity, note, variant = "tag" } = Astro.props;
 const label = MATURITY_LABEL[maturity];
-const final = maturity === "published" || maturity === "in-force";
 const draft =
   maturity === "individual-draft" || maturity === "working-group-draft" || maturity === "candidate";
 ---
 
 <span
-  class:list={["chip", "maturity", `maturity-${maturity}`, variant, { signal: final, draft }]}
+  class:list={["chip", "maturity", `maturity-${maturity}`, variant, { signal: maturity === "published", draft }]}
   data-maturity={maturity}
   title={note ? `${label}: ${note}` : label}
 >
@@ -27,11 +26,27 @@ const draft =
 
 <style>
   /*
-   * Maturity is a chip that says the word (plan 016, 5.3); the outline repeats it as a shape,
-   * dashed for a draft, so it reads without colour. The map's node chips match.
+   * Maturity is a chip that says the word (plan 016, 5.3). The colour sorts it at a glance and
+   * the outline repeats it as a shape, dashed for a draft, so it reads without colour too.
+   * The map's node chips match.
    */
+  .maturity-in-force {
+    --m: var(--boundary);
+  }
+  .maturity-candidate {
+    --m: var(--caution);
+  }
+  .maturity-in-force,
+  .maturity-candidate {
+    border-color: color-mix(in oklch, var(--m) 45%, transparent);
+    background: color-mix(in oklch, var(--m) 8%, transparent);
+    color: var(--m);
+  }
   .draft {
     border-style: dashed;
+  }
+  .maturity-individual-draft,
+  .maturity-working-group-draft {
     border-color: var(--rule-strong);
   }
   .maturity-expired,
