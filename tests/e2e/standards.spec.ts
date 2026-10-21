@@ -302,6 +302,11 @@ test.describe("standards map (US1)", () => {
     await expect(page.locator("#map-filters .toggle svg.sample")).toHaveCount(used.size);
     const maturities = new Set(nodes.map((s) => s.maturity));
     await expect(page.locator("#map-filters .maturities .chip")).toHaveCount(maturities.size);
+    // an unchecked toggle fades its sample, never its label: the label must keep its contrast
+    const off = page.locator("#map-filters .toggle:has(input[value='references'])");
+    await expect(off.locator("input")).not.toBeChecked();
+    await expect(off.locator(".toggle__label")).toHaveCSS("opacity", "1");
+    await expect(off.locator(".sample")).not.toHaveCSS("opacity", "1");
   });
 
   // the title ends in "looks right" so the refresh-screenshots workflow regenerates its baseline
