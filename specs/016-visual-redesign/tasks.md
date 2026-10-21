@@ -80,4 +80,4 @@ and `RelationList` render only on the standards pages, so they stay with WP5.
 - [x] W4-T11 Code inside the small key/value text keeps the 13px floor on the server and feature pages
 - [x] W4-T12 `tests/e2e/matrix.spec.ts`: focus on the dialog heading; 320px region scroll with the server column sticky and no page scroll; the five status forms in greyscale (screenshot); M10 and M9 end states under reduced motion; the crosshair without JavaScript. `feature-page.spec.ts`: no page scroll at 320px
 - [x] W4-T13 `docs/design.md`: how status glyphs are drawn and why the matrix styles sit in `product`
-- [x] W4-T14 Screenshot baselines for the matrix, feature, server and new status-shape shots: refreshed through the `refresh-screenshots` label on the pull request, not from a local browser
+- [x] W4-T14 Screenshot baselines refreshed through the `refresh-screenshots` label on the pull request, not from a local browser: matrix, server and the new status-shape shots changed; the feature page and the scanner pages stayed within the 2% tolerance in CI's Chromium
