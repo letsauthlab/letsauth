@@ -78,43 +78,49 @@ const products = [
   path="/"
 >
   <div class="wrap">
-    <header class="page-head home-head">
-      <p class="eyebrow">An independent lab for agent authorization</p>
-      <h1>Agent authorization, on the record</h1>
-      <p class="lede">
-        letsauth keeps one open dataset of what the agent protocols require and what public
-        servers do. Each requirement cites a specification revision and each status cites a dated
-        observation.
-      </p>
-      <p class="home-head__actions">
-        <a class="button" href="/mcp/">Open the MCP auth atlas</a>
-        <a class="button quiet" href="/mcp/data.json">Download the data</a>
-      </p>
-    </header>
+    <section class="hero">
+      <header class="page-head hero__copy">
+        <p class="eyebrow">An independent lab for agent authorization</p>
+        <h1>Agent authorization, on the record</h1>
+        <p class="lede">
+          letsauth keeps one open dataset of what the agent protocols require and what public
+          servers do. Each requirement cites a specification revision and each status cites a
+          dated observation.
+        </p>
+        <p class="hero__actions">
+          <a class="button" href="/mcp/">Open the MCP auth atlas</a>
+          <a class="button quiet" href="/mcp/data.json">Download the data</a>
+        </p>
+      </header>
 
-    <figure class="home-plate">
-      <a class="plate" href="/mcp/" aria-label="Open the matrix of the MCP auth atlas">
-        <MatrixThumb revisionId={revision.id} />
-      </a>
-      <figcaption>
-        <span>
-          {`${matrix.rows.length} servers × ${matrix.columns.length} requirements of MCP Authorization ${revision.id}`}
-        </span>
-        {newest && (
+      <figure class="plate home-plate">
+        <figcaption class="home-plate__head">
+          <span>MCP auth atlas <span class="home-plate__rev">{revision.id}</span></span>
+          <a href="/mcp/">Open the matrix</a>
+        </figcaption>
+        <a class="home-plate__grid" href="/mcp/" aria-label="Open the matrix of the MCP auth atlas">
+          <MatrixThumb revisionId={revision.id} />
+        </a>
+        <div class="home-plate__foot">
           <span>
-            Last observation <time datetime={newest}>{newest}</time>
+            {`${matrix.rows.length} servers × ${matrix.columns.length} requirements`}
+            {newest && (
+              <>
+                {" · last observation "}
+                <time datetime={newest}>{newest}</time>
+              </>
+            )}
           </span>
-        )}
-        <a href="/mcp/">Open the matrix</a>
-      </figcaption>
-      <p class="home-plate__key" aria-hidden="true">
-        <span><i class="k-s"></i>Supported</span>
-        <span><i class="k-p"></i>Partial</span>
-        <span><i class="k-x"></i>Unsupported</span>
-        <span><i class="k-u"></i>Unknown</span>
-        <span><i class="k-d"></i>No observation</span>
-      </p>
-    </figure>
+          <span class="home-plate__key" aria-hidden="true">
+            <span><i class="k-s"></i>Supported</span>
+            <span><i class="k-p"></i>Partial</span>
+            <span><i class="k-x"></i>Unsupported</span>
+            <span><i class="k-u"></i>Unknown</span>
+            <span><i class="k-d"></i>No observation</span>
+          </span>
+        </div>
+      </figure>
+    </section>
 
     <div class="home-facts">
       <Facts
@@ -128,61 +134,68 @@ const products = [
       />
     </div>
 
-    <section class="home-section" aria-labelledby="products">
-      <h2 id="products">What the lab publishes</h2>
-      <ul class="rows">
-        {
-          products.map((p) => (
-            <li>
-              <div class="rows__head">
-                <h3 class="rows__title">
-                  <a href={p.href}>{p.name}</a>
-                </h3>
-                <span class="rows__meta">{p.count}</span>
-              </div>
-              <p>{p.text}</p>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
-
-    <section class="home-section" aria-labelledby="latest">
-      <h2 id="latest">Latest observations</h2>
-      <p class="home-section__note">
-        Seed data comes from vendor documentation and public directories, and each entry names
-        its method. A cell with no observation on record reads unknown.
-      </p>
-      <ol class="rows latest">
-        {
-          latest.map((o) => {
-            const s = serverName.get(o.server);
-            const f = featureName.get(o.feature);
-            return (
+    <div class="split">
+      <section aria-labelledby="products">
+        <p class="eyebrow">The lab</p>
+        <h2 id="products">What the lab publishes</h2>
+        <ol class="rows numbered products">
+          {
+            products.map((p) => (
               <li>
-                <StatusCell status={o.status} variant="cell" />
-                <span class="latest__what">
-                  <a href={`/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
-                  <span>
-                    <a href={`/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
-                    {f && <> · {CATEGORY_LABEL[f.category]}</>}
-                  </span>
-                </span>
-                <span class="latest__meta">
-                  <time datetime={o.observedAt}>{o.observedAt.slice(0, 10)}</time>
-                  <span>{METHOD_LABEL[o.method]}</span>
-                </span>
+                <div class="rows__head">
+                  <h3 class="rows__title">
+                    <a href={p.href}>{p.name}</a>
+                  </h3>
+                  <span class="chip">{p.count}</span>
+                </div>
+                <p>{p.text}</p>
               </li>
-            );
-          })
-        }
-      </ol>
-    </section>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section class="panel latest" aria-labelledby="latest">
+        <p class="eyebrow">Activity</p>
+        <h2 id="latest">Latest observations</h2>
+        <ol class="rows latest__list">
+          {
+            latest.map((o) => {
+              const s = serverName.get(o.server);
+              const f = featureName.get(o.feature);
+              return (
+                <li>
+                  <StatusCell status={o.status} variant="cell" />
+                  <span class="latest__what">
+                    <a href={`/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
+                    <span>
+                      <a href={`/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
+                      {f && <> · {CATEGORY_LABEL[f.category]}</>}
+                    </span>
+                  </span>
+                  <span class="latest__meta">
+                    <time datetime={o.observedAt}>{o.observedAt.slice(0, 10)}</time>
+                    <span>{METHOD_LABEL[o.method]}</span>
+                  </span>
+                </li>
+              );
+            })
+          }
+        </ol>
+        <p class="latest__note">
+          Seed data comes from vendor documentation and public directories, and each entry names
+          its method. A cell with no observation on record reads unknown.
+        </p>
+        <p class="latest__more">
+          <a class="button quiet small" href="/mcp/">See the full matrix</a>
+        </p>
+      </section>
+    </div>
 
     <footer class="page-foot">
       <p class="page-foot__links">
-        <a href="/mcp/">See the full matrix</a>
         <a href={`/mcp/revisions/${revision.id}/`}>MCP Authorization {revision.id}</a>
+        <a href="/standards/">The standards map</a>
         <a href="/contribute/">Add an observation</a>
       </p>
     </footer>
@@ -190,47 +203,73 @@ const products = [
 </Base>
 
 <style>
-  .home-head h1 {
+  /* statement at the left, the matrix on its plate at the right; stacked below 64rem */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--space-7);
+    align-items: center;
+    padding-block: var(--space-4) var(--space-7);
+  }
+  .hero__copy {
+    margin-bottom: 0;
+  }
+  .hero__copy h1 {
     font-size: var(--h1-home);
   }
-  .home-head__actions {
+  .hero__actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
     margin: var(--space-5) 0 0;
   }
 
-  /* the flagship data view: the whole matrix on its plate, one line under it */
+  /* the flagship data view: a head, the whole matrix, a foot with the size and the key */
   .home-plate {
-    margin: 0 0 var(--space-7);
+    margin: 0;
+    padding: 0;
   }
-  .home-plate .plate {
-    display: block;
-    padding: var(--space-5);
-    transition: border-color var(--dur-fast) var(--ease);
-  }
-  .home-plate .plate:hover {
-    border-color: var(--rule-strong);
-  }
-  .home-plate figcaption {
+  .home-plate__head,
+  .home-plate__foot {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-5);
-    margin-top: var(--space-3);
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-3) var(--space-4);
     font-size: var(--small);
     color: var(--ink-2);
-    font-variant-numeric: tabular-nums;
   }
-  .home-plate figcaption a {
-    margin-left: auto;
+  .home-plate__head {
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .home-plate__rev {
+    margin-left: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+  .home-plate__grid {
+    display: block;
+    padding: var(--space-5) var(--space-4);
+    background: var(--ground);
+    transition: background-color var(--dur-fast) var(--ease);
+  }
+  .home-plate__grid:hover {
+    background: color-mix(in oklch, var(--signal) 4%, var(--ground));
+  }
+  .home-plate__foot {
+    border-top: 1px solid var(--rule);
+    font-variant-numeric: tabular-nums;
   }
   .home-plate__key {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-4);
-    margin: var(--space-2) 0 0;
+    gap: var(--space-1) var(--space-3);
     font-size: var(--tiny);
-    color: var(--ink-2);
   }
   .home-plate__key span {
     display: inline-flex;
@@ -264,25 +303,52 @@ const products = [
     opacity: 0.45;
   }
 
+  /* the facts as one band: equal columns between two rules, a hairline between each */
   .home-facts {
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--rule);
+    margin-bottom: var(--space-8);
+    border-block: 1px solid var(--rule);
+  }
+  .home-facts :global(.facts) {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+  }
+  .home-facts :global(.facts > div) {
+    padding: var(--space-5) var(--space-5) var(--space-5) 0;
+  }
+  .home-facts :global(.facts dt) {
+    white-space: normal;
+  }
+  .home-facts :global(.facts > div + div) {
+    padding-left: var(--space-5);
+    border-left: 1px solid var(--rule);
   }
 
-  .home-section {
-    margin-top: var(--space-8);
-    max-width: 52rem;
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-7);
+    align-items: start;
   }
-  .home-section h2 {
+  .split h2 {
+    margin-bottom: var(--space-5);
+  }
+  /* the left column starts where the text inside the panel beside it does */
+  .split > section:first-child {
+    padding-top: var(--space-5);
+  }
+  .products .rows__head {
+    align-items: center;
+  }
+
+  /* the latest observations: a series, so it sits on a panel */
+  .latest {
+    padding: var(--space-5) var(--space-5) var(--space-4);
+  }
+  .latest__list {
     margin-bottom: var(--space-4);
   }
-  .home-section__note {
-    max-width: var(--measure);
-    color: var(--ink-2);
-    font-size: var(--small);
-  }
-
-  .latest > li {
+  .latest__list > li {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--space-3);
@@ -325,5 +391,30 @@ const products = [
   .latest__meta time {
     font-family: var(--font-mono);
     color: var(--ink);
+  }
+  .latest__note {
+    color: var(--ink-2);
+    font-size: var(--small);
+  }
+  .latest__more {
+    margin: 0;
+  }
+
+  @media (max-width: 64rem) {
+    .hero,
+    .split {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+    .home-facts :global(.facts) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .home-facts :global(.facts > div:nth-child(3)) {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .home-facts :global(.facts > div:nth-child(n + 3)) {
+      border-top: 1px solid var(--rule);
+    }
   }
 </style>

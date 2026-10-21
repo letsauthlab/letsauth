@@ -177,3 +177,46 @@ export function recentlyRevised(data: Dataset, n = 5): { spec: Spec; revision: R
     .sort((a, b) => b.revision.date.localeCompare(a.revision.date) || compareSpecs(a.spec, b.spec))
     .slice(0, n);
 }
+
+/**
+ * The `builds-on` spine of the map: the longest chain of builds-on relations, ordered from the
+ * oldest document (the one everything else builds on) to the newest. Ties go to the chain whose
+ * documents come first in `compareSpecs` order, so the result is stable across builds. The map
+ * draws this chain in on load (plan 016, M4).
+ */
+export function buildsOnSpine(specs: Spec[], relations: Relation[]): Relation[] {
+  const byId = new Map(specs.map((s) => [s.id, s]));
+  // `from` builds on `to`, so the chain runs from `to` to `from`: index the edges by `to`
+  const next = new Map<string, Relation[]>();
+  for (const r of relations) {
+    if (r.type !== "builds-on" || !byId.has(r.from) || !byId.has(r.to)) continue;
+    const list = next.get(r.to) ?? [];
+    list.push(r);
+    next.set(r.to, list);
+  }
+  const best = new Map<string, Relation[]>();
+  const visiting = new Set<string>();
+  const longestFrom = (id: string): Relation[] => {
+    const known = best.get(id);
+    if (known) return known;
+    if (visiting.has(id)) return [];
+    visiting.add(id);
+    let chain: Relation[] = [];
+    const out = [...(next.get(id) ?? [])].sort((a, b) =>
+      compareSpecs(byId.get(a.from) as Spec, byId.get(b.from) as Spec),
+    );
+    for (const r of out) {
+      const candidate = [r, ...longestFrom(r.from)];
+      if (candidate.length > chain.length) chain = candidate;
+    }
+    visiting.delete(id);
+    best.set(id, chain);
+    return chain;
+  };
+  let spine: Relation[] = [];
+  for (const spec of [...specs].sort(compareSpecs)) {
+    const chain = longestFrom(spec.id);
+    if (chain.length > spine.length) spine = chain;
+  }
+  return spine;
+}

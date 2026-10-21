@@ -19,15 +19,13 @@ test.describe("home page (016 WP3)", () => {
     page,
   }) => {
     await page.goto("/");
-    const products = page.locator("#products + .rows > li");
+    const products = page.locator(".products > li");
     await expect(products).toHaveCount(5);
     for (const href of ["/mcp/", "/standards/", "/explorer/", "/breaches/", "/mcp/scanner/"])
       await expect(products.locator(`a[href="${href}"]`)).toHaveCount(1);
-    await expect(products.first().locator(".rows__meta")).toHaveText(
-      `${matrix.rows.length} servers`,
-    );
-    await expect(page.locator(".latest > li")).toHaveCount(6);
-    await expect(page.locator(".latest > li .status")).toHaveCount(6);
+    await expect(products.first().locator(".chip")).toHaveText(`${matrix.rows.length} servers`);
+    await expect(page.locator(".latest__list > li")).toHaveCount(6);
+    await expect(page.locator(".latest__list > li .status")).toHaveCount(6);
   });
 
   test("keeps one filled button and loads no script file or island", async ({ page }) => {
@@ -46,7 +44,7 @@ test.describe("home page (016 WP3)", () => {
       matrix.rows.length * matrix.columns.length,
     );
     expect(await thumb.evaluate((el) => getComputedStyle(el).viewTransitionName)).toBe("matrix");
-    await expect(page.locator(".home-plate a.plate")).toHaveAttribute("href", "/mcp/");
+    await expect(page.locator(".home-plate a.home-plate__grid")).toHaveAttribute("href", "/mcp/");
   });
 
   test("counts the facts up to the dataset's numbers once in view (M3)", async ({ page }) => {
@@ -81,6 +79,18 @@ test.describe("home page (016 WP3)", () => {
       });
       expect(count, `h1 lines at ${width}px`).toBeLessThanOrEqual(lines);
     }
+  });
+
+  test("sets the products and the latest observations side by side on a wide screen", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const products = await page.locator("section:has(> #products)").boundingBox();
+    const latest = await page.locator("section:has(> #latest)").boundingBox();
+    expect(products && latest).toBeTruthy();
+    expect(Math.abs((products?.y ?? 0) - (latest?.y ?? 0))).toBeLessThan(2);
+    expect((products?.x ?? 0) + (products?.width ?? 0)).toBeLessThan(latest?.x ?? 0);
   });
 
   test("does not scroll sideways at 320px", async ({ page }) => {

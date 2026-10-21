@@ -71,6 +71,24 @@ and the latest observations. No boxes, no icons, one filled button.
 - [x] W3-T05 `tests/e2e/home.spec.ts` (new): the five products and their counts, one filled button, no script file or island, every matrix cell drawn and named `matrix`, the count-up waiting at 0 out of view and ending at the dataset's figures, the final figures at once under reduced motion, the h1 in two lines at 1440px and four at 360px, no sideways scroll at 320px, the figures present without JavaScript, axe and a screenshot
 - [x] W3-T06 Screenshot baselines: `home.spec.ts` is new; its three baselines come from the `refresh-screenshots` label on the pull request, not from a local browser
 
+## WP5: Standards map
+
+The map on a plate with one ink for every relation, told apart by dash pattern and weight; the
+neighbourhood of the node in focus in the signal colour; the builds-on spine drawn in once; the
+spec list and spec pages on the shared surfaces. No data change.
+
+- [x] W5-T01 `src/lib/standards.ts`: `buildsOnSpine(specs, relations)`, the longest builds-on chain from the oldest document to the newest, stable on ties; unit test in `tests/unit/standards.test.ts`
+- [x] W5-T02 `src/components/StandardsMap.astro`: the map frame is a `.plate`; lanes as hairlines with sentence-case labels; nodes on `--ground` with the maturity as a chip (dashed for a draft); edges in one ink, relation types by dash pattern, weight and arrowhead; all map text at 13px or more (`src/lib/graph.ts`: nodes 200 by 68, label column 120)
+- [x] W5-T03 M4: the spine edges draw in once on load from the oldest end (`stroke-dashoffset` over `--dur-draw`, split across the chain), a `--signal-soft` halo shows during the draw and fades after; both only under `prefers-reduced-motion: no-preference`, so the spine is drawn complete and the halo absent otherwise; filtered items use `visibility` so a filter never restarts the draw
+- [x] W5-T04 The legend moves into the map component as two `.panel`s: relation types with a sample drawn by the map's own edge styles, maturity by `MaturityTag`, and a note that colour only marks the node in focus
+- [x] W5-T05 `src/components/MaturityTag.astro`: a `.chip`, signal-tinted when published or in force, dashed when a draft, struck when expired or withdrawn
+- [x] W5-T06 `src/components/StandardsMap.svelte`: the neighbourhood highlight in `--signal` with a signal arrowhead; M2: on `pageswap` the followed list link, or an empty box over the followed map node (SVG cannot be captured), takes the `spec-title` view transition name that the spec page's h1 carries
+- [x] W5-T07 `src/pages/standards/index.astro`: filters in an `.explainer` (samples dropped from the checkboxes, the legend has them); recently revised as the head's meta line; the spec list as `.rows` per body with `content-visibility: auto`; this fixes the horizontal scroll at 320px (the old grid had a 20rem minimum); lede and copy without semicolons
+- [x] W5-T08 `src/pages/standards/[id].astro`: the withdrawn/expired notice as `.notice`, revisions as a `.timeline` with `.chip` status, features as `.rows`, eyebrow parts split by ` / `; `src/components/RelationList.astro` as `.rows`; `src/lib/labels.ts` relation descriptions without semicolons
+- [x] W5-T09 `tests/e2e/standards.spec.ts`: no page scroll at 320 and 412px; the spine animates once per edge; reduced motion shows the end state with no halo; keyboard focus highlights the neighbourhood as hover does; the legend counts and a greyscale screenshot of the map; `spec-page.spec.ts`: the title's view transition name
+- [x] W5-T10 Screenshot baselines for the standards and spec pages, plus the new greyscale one, through the `refresh-screenshots` label (the workflow only runs tests whose title contains "looks right", so the greyscale test is named that way)
+- [x] W5-T11 Colour back on the map after review (Jan): each relation type keeps its dash pattern and weight and gets a colour (builds on `--signal`, profiles `--boundary`, competes with `--threat`, solves the same problem as `--caution`, replaces and references `--ink-2`) at 62% strength, full on the spine and on the focused node's relations, with matching arrowheads; maturity chips coloured too (published `--signal`, in force `--boundary`, candidate `--caution`), in the map and in `MaturityTag`. Deviates from plan 5.3, which kept colour for the focus only
+
 ## WP7: Scanner pages
 
 The scanner overview and the per-server report on the new surfaces; the request ladder as a
@@ -83,3 +101,33 @@ transcript with the line-by-line reveal (M12); the 320px overflow on `/mcp/scann
 - [x] W7-T05 `src/pages/mcp/scanner/index.astro`: "What it reads" is the ladder of one example scan as a `.transcript`, built from the scanner's own URL rules; status and grade rule as `.panel`s; the run-it-yourself note says the site never scans on request; grids use `min(100%, …)` so nothing is wider than the viewport at 320px; three missing spaces after line breaks restored
 - [x] W7-T06 `tests/e2e/scanner.spec.ts`: no page scroll at 320 and 412px on both pages; no form, input or scan button; the transcript matches `requestLadder` line by line with JavaScript off and ends with the grade; the reveal runs once with the grade last; reduced motion shows the end state
 - [x] W7-T07 Screenshot baselines: the `refresh-screenshots` run on the pull request found `scanner.png` and `report.png` unchanged (both are viewport shots, the head is above the changes and the report is masked), so none were committed
+
+### WP3 follow-up: one page, not a stack of sections
+
+After review, the merged home page read as unfinished: loose sections with nothing tying them
+together. The former layout's side-by-side split comes back in the new tone.
+
+- [x] W3-T07 `src/pages/index.astro`: statement and matrix plate side by side above 64rem, as before; the plate gets a head (product and revision, link) and a foot (size, last observation, key) on its own rules, with the grid on `--ground`
+- [x] W3-T08 The facts as one band between two rules, equal columns with a hairline between each (two by two below 64rem)
+- [x] W3-T09 "What the lab publishes" (numbered `.rows`, counts as `.chip`) and "Latest observations" (on a `.panel`, with the seed note and a quiet small button) side by side above 64rem, each under an eyebrow
+- [x] W3-T10 `tests/e2e/home.spec.ts`: the two sections sit side by side at 1440px; selectors follow the new markup; baselines refreshed through the `refresh-screenshots` label
+
+## WP6: Explorer and breach anatomy
+
+The chain on a plate with hairline lifelines and the stepper in an `.explainer`; Play, the step
+reveal, the token rail and the toggle rails; breach pages on `.rows`, `.panel` and a
+`.timeline`; the copy of these pages and of their YAML.
+
+- [x] W6-T01 `src/components/ChainPage.astro`: the chain on a `.plate` (clipped, so the actor head stays sticky) with a `--ground-2` head and no blur; lanes as 1px `--rule` lifelines; arrows 1.5px `--ink-2`, the current one 2px `--signal` with a filled numeral; toggled steps carry a 2px rail and arrow in the toggle's ink (`--toggle-attack`, `--toggle-misconfiguration`); removed steps struck with dashed arrows; a self arrow in the last lane loops left so it stays inside the plate; the toggle notice is the shared `.notice` (`.caution` for misconfiguration), tinted in oklab; tags are `.chip`; the list no longer collides with the shared `.steps` surface
+- [x] W6-T02 M5: once the reader steps, the current arrow draws in (`scaleX`, 300ms) and its body rises 8px (220ms); later steps dim through an opacity transition at `--dur`
+- [x] W6-T03 M6 in `src/components/Explorer.svelte`: Play advances every 2.5 s after it is pressed, stops at the last step, pauses on any pointer, key, wheel or touch input other than pressing Play itself, and is not offered under reduced motion (`reducedMotion()` from `src/lib/motion.ts`); Next is the one filled button, Previous and Play are `quiet`
+- [x] W6-T04 M7 in `src/components/TokenView.astro`: claims on `--code-bg` with a 2px rail on every added, changed or removed claim, marked at build time as `data-changed` (from `diffClaims`, already pure and unit tested); the island only toggles `is-fresh` on the current step, which starts the rail in `--signal` and settles it on `--rule` over 480ms
+- [x] W6-T05 M8: on a toggle page the rails of the touched steps light up once on load, 40ms apart and no later than 400ms, in CSS alone
+- [x] W6-T06 M2: the scenario title on `/explorer/` and the h1 of its scenario and toggle pages share a `view-transition-name`
+- [x] W6-T07 `src/pages/explorer/index.astro`: scenarios as `.rows` with actors as a plain line and toggles as wrapping links with a kind dot and a key; "How to read a chain" as a `.panel`; this fixes the horizontal scroll at 320px (nowrap pills in a grid item)
+- [x] W6-T08 `src/pages/breaches/index.astro`: entries as `.rows` with the class as a `.chip`; `src/pages/breaches/[id].astro`: facts in a `.panel`, a `.timeline` ordered list with a `time` element for the disclosure and the fix as its second entry, controls as `.rows`, the replay as a `.panel`
+- [x] W6-T09 M13: the timeline rail draws in from the top (`scaleY`, 480ms) and its entries fade in behind it, once, on load
+- [x] W6-T10 Copy: explorer and breach heads, ledes and how-to text rewritten to section 8 (no slogan heads, no semicolons, no "X, not Y"); semicolons removed from the `summary` and `note` fields of `data/scenarios/*.yaml` and `data/vulnerabilities/*.yaml`, citations and messages untouched
+- [x] W6-T11 `tests/e2e/explorer.spec.ts`, `breaches.spec.ts`: no horizontal scroll at 320px on every explorer and breach page; Play never starts by itself, advances when pressed and pauses on a key; the token diff is in the markup without JavaScript; reduced-motion end states for M5, M6, M7, M8 and M13; the timeline holds a `time` element; axe runs on the settled breach page
+- [x] W6-T13 Breach layout rework after review: the entry page puts the account (summary after its first sentence, the missing control, the replay as a rail in the toggle's ink) at reading width beside a sticky facts panel (timeline, affects, sources as short labels); the index is a ledger with the date, class and id in a narrow column beside each entry and its missing control and replay as labelled lines
+- [x] W6-T12 Screenshot baselines for `explorer.spec.ts` and `breaches.spec.ts`: refreshed through the `refresh-screenshots` label on the pull request

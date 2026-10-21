@@ -3,6 +3,7 @@ import type { Dataset } from "@/lib/data";
 import { getDataset } from "@/lib/data";
 import {
   adjacentRevisionPairs,
+  buildsOnSpine,
   currentRevisionOf,
   featuresDefinedBy,
   mapRelations,
@@ -119,6 +120,35 @@ describe("specNodes and withdrawnSpecs (FR-014, SC-006)", () => {
       "mcp",
       "eu",
     ]);
+  });
+});
+
+describe("buildsOnSpine (M4)", () => {
+  it("follows the longest builds-on chain from the oldest document, stable on ties", () => {
+    const specs = [
+      spec("a", "ietf-oauth", "2010-01-01"),
+      spec("b", "ietf-oauth", "2012-01-01"),
+      spec("c", "openid", "2014-01-01"),
+      spec("d", "mcp", "2025-01-01"),
+      spec("e", "mcp", "2025-02-01"),
+    ];
+    const rels: Relation[] = [
+      { from: "b", to: "a", type: "builds-on" },
+      { from: "c", to: "b", type: "builds-on" },
+      { from: "d", to: "c", type: "builds-on" },
+      { from: "e", to: "c", type: "builds-on" },
+      { from: "e", to: "a", type: "references" },
+    ];
+    expect(buildsOnSpine(specs, rels).map((r) => `${r.to}>${r.from}`)).toEqual([
+      "a>b",
+      "b>c",
+      "c>d",
+    ]);
+  });
+
+  it("is empty without builds-on relations and ignores specs off the map", () => {
+    expect(buildsOnSpine(specNodes(data), [])).toEqual([]);
+    expect(buildsOnSpine(specNodes(data), mapRelations(data)).map((r) => r.from)).toHaveLength(1);
   });
 });
 

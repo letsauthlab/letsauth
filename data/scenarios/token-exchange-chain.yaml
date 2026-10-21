@@ -62,7 +62,7 @@ steps:
         exp: 1789998200
         iat: 1789996500
         jti: a2
-      note: may_act says which party the subject allows to act on this token next; the authorization server checks it on the following exchange.
+      note: may_act says which party the subject allows to act on this token next. The authorization server checks it on the following exchange.
   - id: hand-over
     from: orchestrator
     to: subagent
@@ -115,7 +115,7 @@ steps:
         exp: 1789997900
         iat: 1789996600
         jti: a3
-      note: The outermost act is the current actor; each nested act is the party it received authority from.
+      note: The outermost act is the current actor. Each nested act is the party it received authority from.
   - id: api-call
     from: subagent
     to: api

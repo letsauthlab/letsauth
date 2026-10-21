@@ -12,80 +12,45 @@ interface Props {
 
 const { maturity, note, variant = "tag" } = Astro.props;
 const label = MATURITY_LABEL[maturity];
+const draft =
+  maturity === "individual-draft" || maturity === "working-group-draft" || maturity === "candidate";
 ---
 
 <span
-  class:list={["maturity", `maturity-${maturity}`, variant]}
+  class:list={["chip", "maturity", `maturity-${maturity}`, variant, { signal: maturity === "published", draft }]}
   data-maturity={maturity}
   title={note ? `${label}: ${note}` : label}
 >
-  <span class="swatch" aria-hidden="true"></span>
   {variant === "label" ? label : MATURITY_TAG[maturity]}
 </span>
 
 <style>
-  /* Maturity is encoded by border style and a text tag, never by colour alone. */
-  .maturity {
-    --c: var(--ink-muted);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4em;
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--c);
-    white-space: nowrap;
-  }
-  .maturity.label {
-    text-transform: none;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    letter-spacing: 0;
-  }
-  .swatch {
-    width: 0.85em;
-    height: 0.85em;
-    border-radius: 3px;
-    border: 1.5px solid var(--c);
-    background: transparent;
-  }
-  .maturity-published {
-    --c: var(--accent);
-  }
-  .maturity-published .swatch {
-    background: var(--c);
-  }
+  /*
+   * Maturity is a chip that says the word (plan 016, 5.3). The colour sorts it at a glance and
+   * the outline repeats it as a shape, dashed for a draft, so it reads without colour too.
+   * The map's node chips match.
+   */
   .maturity-in-force {
-    --c: var(--accent-2);
-  }
-  .maturity-in-force .swatch {
-    background: var(--c);
-    border-radius: 50%;
+    --m: var(--boundary);
   }
   .maturity-candidate {
-    --c: var(--level-should);
+    --m: var(--caution);
   }
-  .maturity-candidate .swatch {
-    border-style: dotted;
-    border-width: 2px;
+  .maturity-in-force,
+  .maturity-candidate {
+    border-color: color-mix(in oklch, var(--m) 45%, transparent);
+    background: color-mix(in oklch, var(--m) 8%, transparent);
+    color: var(--m);
   }
-  .maturity-working-group-draft .swatch {
+  .draft {
     border-style: dashed;
   }
-  .maturity-individual-draft .swatch {
-    border-style: dashed;
-    border-width: 1px;
-    opacity: 0.8;
+  .maturity-individual-draft,
+  .maturity-working-group-draft {
+    border-color: var(--rule-strong);
   }
   .maturity-expired,
   .maturity-withdrawn {
-    --c: var(--level-deprecated);
     text-decoration: line-through;
-  }
-  .maturity-expired .swatch,
-  .maturity-withdrawn .swatch {
-    opacity: 0.5;
   }
 </style>
