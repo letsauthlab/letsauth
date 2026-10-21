@@ -156,3 +156,10 @@ reveal, the token rail and the toggle rails; breach pages on `.rows`, `.panel` a
 - [x] W6-T11 `tests/e2e/explorer.spec.ts`, `breaches.spec.ts`: no horizontal scroll at 320px on every explorer and breach page; Play never starts by itself, advances when pressed and pauses on a key; the token diff is in the markup without JavaScript; reduced-motion end states for M5, M6, M7, M8 and M13; the timeline holds a `time` element; axe runs on the settled breach page
 - [x] W6-T13 Breach layout rework after review: the entry page puts the account (summary after its first sentence, the missing control, the replay as a rail in the toggle's ink) at reading width beside a sticky facts panel (timeline, affects, sources as short labels); the index is a ledger with the date, class and id in a narrow column beside each entry and its missing control and replay as labelled lines
 - [x] W6-T12 Screenshot baselines for `explorer.spec.ts` and `breaches.spec.ts`: refreshed through the `refresh-screenshots` label on the pull request
+
+## Review follow-ups (21 October 2026)
+
+Items from the redesign review, one pull request each, in order.
+
+- [x] R-01 PR #58 merged: matrix and feature baselines refreshed
+- [x] R-02 Small fixes: `.notice`, `.notice.caution` and `.card.notice` tint in oklab, not oklch (the toggle notice in `ChainPage.astro` keeps its local tint in the kind's ink); the link after "in the" on `/explorer/` and after "See" on `/standards/` no longer loses its space to HTML compression; the entry-format `pre` on `/contribute/` is focusable (axe scrollable-region-focusable)
