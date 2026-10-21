@@ -25,7 +25,7 @@ test.describe("home page (016 WP3)", () => {
       await expect(products.locator(`a[href="${href}"]`)).toHaveCount(1);
     await expect(products.first().locator(".chip")).toHaveText(`${matrix.rows.length} servers`);
     await expect(page.locator(".latest__list > li")).toHaveCount(6);
-    await expect(page.locator(".latest__list > li .status")).toHaveCount(6);
+    await expect(page.locator(".latest__list > li .status-cell")).toHaveCount(6);
   });
 
   test("keeps one filled button and loads no script file or island", async ({ page }) => {

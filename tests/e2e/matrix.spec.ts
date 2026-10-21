@@ -3,7 +3,7 @@ import { currentCell, currentRevision, matrixFor } from "../../src/lib/atlas";
 import { ACCESS_ORDER, AUTH_ORDER, accessOf, authOf, countBy } from "../../src/lib/classes";
 import { getDataset } from "../../src/lib/data";
 import { latestScan } from "../../src/lib/scanner";
-import { expectNoSeriousA11yViolations } from "./helpers";
+import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const revision = currentRevision(data);
@@ -55,6 +55,8 @@ test.describe("matrix page (US1)", () => {
     await summary.click();
     const dialog = page.locator("dialog.cell-dialog");
     await expect(dialog).toBeVisible();
+    // focus lands on the dialog's heading (016 WP4) and goes back to the cell on close
+    await expect(dialog.locator("#cell-dialog-title")).toBeFocused();
     await expect(dialog).toContainText("Unsupported");
     const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
     await expect(dialog).toContainText(winning?.method ?? "vendor-claim");
@@ -222,7 +224,72 @@ test.describe("matrix page (US1)", () => {
     expect(scroll).toBeLessThanOrEqual(inner ?? 0);
   });
 
+  test("scrolls inside its region at 320px with the server column sticky (016 WP4)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto("/mcp/");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      320,
+    );
+    const region = page.locator(".matrix-scroll");
+    const first = page.locator("#matrix tbody th.server-cell").first();
+    const before = await first.boundingBox();
+    await region.evaluate((el) => {
+      el.scrollLeft = 400;
+    });
+    expect(await region.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    const after = await first.boundingBox();
+    expect(after?.x).toBe(before?.x);
+  });
+
+  test("looks right in greyscale: the five status forms differ in shape (016 WP4)", async ({
+    page,
+  }) => {
+    await page.goto("/mcp/");
+    const legend = page.locator(".legend__statuses");
+    await legend.evaluate((el) => {
+      (el as HTMLElement).style.filter = "grayscale(1)";
+    });
+    await expect(legend).toHaveScreenshot("status-shapes.png");
+  });
+
+  test("cell detail opens without motion under reduced motion (M10)", async ({ page }) => {
+    test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/mcp/");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    await page
+      .locator(`td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`)
+      .click();
+    const dialog = page.locator("dialog.cell-dialog");
+    await expect(dialog).toBeVisible();
+    const running = await dialog.evaluate(
+      (el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === "running").length,
+    );
+    expect(running).toBe(0);
+    expect(await dialog.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+  });
+
+  test("the crosshair shows at once under reduced motion (M9)", async ({ page }) => {
+    await page.goto("/mcp/");
+    await expectEndStateUnderReducedMotion(page, "#matrix tbody tr[data-server]");
+    const row = page.locator("#matrix tbody tr[data-server]").nth(1);
+    const cell = row.locator("td[data-feature]").nth(3);
+    await cell.hover();
+    const running = await row.evaluate(
+      (el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === "running").length,
+    );
+    expect(running).toBe(0);
+    expect(await cell.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(
+      "rgba(0, 0, 0, 0)",
+    );
+  });
+
   test("has no serious accessibility violations", async ({ page }) => {
+    // axe walks every cell and its observation, which takes most of the default 30 s on a busy runner
+    test.slow();
     await page.goto("/mcp/");
     await expectNoSeriousA11yViolations(page);
   });
@@ -253,6 +320,31 @@ test.describe("matrix page without JavaScript", () => {
     await expect(details).toHaveAttribute("open", "");
     const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
     await expect(details.locator("[data-detail]")).toContainText(winning?.method ?? "vendor-claim");
+  });
+
+  test("highlights the row and column under the pointer without the island (M9)", async ({
+    page,
+  }) => {
+    await page.goto("/mcp/");
+    const row = page.locator("#matrix tbody tr[data-server]").nth(2);
+    const cell = row.locator("td[data-feature]").nth(4);
+    const plain = page.locator("#matrix tbody tr[data-server]").nth(8).locator("td").nth(4);
+    await cell.hover();
+    const tint = (el: Element, pseudo?: string) => getComputedStyle(el, pseudo).backgroundColor;
+    await expect
+      .poll(() => cell.evaluate((el) => getComputedStyle(el).backgroundColor))
+      .not.toBe("rgba(0, 0, 0, 0)");
+    expect(await cell.evaluate(tint, "::after")).not.toBe("rgba(0, 0, 0, 0)");
+    // the column band reaches the other rows: it covers a cell of the same column further down
+    const band = await cell.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const after = getComputedStyle(el, "::after");
+      return { top: parseFloat(after.top), height: r.height };
+    });
+    expect(band.top).toBeLessThan(-band.height);
+    expect(await plain.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgba(0, 0, 0, 0)",
+    );
   });
 
   test("renders every row alphabetically with its class pills and no group rows (009 FR-003)", async ({
