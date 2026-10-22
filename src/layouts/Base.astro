@@ -24,6 +24,20 @@ const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | unde
 const fullTitle =
   title === "letsauth" ? "letsauth · the lab for agent authorization" : `${title} · letsauth`;
 const here = path ?? Astro.url.pathname;
+// Who publishes the site, for search engines: the lab, founded and run by one person.
+const publisher = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "letsauth",
+  url: site.href,
+  author: { "@type": "Person", name: OPERATOR.name, url: OPERATOR.site },
+  publisher: {
+    "@type": "Organization",
+    name: LAB,
+    url: site.href,
+    founder: { "@type": "Person", name: OPERATOR.name, url: OPERATOR.site },
+  },
+};
 // Footer link groups: what you can read, what you can take, and who is behind it.
 const footerGroups = [
   {
@@ -95,6 +109,8 @@ const nav = [
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical.href} />
+    <meta name="author" content={OPERATOR.name} />
+    <link rel="author" href={OPERATOR.site} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="letsauth" />
@@ -114,6 +130,7 @@ const nav = [
       ))
     }
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <script type="application/ld+json" set:html={JSON.stringify(publisher)} />
     <script is:inline>
       // Apply a stored theme before first paint. Stored value is a per-viewer convenience only.
       try {
@@ -185,7 +202,7 @@ const nav = [
           </a>
           <p>
             An independent lab for agent authorization, run by{" "}
-            <a class="site-footer__author" href={OPERATOR.site}>{OPERATOR.name}</a>. Each cell cites
+            <a class="site-footer__author" href={OPERATOR.site} rel="author">{OPERATOR.name}</a>. Each cell cites
             its source and the data is open. Only a nightly scan of public metadata ever contacts a server.
           </p>
           <a class="site-footer__eu" href="/made-in-europe/">Made in Europe, hosted in the EU</a>
