@@ -152,7 +152,7 @@ onMount(() => {
       for (const key of PARAMS)
         if (s[key]) params.set(key, key === "q" ? (controls.q?.value ?? "").trim() : s[key]);
       const qs = params.toString();
-      history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
+      history.replaceState(null, "", `${qs ? `?${qs}` : location.pathname}${location.hash}`);
     }
   }
 
@@ -174,6 +174,37 @@ onMount(() => {
     if (panel) panel.open = true;
   }
   table.dataset.enhanced = "true";
+
+  // the phone view's group picker: the anchors work through :target without the island; with it
+  // the choice is a data attribute, so switching keeps the scroll position and the history
+  const view = document.querySelector<HTMLElement>("[data-matrix-view]");
+  const tabs = Array.from(view?.querySelectorAll<HTMLAnchorElement>(".matrix-tabs a") ?? []);
+  const region = view?.querySelector<HTMLElement>(".matrix-scroll");
+  function showView(id: string) {
+    if (!view) return;
+    view.dataset.view = id;
+    for (const a of tabs) {
+      if (a.id === `mx-${id}`) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    }
+  }
+  const viewFromHash = () => {
+    const id = location.hash.startsWith("#mx-") ? location.hash.slice(4) : "";
+    showView(tabs.some((a) => a.id === `mx-${id}`) ? id : "all");
+  };
+  viewFromHash();
+  // a link from elsewhere on the page, or the back button, still picks a group
+  window.addEventListener("hashchange", viewFromHash);
+  for (const a of tabs) {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = a.id.slice(3);
+      showView(id);
+      if (region) region.scrollLeft = 0;
+      const hash = id === "all" ? "" : `#${a.id}`;
+      history.replaceState(null, "", `${location.pathname}${location.search}${hash}`);
+    });
+  }
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   controls.q?.addEventListener("input", () => {
