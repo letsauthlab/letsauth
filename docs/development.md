@@ -33,7 +33,7 @@ set.
 | `pnpm typecheck` | `astro sync` and `tsc --noEmit`. |
 | `pnpm test` | Unit tests (Vitest) over `src/lib` and `src/scanner`. |
 | `pnpm test:e2e` | Playwright against `astro preview`; run `pnpm build` first. |
-| `pnpm check:prose [--fail]` | Lists copy in `src/pages`, `src/components`, `README.md` and `docs/*.md` that breaks the mechanical voice rules (banned words, em dash). Warns only until the content pass; `--fail` makes hits fail. |
+| `pnpm check:prose` | Lists copy in `src/pages`, `src/components`, `README.md` and `docs/*.md` that breaks the mechanical voice rules (banned words, em dash) and fails on any hit. |
 | `pnpm check:budgets [dir]` | Byte budgets over `dist/` (gzip level 6): CSS, JavaScript, HTML, inline SVG and preloaded fonts per page, plus each island. Run `pnpm build` first. |
 | `pnpm check:contrast [--markdown] [--hex]` | WCAG contrast of the colour pairs in `src/styles/tokens.css`, light and dark; fails under 4.5:1 for text and 3:1 for glyphs and outlines. `--markdown` prints the table in `docs/design.md`, `--hex` the sRGB value of each token. |
 | `pnpm check` | validate:data, lint, check:prose, check:contrast, typecheck, unit tests, build, check:links, check:budgets. Must pass before a push. |
@@ -58,8 +58,8 @@ set.
   `enforce` flag in `LIMITS` at the top of `scripts/check-budgets.ts`, and the package that meets
   a target flips it.
 - **Prose lint** (`pnpm check:prose`) reports the voice rules a script can check, from section 8
-  of the same plan. It prints `file:line: rule: text` and exits 0. Set `FAIL` in
-  `scripts/check-prose.ts` to make it a gate.
+  of the same plan. It prints `file:line: rule: text` and fails on any hit, so `pnpm check`
+  fails too. A quotation of a source may use "ecosystem"; nothing else is exempt.
 - **Contrast** (`pnpm check:contrast`) recomputes every colour pair in `docs/design.md` from the
   OKLCH values in `tokens.css` and fails when one is under its minimum.
 

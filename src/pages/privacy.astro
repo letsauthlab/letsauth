@@ -5,25 +5,25 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
 
 <Document
   title="Privacy"
-  heading="Privacy note: no cookies, no accounts, no tracking"
+  heading="Privacy note"
   description="letsauth.eu sets no cookies and collects no personal data beyond cookieless, aggregate EU analytics. What is processed, by whom, and your rights under the GDPR."
   path="/privacy/"
   eyebrow="Legal"
-  lede="letsauth.eu sets no cookies, has no accounts and does not track you across sites. It counts page views with cookieless, aggregate analytics hosted in the EU. That is all."
-  updated="2026-10-14"
+  lede="letsauth.eu sets no cookies, has no accounts and does not track you across sites. It counts page views with cookieless, aggregate analytics hosted in the EU."
+  updated="2026-10-22"
 >
   <h2>In short</h2>
   <ul>
     <li>No cookies, no fingerprinting, no advertising, no social media embeds.</li>
     <li>No personal information is collected, sold, shared with advertisers or used for profiling.</li>
-    <li>Fonts, scripts and styles are served from this site; your browser contacts no third party to render a page.</li>
+    <li>Fonts, scripts and styles come from this site. Your browser contacts no third party to show a page.</li>
     <li>
       The one thing stored in your browser is your colour theme, and only if you choose one. It
       never leaves your device.
     </li>
     <li>
-      Nothing is scanned on a visitor's request. Scanning is a scheduled backend job over the
-      public metadata of listed servers; it involves no data about you.
+      Nothing is scanned on a visitor's request. A scheduled backend job reads the public
+      metadata of listed servers. It involves no data about you.
     </li>
   </ul>
 
@@ -39,10 +39,9 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
 
   <h2>Hosting and delivery</h2>
   <p>
-    The site is a set of static files served by Bunny.net (BunnyWay d.o.o., Ljubljana,
-    Slovenia) from a storage zone in the EU. To deliver a page, its servers necessarily process
-    your IP address, the requested address, the time, and the browser identification your
-    browser sends. Bunny.net processes this on our behalf under a data processing agreement and
+    Bunny.net (BunnyWay d.o.o., Ljubljana, Slovenia) serves the site as static files from a
+    storage zone in the EU. To deliver a page, its servers must process your IP address, the
+    requested address, the time and the browser identification your browser sends. Bunny.net processes this on our behalf under a data processing agreement and
     may keep it in short-lived technical logs for security and operation. We do not use it to
     identify or profile visitors.
   </p>
@@ -51,8 +50,8 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
   <h2>Analytics</h2>
   <p>
     We count visits with <a href="https://plausible.io/data-policy" rel="noopener">Plausible
-    Analytics</a> (Plausible Insights OÜ, Tartu, Estonia), which is built to work without
-    cookies or personal data and stores its data in the EU. It records, per page view:
+    Analytics</a> (Plausible Insights OÜ, Tartu, Estonia). It works without cookies or personal
+    data and stores its data in the EU. For each page view it records:
   </p>
   <ul>
     <li><strong>Page address</strong>, to see which pages are read and how often.</li>
@@ -71,7 +70,8 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
   <p>
     To count unique visitors per day without a cookie, Plausible combines the IP address and
     browser identification with a salt that changes every 24 hours and keeps only the resulting
-    hash; the salt is deleted, so a visitor cannot be recognised the next day or across sites.
+    hash. The salt is then deleted, so nobody can recognise a visitor the next day or across
+    sites.
     IP addresses are never stored. The statistics are aggregate and nobody can trace them back
     to you.
   </p>
@@ -89,31 +89,31 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
     settings. Storing it is strictly necessary for a function you asked for
     (§ 25 (2) no. 2 TDDDG).
   </p>
-  <p>Pages read fully without JavaScript; nothing else is stored.</p>
+  <p>Pages read fully without JavaScript. Nothing else is stored.</p>
 
   <h2>Scanning of MCP servers</h2>
   <p>
-    letsauth does not scan anything on a visitor's request, and there is no form that triggers a
-    scan. A scheduled job on the project's own backend (Scaleway, EU region) reads, once a night, the
-    public metadata of the MCP
-    servers listed in the atlas (the documents a server publishes for any client to read), with
-    no credentials and without starting any authorization flow. Its findings are published as
-    data in the <a href={REPO} rel="noopener">public repository</a>. This job processes
-    technical data about services, not personal data about visitors. Server maintainers can ask
-    for their server to be withdrawn; see <a href="/contribute/">how to contribute</a>.
+    letsauth scans nothing on a visitor's request, and no form can start a scan. Once a night, a
+    scheduled job on the project's own backend (Scaleway, EU region) reads the public metadata of
+    the MCP servers listed in the atlas. These are the documents a server publishes for any
+    client to read. The job uses no credentials and starts no authorization flow. Its findings
+    are published as data in the <a href={REPO} rel="noopener">public repository</a>. The job
+    processes technical data about services and no personal data about visitors. Server
+    maintainers can ask for their server to be withdrawn, as <a href="/contribute/">the
+    contribute page</a> describes.
   </p>
 
   <h2>Contributions and GitHub</h2>
   <p>
-    Corrections and new data go through issues and pull requests on GitHub (GitHub, Inc., USA).
+    Corrections and new data arrive as issues and pull requests on GitHub (GitHub, Inc., USA).
     When you contribute there, GitHub's{" "}
     <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">privacy statement</a>{" "}
     applies. The handle you give in an observation (<code>observedBy</code>) becomes part of the
     public dataset under CC BY 4.0, which requires attribution. If you want it removed, write to
-    us and we will act on your request under Art. 17 GDPR; copies in the public history of the
-    repository or made by others may remain.
+    us and we will act on your request under Art. 17 GDPR. Copies in the public history of the
+    repository, or copies others made, may remain.
   </p>
-  <p>Links to GitHub and to specification publishers are plain links; nothing is loaded from them until you follow one.</p>
+  <p>Links to GitHub and to specification publishers are plain links. Nothing loads from them until you follow one.</p>
 
   <h2>Email</h2>
   <p>
@@ -125,10 +125,10 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
   <h2>Your rights</h2>
   <p>Under the GDPR you have the right to:</p>
   <ul>
-    <li>access the personal data we hold about you (Art. 15);</li>
-    <li>have it corrected (Art. 16) or erased (Art. 17);</li>
-    <li>restrict its processing (Art. 18) and receive it in a portable format (Art. 20);</li>
-    <li>object to processing based on legitimate interest (Art. 21).</li>
+    <li>access the personal data we hold about you (Art. 15)</li>
+    <li>have it corrected (Art. 16) or erased (Art. 17)</li>
+    <li>restrict its processing (Art. 18) and receive it in a portable format (Art. 20)</li>
+    <li>object to processing based on legitimate interest (Art. 21)</li>
   </ul>
   <p>
     Write to <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>. You can also complain

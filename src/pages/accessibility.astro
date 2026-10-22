@@ -1,50 +1,150 @@
 ---
 import Document from "@/layouts/Document.astro";
 import { OPERATOR, REPO } from "@/lib/site";
+
+/** Every animation on the site (plan 016, section 4) and what you see with reduced motion. */
+const motions = [
+  {
+    where: "Moving between pages",
+    what: "The page crossfades in 220 ms. The matrix, the map and a chain's title morph into the page you open.",
+    reduced: "The new page appears at once.",
+  },
+  {
+    where: "Home and server pages",
+    what: "The figures count up from zero once, when they scroll into view.",
+    reduced: "The figures show their value at once.",
+  },
+  {
+    where: "Standards map",
+    what: "The longest builds-on path draws itself in once, with a soft halo that fades after.",
+    reduced: "The path is drawn complete, with no halo.",
+  },
+  {
+    where: "Explorer: steps",
+    what: "On each step the sender and receiver light up and the message arrow draws in over 300 ms. The changed token claims get a rail that fades over 480 ms.",
+    reduced: "The step, its arrow and its rails appear at once.",
+  },
+  {
+    where: "Explorer: Play and auto-advance",
+    what: "Play moves to the next step every 2.5 seconds. When a chain sits in view for a second, it starts by itself once. It stops for good when you hover, touch, focus, scroll or press a key, and Pause stops it too.",
+    reduced:
+      "There is no Play button and nothing starts by itself. Previous, Next, the scrub bar and the step list still work.",
+  },
+  {
+    where: "Explorer: toggles",
+    what: "A toggle swaps the chain in place in 220 ms. The steps it touched get their rail one after another.",
+    reduced: "The toggle opens as a normal page and the rails show at once.",
+  },
+  {
+    where: "Explorer: decision log",
+    what: "Each new line of the log under the chain fades in over 220 ms.",
+    reduced: "The lines appear at once.",
+  },
+  {
+    where: "Matrix",
+    what: "The row and column under your pointer or focus take a tint. A cell opens a dialog that fades in and rises 8 px.",
+    reduced: "The tint and the dialog appear at once.",
+  },
+  {
+    where: "Scanner report",
+    what: "The list of requests prints line by line, once, with the grade last.",
+    reduced: "All lines show at once.",
+  },
+  {
+    where: "Breach pages",
+    what: "The timeline line draws from the top once and its dates fade in behind it.",
+    reduced: "The timeline shows complete.",
+  },
+  {
+    where: "Long pages like this one",
+    what: "A thin bar at the top shows how far you have read.",
+    reduced: "There is no bar.",
+  },
+  {
+    where: "Links and buttons",
+    what: "Colours and borders change in 120 ms on hover and focus.",
+    reduced: "They change at once.",
+  },
+];
 ---
 
 <Document
   title="Accessibility"
   heading="Accessibility statement"
-  description="letsauth.eu aims to meet WCAG 2.2 level AA on every page. How that is checked, what is known to fall short, and how to report a barrier."
+  description="letsauth.eu aims to meet WCAG 2.2 level AA on every page. How we check it, every animation and its reduced-motion form, what falls short and how to report a barrier."
   path="/accessibility/"
   eyebrow="Accessibility"
-  lede="Every page on letsauth.eu should work for everyone: with a keyboard, a screen reader, zoom, either colour scheme, reduced motion and no JavaScript."
-  updated="2026-10-14"
+  lede="We want every page on letsauth.eu to work with a keyboard, a screen reader, zoom, either colour scheme, reduced motion and no JavaScript."
+  updated="2026-10-22"
 >
   <h2>The target</h2>
   <p>
     The site aims to meet the <a href="https://www.w3.org/TR/WCAG22/" rel="noopener">Web
-    Content Accessibility Guidelines (WCAG) 2.2</a> at level AA. This is a rule in the project's
-    constitution, not an aspiration: a change that breaks it does not merge.
+    Content Accessibility Guidelines (WCAG) 2.2</a> at level AA. The project's constitution
+    makes this a rule. A change that breaks it does not merge.
   </p>
 
-  <h2>How it is checked</h2>
+  <h2>How we check it</h2>
   <ul>
-    <li>Every pull request runs automated accessibility checks (axe) on the main pages, in light and dark and at phone width, and fails on any serious violation.</li>
-    <li>Lighthouse must score at least 95 for accessibility on the atlas pages.</li>
-    <li>Pages are pre-rendered HTML that read fully without JavaScript; interactive parts add to that, they do not replace it.</li>
-    <li>Status in the atlas is never shown by colour alone: each status has its own shape and text.</li>
-    <li>Animations are switched off when your system asks for reduced motion.</li>
+    <li>Every pull request runs automated accessibility checks (axe) on the main pages. They run in light and dark and at phone width, and fail on any serious violation.</li>
+    <li>Lighthouse must score at least 95 for accessibility on the main pages.</li>
+    <li>Pages are pre-rendered HTML and read fully without JavaScript. Interactive parts add to that HTML and never replace it.</li>
+    <li>Colour never carries a status alone. Each status in the atlas has its own shape and text.</li>
+  </ul>
+
+  <h2>Motion</h2>
+  <p>
+    Every animation runs once per page or once per action, and none of them loops. When your
+    system asks for reduced motion, each one shows its end state at once. This list is every
+    animation on the site.
+  </p>
+  <ul class="rows motions" role="list">
+    {
+      motions.map((m) => (
+        <li>
+          <h3 class="rows__title">{m.where}</h3>
+          <p>{m.what}</p>
+          <p class="motions__reduced">
+            <span class="motions__label">Reduced motion</span> {m.reduced}
+          </p>
+        </li>
+      ))
+    }
   </ul>
 
   <h2>Known limits</h2>
   <ul>
     <li>
-      The atlas matrix is a wide data table. On a small screen it scrolls sideways inside its
-      frame; each server and each requirement also has its own page that reads as plain text.
+      The server matrix is a wide data table. On a phone it shows one requirement group at a
+      time, and you scroll sideways inside its frame. Each server and each requirement also has
+      its own page that reads as plain text.
     </li>
     <li>
-      The standards map draws a graph. The same specifications and relations are listed as text
-      on each specification's page.
+      The standards map is a drawing. The same specifications and relations are also listed as
+      an outline under it, and on a phone the outline takes the drawing's place.
     </li>
-    <li>Automated checks find only part of the barriers. Manual testing with assistive technology is not yet systematic.</li>
+    <li>Automated checks find only some barriers. We do not yet test with assistive technology on a fixed schedule.</li>
   </ul>
 
   <h2>Report a barrier</h2>
   <p>
-    If something does not work for you, tell us what page, what you tried and what happened.
+    If something does not work for you, tell us the page, what you tried and what happened.
     Write to <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a> or open an issue in the{" "}
-    <a href={REPO} rel="noopener">repository</a>. Barriers are treated as bugs.
+    <a href={REPO} rel="noopener">repository</a>. We treat barriers as bugs.
   </p>
 </Document>
+
+<style>
+  .motions p {
+    margin: 0;
+  }
+  .motions__reduced {
+    margin-top: var(--space-1);
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .motions__label {
+    font-weight: 500;
+    color: var(--ink);
+  }
+</style>

@@ -61,8 +61,8 @@ Metadata Documents", "RFC 9207 `iss` validation", "Resource indicators (RFC 8707
 | `category` | enum | `discovery`, `registration`, `authorization`, `token`, `session`, `transport`, `delegation`, `consent` |
 | `description` | string | |
 | `supersedes` | string? | Feature id this replaces (e.g. CIMD supersedes DCR as the default) |
-| `observable` | enum | `passive`, `active`, `manual` — how support can be verified |
-| `party` | enum | `mcp-server`, `authorization-server`, `client` — who the requirement is on |
+| `observable` | enum | `passive`, `active`, `manual`: how support can be verified |
+| `party` | enum | `mcp-server`, `authorization-server`, `client`: who the requirement is on |
 | | | (`levelNote` lives inside each `revisions` entry) |
 
 ### Relation
@@ -91,7 +91,7 @@ A public MCP server (or, later, another agent endpoint) that the MCP Atlas track
 | `url` | url | MCP endpoint |
 | `homepage` | url? | |
 | `transport` | enum | `streamable-http`, `sse`, `stdio-only` |
-| `listed` | enum | `opt-in`, `public-directory`, `maintainer-added` — why it is in the atlas |
+| `listed` | enum | `opt-in`, `public-directory`, `maintainer-added`: why it is in the atlas |
 | `source` | url | Where the listing came from; required unless `opt-in` |
 | `access` | Classification? | Who can connect: `public` (anyone; where an account is needed, anyone can create one by self-service), `closed` (an existing contract, a tenant an admin must enable, a sales process or a private beta stands in the way; a catalog of approved clients is not an obstacle to the person and stays in the evidence note), `unknown` |
 | `auth` | Classification? | How the endpoint authenticates clients: `oauth` (an OAuth 2.x authorization through the server's authorization server), `api-key` (a static credential the user pastes into the client), `none`, `unknown` |

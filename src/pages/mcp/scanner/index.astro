@@ -62,13 +62,12 @@ const ladder = [
     <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current="Scanner" />
     <header class="page-head">
       <p class="eyebrow">Scanner</p>
-      <h1>What a server's metadata says, measured every night</h1>
+      <h1>The nightly scanner</h1>
       <p class="lede">
-        The scanner reads the public authorization metadata an MCP server publishes for every
-        client and judges the {checks.length} requirements of MCP Authorization {revision.id} that
-        metadata can answer. Nothing else is sent: no token, no authorization flow, no protocol
-        message; the one request to the endpoint itself carries no credentials and only its
-        status and headers are read. Results land in the atlas as observations, by pull request.
+        Every night the scanner reads the public authorization metadata of each listed MCP server
+        and judges the {checks.length} requirements of MCP Authorization {revision.id} that this
+        metadata can answer. It sends no token and no credentials, and starts no authorization
+        flow. Its results reach the atlas as observations, by pull request.
       </p>
       <dl class="facts" aria-label="Scanner at a glance">
         <div>

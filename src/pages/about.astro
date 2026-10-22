@@ -25,44 +25,44 @@ const products = [
     name: "Delegation chain explorer",
     href: "/explorer/",
     status: "Live",
-    text: "Step-through scenarios with the decoded token at each hop, and toggles for the attacks and misconfigurations that break them.",
+    text: "Scenarios you play step by step, with the decoded token at each hop. Toggles add the attacks and misconfigurations that break a chain.",
   },
   {
     name: "Breach anatomy",
     href: "/breaches/",
     status: "Live",
-    text: "Published agent-auth vulnerabilities and incidents, each traced to the missing control, the atlas rows that name it and a replay in the explorer.",
+    text: "Published vulnerabilities and incidents in agent authorization. Each one names the control that was missing and links to the atlas rows and the explorer replay for it.",
   },
   {
     name: "Agents under EU rules",
     status: "Planned",
-    text: "What eIDAS 2.0 and the EUDI wallet, the AI Act and NIS2 ask of agent delegation, as scenarios and long reads.",
+    text: "Scenarios and long reads on what eIDAS 2.0 and the EUDI wallet, the AI Act and NIS2 ask of agent delegation.",
   },
 ];
 const principles = [
   {
-    name: "Cited, not asserted",
-    text: "A claim without a specification revision and section does not ship.",
+    name: "Cited",
+    text: "Each claim names a specification revision and section. A claim without one does not ship.",
   },
   {
     name: "Neutral",
-    text: "Nothing is ranked or scored. Rows are alphabetical, and no vendor pays for anything.",
+    text: "We rank and score nothing. Rows are in alphabetical order, and no vendor pays for anything.",
   },
   {
-    name: "Unknown is honest",
-    text: "A missing observation reads <em>unknown</em>, never failure.",
+    name: "Unknown means no observation",
+    text: "A cell with no observation on record reads <em>unknown</em>. It never reads as a failure.",
   },
   {
-    name: "Passive by default",
-    text: "We read public metadata only, on a schedule, never on a visitor's request, and never with credentials.",
+    name: "Passive",
+    text: "We read public metadata only. A scheduled job does the reading, without credentials. A visitor can never start a scan.",
   },
   {
     name: "Open",
-    text: "Code under MIT, data under CC BY 4.0, history kept in a public repository where anyone can propose a correction.",
+    text: "The code is MIT and the data is CC BY 4.0. The history is in a public repository, where anyone can propose a correction.",
   },
   {
-    name: "European by default",
-    text: 'Built in Berlin, hosted and measured in the EU; see <a href="/made-in-europe/">made in Europe</a>.',
+    name: "European",
+    text: 'We build in Berlin, and EU companies host and measure the site. <a href="/made-in-europe/">Made in Europe</a> lists every service.',
   },
 ];
 ---
@@ -70,20 +70,22 @@ const principles = [
 <Document
   title="About"
   heading={LAB}
-  description={`${LAB} is an independent, vendor-neutral lab for authentication and authorization in the agent era. letsauth.eu is where its work is published.`}
+  description={`${LAB} is an independent, vendor-neutral lab for how AI agents are authenticated and authorized. It publishes its work on letsauth.eu.`}
   path="/about/"
   eyebrow="About"
-  lede="An independent, vendor-neutral lab for how AI agents are authenticated and authorized. We measure what the protocols require and what real systems do, and publish all of it as open data."
-  updated="2026-10-14"
+  lede="An independent, vendor-neutral lab for how AI agents are authenticated and authorized. We record what the protocols require and what real servers do, and publish it all as open data."
+  updated="2026-10-22"
 >
   <h2>Why a lab</h2>
   <p>
-    Agents now call APIs, use tools and act for people. The rules for how they get and pass on
-    authority sit where agent protocols (MCP, A2A) meet identity standards (OAuth, OpenID
-    Connect, token exchange, workload identity), and both sides move monthly. Most of what is
-    written about it is assertion. {LAB} replaces assertion with evidence: every claim cites a
-    specification revision, every status cites a dated observation, and the data is yours to
-    download and check.
+    Agents now call APIs, use tools and act for people. The rules for how they get authority and
+    pass it on sit where agent protocols (MCP, A2A) meet identity standards (OAuth, OpenID
+    Connect, token exchange, workload identity). Both sides change every month.
+  </p>
+  <p>
+    Much of what is written about this rests on claims that nobody can check. {LAB} keeps the
+    evidence instead. Each requirement cites a specification revision, and each status cites a
+    dated observation. You can download all of the data and check it yourself.
   </p>
 
   <h2>What we build</h2>
@@ -101,8 +103,9 @@ const principles = [
     }
   </ul>
   <p>
-    All of them are views on one shared data model. The order and status of each is in the{" "}
-    <a href={`${REPO}/blob/main/docs/roadmap.md`} rel="noopener">roadmap</a>.
+    All of them read from one shared data model. The{" "}
+    <a href={`${REPO}/blob/main/docs/roadmap.md`} rel="noopener">roadmap</a> shows what comes
+    next.
   </p>
 
   <h2>How we work</h2>
@@ -120,16 +123,16 @@ const principles = [
   <h2>Who is behind it</h2>
   <p>
     {LAB} is run by <a href={OPERATOR.site} rel="noopener">{OPERATOR.name}</a>, a security
-    engineer in Berlin who works on usable security and web authentication. It is a personal,
-    independent project; the <a href="/disclaimer/">disclaimer</a> says what that means for
-    affiliation.
+    engineer in Berlin who works on usable security and web authentication. The lab is a
+    personal, independent project. The <a href="/disclaimer/">disclaimer</a> says what that
+    means for affiliation.
   </p>
 
   <h2>Get involved</h2>
   <p>
-    Know how a server behaves? <a href="/contribute/">Add an observation</a>. Found a
-    mistake, or want a specification on the map? Open an issue in the{" "}
-    <a href={REPO} rel="noopener">repository</a>. Anything else:{" "}
+    If you know how a server behaves, <a href="/contribute/">add an observation</a>. If you
+    found a mistake or want a specification on the map, open an issue in the{" "}
+    <a href={REPO} rel="noopener">repository</a>. For anything else, write to{" "}
     <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>.
   </p>
 

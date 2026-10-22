@@ -22,7 +22,7 @@ const site = Astro.site ?? new URL("https://letsauth.eu");
 const canonical = new URL(path ?? Astro.url.pathname, site);
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | undefined;
 const fullTitle =
-  title === "letsauth" ? "letsauth — the lab for agent auth" : `${title} · letsauth`;
+  title === "letsauth" ? "letsauth · the lab for agent authorization" : `${title} · letsauth`;
 const here = path ?? Astro.url.pathname;
 // Footer link groups: what you can read, what you can take, and who is behind it.
 const footerGroups = [
@@ -184,9 +184,8 @@ const nav = [
             <BrandLogo />
           </a>
           <p>
-            An independent lab for authentication in the agent era, by {LAB}. Every cell cites its
-            source, the data is open, and the only thing that contacts a server is a scheduled scan
-            of public metadata.
+            An independent lab for agent authorization, run by {LAB}. Each cell cites its source
+            and the data is open. Only a nightly scan of public metadata ever contacts a server.
           </p>
           <a class="site-footer__eu" href="/made-in-europe/">Made in Europe, hosted in the EU</a>
         </div>
