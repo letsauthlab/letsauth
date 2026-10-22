@@ -14,6 +14,9 @@ const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applica
 const withUnsupported = matrix.rows.find(
   (s) => matrix.cells.get(`${s.id}|mcp.as.dcr`)?.status === "unsupported",
 );
+// on a phone the cells open from their group's view, so the cell tests open that group; on a
+// wide screen the anchor changes nothing
+const dcrGroup = `#mx-${matrix.columns.find((f) => f.id === "mcp.as.dcr")?.category}`;
 // the most common access and auth classes, for the filter tests (009)
 const topAccess = [...countBy(matrix.rows, ACCESS_ORDER, accessOf)].sort(
   (a, b) => b.count - a.count,
@@ -47,7 +50,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/mcp/");
+    await page.goto(`/mcp/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const summary = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
@@ -198,7 +201,7 @@ test.describe("matrix page (US1)", () => {
 
   test("keyboard-only walkthrough opens and closes a cell", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/mcp/");
+    await page.goto(`/mcp/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const summary = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
@@ -224,11 +227,11 @@ test.describe("matrix page (US1)", () => {
     expect(scroll).toBeLessThanOrEqual(inner ?? 0);
   });
 
-  test("scrolls inside its region at 320px with the server column sticky (016 WP4)", async ({
+  test("a group scrolls inside its region at 320px with the server column sticky (016 WP4)", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 800 });
-    await page.goto("/mcp/");
+    await page.goto("/mcp/#mx-discovery");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       320,
@@ -242,6 +245,38 @@ test.describe("matrix page (US1)", () => {
     expect(await region.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
     const after = await first.boundingBox();
     expect(after?.x).toBe(before?.x);
+  });
+
+  test("on a phone, All fits every requirement without sideways scroll (follow-up 5)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/mcp/");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    await expect(page.locator("#mx-all")).toHaveAttribute("aria-current", "true");
+    const region = page.locator(".matrix-scroll");
+    expect(await region.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
+    const row = page.locator("#matrix tbody tr[data-server]").first();
+    for (const td of await row.locator("td[data-feature]").all()) await expect(td).toBeVisible();
+  });
+
+  test("on a phone, a group shows only its columns with labels written across (follow-up 5)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/mcp/");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    const category = matrix.columns[0]?.category ?? "";
+    const inGroup = matrix.columns.filter((f) => f.category === category);
+    await page.locator(`#mx-${category}`).click();
+    await expect(page.locator(`#mx-${category}`)).toHaveAttribute("aria-current", "true");
+    await expect(page).toHaveURL(new RegExp(`#mx-${category}$`));
+    const row = page.locator("#matrix tbody tr[data-server]").first();
+    await expect(row.locator("td[data-feature]:visible")).toHaveCount(inGroup.length);
+    const head = page.locator(`#matrix thead th[data-feature="${inGroup[0]?.id}"] .feature-link`);
+    expect(await head.evaluate((el) => getComputedStyle(el).writingMode)).toBe("horizontal-tb");
+    await page.locator("#mx-all").click();
+    await expect(row.locator("td[data-feature]:visible")).toHaveCount(matrix.columns.length);
   });
 
   test("looks right in greyscale: the five status forms differ in shape (016 WP4)", async ({
@@ -258,7 +293,7 @@ test.describe("matrix page (US1)", () => {
   test("cell detail opens without motion under reduced motion (M10)", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/mcp/");
+    await page.goto(`/mcp/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await page
       .locator(`td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`)
@@ -308,7 +343,7 @@ test.describe("matrix page without JavaScript", () => {
 
   test("renders the full matrix and native cell details", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/mcp/?level=MUST");
+    await page.goto(`/mcp/?level=MUST${dcrGroup}`);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(
       matrix.rows.length,
@@ -320,6 +355,21 @@ test.describe("matrix page without JavaScript", () => {
     await expect(details).toHaveAttribute("open", "");
     const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
     await expect(details.locator("[data-detail]")).toContainText(winning?.method ?? "vendor-claim");
+  });
+
+  test("on a phone, the group picker works through plain anchors (follow-up 5)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/mcp/");
+    const category = matrix.columns[0]?.category ?? "";
+    const inGroup = matrix.columns.filter((f) => f.category === category);
+    const row = page.locator("#matrix tbody tr[data-server]").first();
+    await expect(row.locator("td[data-feature]:visible")).toHaveCount(matrix.columns.length);
+    await page.locator(`#mx-${category}`).click();
+    await expect(row.locator("td[data-feature]:visible")).toHaveCount(inGroup.length);
+    // every group is still in the HTML
+    await expect(row.locator("td[data-feature]")).toHaveCount(matrix.columns.length);
   });
 
   test("highlights the row and column under the pointer without the island (M9)", async ({

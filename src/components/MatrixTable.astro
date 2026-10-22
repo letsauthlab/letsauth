@@ -30,6 +30,33 @@ for (const f of columns) {
   else groups.push({ category: f.category, count: 1 });
 }
 
+/*
+ * On phones (below 40rem) the matrix is read one way at a time: "All" draws every requirement
+ * as a dense strip per server, and each group shows only its own columns at a readable width.
+ * The choice is a row of plain anchors, so it works without JavaScript through :target; the
+ * island records it as data-view instead, so it can switch without a scroll jump. Each group's
+ * columns are a contiguous run, so hiding the others is one nth-child range per group.
+ */
+let firstColumn = 1;
+const ranges = groups.map((g) => {
+  const range = { ...g, from: firstColumn, to: firstColumn + g.count - 1 };
+  firstColumn += g.count;
+  return range;
+});
+const inGroup = (c: string) =>
+  `.matrix-view:is([data-view="${c}"], :not([data-view]):has(#mx-${c}:target))`;
+const atAll =
+  '.matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target)))';
+const phoneCss = `@layer product{@media (max-width: 40rem){${ranges
+  .map(
+    (r) =>
+      `${inGroup(r.category)} tr[data-server]>td:not(:nth-child(n+${r.from + 1}):nth-child(-n+${r.to + 1})),${inGroup(r.category)} thead th[data-category]:not([data-category="${r.category}"]){display:none}`,
+  )
+  .join("")}${atAll} tr[data-server]>td:is(${ranges
+  .slice(1)
+  .map((r) => `:nth-child(${r.from + 1})`)
+  .join(",")}){border-left:1px solid var(--rule)}}}`;
+
 const changedIds = new Map(diff?.changed.map((c) => [c.feature.id, c]) ?? []);
 const addedIds = new Set(diff?.added.map((f) => f.id) ?? []);
 const changesHref = diff ? `/mcp/changes/${diff.from.id}/${diff.to.id}/` : undefined;
@@ -37,6 +64,23 @@ const columnTitle = (name: string, party: string, level: string) => `${name}, ${
 const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
 ---
 
+<div class="matrix-view" data-matrix-view>
+<nav class="matrix-tabs" aria-label="Requirement groups">
+  <a id="mx-all" href="#mx-all">All <span class="matrix-tabs__count">{columns.length}</span></a>
+  {
+    groups.map((g) => (
+      <a id={`mx-${g.category}`} href={`#mx-${g.category}`}>
+        {CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}{" "}
+        <span class="matrix-tabs__count">{g.count}</span>
+      </a>
+    ))
+  }
+</nav>
+<p class="matrix-tabs__hint">
+  All shows every requirement at a glance. A group shows its cells, and each cell opens its
+  observation. A server's name opens its page with every requirement.
+</p>
+<style is:inline set:html={phoneCss}></style>
 <div class="matrix-scroll" tabindex="0" role="region" aria-label="Support matrix, scrolls horizontally">
   <div class="matrix-clip">
     <table
@@ -202,6 +246,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       </tbody>
     </table>
   </div>
+</div>
 </div>
 
 <style is:global>
@@ -582,6 +627,215 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       left: auto;
       right: 0;
       translate: none;
+    }
+
+    /* the group picker and its hint exist for phones only */
+    .matrix-tabs,
+    .matrix-tabs__hint {
+      display: none;
+    }
+
+    /*
+     * Phones (follow-up 5). Two views instead of the desktop table squeezed: "All" fits every
+     * requirement into the column as a strip of small glyphs per server, with no sideways scroll;
+     * a group shows its own columns at a readable width, with horizontal two-line headers, a
+     * peek of the next column and shadows at the edges that scroll. The names link to the server
+     * page, which is the same data transposed. .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) is the "All" view, .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) a group's.
+     */
+    @media (max-width: 40rem) {
+      .matrix-view {
+        --server-w: 7rem;
+        container-type: inline-size;
+      }
+
+      .matrix-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+        margin: 0 0 var(--space-2);
+        /* the anchors are their own targets; keep the jump from hiding the row under the top */
+        scroll-margin-top: var(--space-4);
+      }
+
+      .matrix-tabs a {
+        display: inline-flex;
+        gap: 0.35em;
+        padding: 0.35em 0.75em;
+        min-height: 2.25rem;
+        box-sizing: border-box;
+        align-items: center;
+        font-size: var(--small);
+        font-weight: 500;
+        color: var(--ink);
+        text-decoration: none;
+        border: 1px solid var(--rule-strong);
+        border-radius: 999px;
+        scroll-margin-top: var(--space-4);
+      }
+
+      .matrix-tabs__count {
+        font-family: var(--font-mono);
+        font-size: var(--tiny);
+        color: var(--ink-2);
+      }
+
+      /* the chosen one: from the island's aria-current, or without it from :target */
+      .matrix-tabs a[aria-current="true"],
+      .matrix-view:not([data-view]) .matrix-tabs a:target,
+      .matrix-view:not([data-view]) .matrix-tabs:not(:has(:target)) #mx-all {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: var(--ground);
+      }
+
+      .matrix-tabs a[aria-current="true"] .matrix-tabs__count,
+      .matrix-view:not([data-view]) .matrix-tabs a:target .matrix-tabs__count,
+      .matrix-view:not([data-view]) .matrix-tabs:not(:has(:target)) #mx-all .matrix-tabs__count {
+        color: inherit;
+      }
+
+      .matrix-tabs__hint {
+        display: block;
+        margin: 0 0 var(--space-3);
+        font-size: var(--tiny);
+        color: var(--ink-2);
+        line-height: 1.5;
+      }
+
+      .matrix {
+        --server-w: inherit;
+      }
+
+      .matrix .classes {
+        display: none;
+      }
+
+      .matrix .server-head,
+      .matrix .server-cell {
+        padding-inline: var(--space-2);
+      }
+
+      /* All: every requirement in the column's width, no sideways scroll */
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix {
+        --feature-w: max(0.4rem, calc((100cqi - var(--server-w)) / var(--cols)));
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix thead tr.features {
+        display: none;
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .groups th {
+        padding: var(--space-1) 0 var(--space-1) 0.2rem;
+        text-align: left;
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .groups th span {
+        text-overflow: clip;
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix tbody td {
+        padding: 0.3rem 0;
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .server-cell {
+        font-size: var(--tiny);
+        padding-block: 0.3rem;
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .server-cell__row {
+        gap: var(--space-1);
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .server-link {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* the glyphs are a picture of the row here; a group's view opens them */
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .cell summary {
+        /* no box, so no 10px tap target: the glyph alone stays */
+        display: contents;
+        pointer-events: none;
+      }
+
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .status-cell {
+        --size: min(calc(var(--feature-w) - 2px), 0.875rem);
+      }
+
+      /* a group: its own columns, wide enough for a two-line label written across */
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix {
+        /* two and a half columns in view, so the next one always peeks in */
+        --feature-w: max(4.5rem, calc((100cqi - var(--server-w)) / 2.5));
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix thead tr.groups {
+        display: none;
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .features th[data-feature] {
+        padding: var(--space-2) var(--space-1);
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .feature-head {
+        gap: var(--space-1);
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .feature-link,
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .feature-head .level {
+        writing-mode: horizontal-tb;
+        transform: none;
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .feature-link {
+        height: auto;
+        padding-inline: 0.15rem;
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .feature-short {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.3;
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .feature-head .level {
+        padding: 0.1em 0.4em;
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .server-cell__row {
+        align-items: flex-start;
+        gap: var(--space-1);
+      }
+
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix .server-link {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+      }
+
+      /*
+       * Scroll shadows: a shadow fixed at each edge of the frame, and a ground-coloured cover that
+       * scrolls with the table and sits over the shadow while that edge is reached. The left pair
+       * starts after the sticky server column.
+       */
+      .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) .matrix-scroll {
+        --shade: color-mix(in oklch, var(--ink) 16%, transparent);
+        background:
+          linear-gradient(var(--ground), var(--ground)) var(--server-w) 0 / 1rem 100% no-repeat local,
+          linear-gradient(to left, var(--ground), var(--ground)) right 0 / 1rem 100% no-repeat local,
+          linear-gradient(to right, var(--shade), transparent) var(--server-w) 0 / 0.75rem 100%
+            no-repeat scroll,
+          linear-gradient(to left, var(--shade), transparent) right 0 / 0.75rem 100% no-repeat scroll,
+          var(--ground);
+      }
     }
   }
 </style>
