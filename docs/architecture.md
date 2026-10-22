@@ -57,7 +57,7 @@ that has no page of its own.
 /mcp/features/<id>/             one requirement
 /mcp/revisions/<id>/            the matrix as of an older revision (the current one redirects to /mcp/)
 /mcp/changes/<from>/<to>/       what changed between two revisions
-/mcp/scanner/                   what the scanner reads, how it grades, and every report
+/mcp/scanner/                   what the scanner reads, how it reports, and every report
 /mcp/data.json                  the atlas export
 /standards/                     Agent auth atlas: the standards map
 /standards/<id>/                one specification
@@ -96,7 +96,7 @@ src/
                  page head and foot every page uses are in styles/global.css
   lib/           pure functions over the dataset: atlas matrix, standards graph, chains, exports, citations
   pages/         routes; file-system routing, every page pre-rendered
-  scanner/       the passive scanner: url guard, fetch, checks, grade, observations, nightly job
+  scanner/       the passive scanner: url guard, fetch, checks, summary, observations, nightly job
   schema/        Zod schemas, the contract for data/
   styles/        tokens.css (the one token system), global.css (shared surfaces), fonts.css
 tests/
@@ -133,7 +133,7 @@ the `WWW-Authenticate` challenge), never a token, a body or an authorization flo
 passively observable requirement of the current MCP Authorization revision. It runs in exactly
 one place: a Scaleway Serverless Job in an EU region, every night, from the image `Dockerfile`
 builds. A run writes observations and opens one pull request; nothing on the site triggers a
-scan. [`scanner.md`](scanner.md) has the request list, the grade and the job.
+scan. [`scanner.md`](scanner.md) has the request list, the summary and the job.
 
 ## Hosting and delivery
 

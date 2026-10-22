@@ -58,15 +58,21 @@ describe("passiveChecks", () => {
 });
 
 describe("latestScan (FR-007)", () => {
-  it("reports a server without scanner observations as not scanned, with no grade", () => {
+  it("reports a server without scanner observations as not scanned, with no counts", () => {
     const v = latestScan(withObservations([]), server);
     expect(v.scanned).toBe(false);
     expect(v.scannedAt).toBeUndefined();
-    expect(v.grade).toEqual({ letter: null, label: "Not scanned", reasons: [] });
+    expect(v.summary).toEqual({
+      state: "not-scanned",
+      label: "Not scanned",
+      tallies: [],
+      open: [],
+      notes: [],
+    });
     expect(v.checks.every((c) => c.status === "unknown" && c.observedAt === undefined)).toBe(true);
   });
 
-  it("does not grade a server whose auth class is api-key or none, even with scanner observations (009 FR-005)", () => {
+  it("does not summarize a server whose auth class is api-key or none, even with scanner observations (009 FR-005)", () => {
     const statement = {
       method: "manual" as const,
       evidence: "https://example.com/docs — a pasted key",
@@ -75,18 +81,20 @@ describe("latestScan (FR-007)", () => {
     };
     const all = withObservations(checks.map((c) => obs(c.feature.id, "unsupported")));
     const keyed = latestScan(all, { ...server, auth: { ...statement, class: "api-key" as const } });
-    expect(keyed.grade.letter).toBeNull();
-    expect(keyed.grade.label).toBe("No OAuth");
-    expect(keyed.grade.reasons[0]).toContain("API key");
+    expect(keyed.summary.state).toBe("no-oauth");
+    expect(keyed.summary.tallies).toEqual([]);
+    expect(keyed.summary.label).toBe("No OAuth");
+    expect(keyed.summary.notes[0]).toContain("API key");
     const open = latestScan(all, { ...server, auth: { ...statement, class: "none" as const } });
-    expect(open.grade.label).toBe("No OAuth");
-    expect(open.grade.reasons[0]).toContain("no authentication");
+    expect(open.summary.label).toBe("No OAuth");
+    expect(open.summary.notes[0]).toContain("no authentication");
   });
 
-  it("grades a missing or unknown class like OAuth (009 SC-003)", () => {
+  it("summarizes a missing or unknown class like OAuth (009 SC-003)", () => {
     const all = withObservations(checks.map((c) => obs(c.feature.id, "unsupported")));
     const missing = latestScan(all, { ...server, auth: undefined });
-    expect(missing.grade.letter).toBe("F");
+    expect(missing.summary.state).toBe("scanned");
+    expect(missing.summary.open.length).toBeGreaterThan(0);
     const unknown = latestScan(all, {
       ...server,
       auth: {
@@ -97,7 +105,7 @@ describe("latestScan (FR-007)", () => {
         observedBy: "tester",
       },
     });
-    expect(unknown.grade.letter).toBe("F");
+    expect(unknown.summary.state).toBe("scanned");
   });
 
   it("ignores manual and documentation observations", () => {
@@ -109,7 +117,7 @@ describe("latestScan (FR-007)", () => {
     expect(v.scanned).toBe(false);
   });
 
-  it("takes the newest scanner observation per check and grades the statuses", () => {
+  it("takes the newest scanner observation per check and counts the statuses", () => {
     const all = checks.map((c) =>
       obs(c.feature.id, c.feature.id === "mcp.as.dcr" ? "unsupported" : "supported"),
     );
@@ -118,27 +126,26 @@ describe("latestScan (FR-007)", () => {
     expect(v.scanned).toBe(true);
     expect(v.scannedAt).toBe("2026-10-15T03:17:04Z");
     expect(v.checks.find((c) => c.feature === "mcp.as.cimd")?.status).toBe("supported");
-    expect(v.grade.letter).toBe("A");
+    expect(v.summary.open.map((c) => c.feature)).toEqual(["mcp.as.dcr"]);
     const newerFail = obs("mcp.as.cimd", "unsupported", { observedAt: "2026-10-20T00:00:00Z" });
     const v2 = latestScan(withObservations([...all, newerFail]), server);
-    expect(v2.grade.letter).toBe("C");
+    expect(v2.summary.open.map((c) => c.feature).sort()).toEqual(["mcp.as.cimd", "mcp.as.dcr"]);
     expect(v2.scannedAt).toBe("2026-10-20T00:00:00Z");
   });
 
-  it("withholds the grade when a MUST-level check has no scanner observation", () => {
+  it("counts a MUST-level check without a scanner observation as unknown", () => {
     const some = checks
       .filter((c) => c.feature.id !== "mcp.prm")
       .map((c) => obs(c.feature.id, "supported"));
     const v = latestScan(withObservations(some), server);
     expect(v.scanned).toBe(true);
-    expect(v.grade.letter).toBeNull();
-    expect(v.grade.label).toBe("Withheld");
-    expect(v.grade.reasons.join(" ")).toContain("Protected Resource Metadata served");
+    expect(v.summary.tallies[0]?.counts).toContainEqual({ status: "unknown", n: 1 });
+    expect(v.summary.open.map((c) => c.name)).toContain("Protected Resource Metadata served");
   });
 });
 
 describe("scannerIndex (FR-009)", () => {
-  it("lists every non-withdrawn server by name, never by grade", () => {
+  it("lists every non-withdrawn server by name, never by the scan", () => {
     const views = scannerIndex(withObservations([]));
     const names = views.map((v) => v.server.name);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
@@ -153,7 +160,7 @@ describe("reportFromView", () => {
     const all = checks.map((c) => obs(c.feature.id, "supported"));
     const r = reportFromView(latestScan(withObservations(all), server), "2026-10-16T00:00:00Z");
     expect(r).toMatchObject({
-      version: 1,
+      version: 2,
       scanner: SCANNER_ID,
       recorded: true,
       target: { url: server?.url, server: server?.id },
@@ -164,7 +171,7 @@ describe("reportFromView", () => {
       observations: [],
     });
     expect(r.checks).toHaveLength(14);
-    expect(r.grade.letter).toBe("A");
+    expect(r.summary.open).toEqual([]);
   });
 });
 

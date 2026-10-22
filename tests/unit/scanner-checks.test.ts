@@ -256,12 +256,11 @@ describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
     expect(p.pointerOutcome).toBe("found");
   });
 
-  it("challenge-pointer: the report's grade is not withheld for discovery", async () => {
+  it("challenge-pointer: the summary counts discovery as met", async () => {
     const f = fixture("challenge-pointer");
     const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
-    // the discovery MUST is met through the challenge; the only reason left is the scope SHOULD
-    expect(report.grade.label).not.toBe("Withheld");
-    expect(report.grade.reasons.join(" ")).not.toMatch(/MUST/);
+    // the discovery MUST is met through the challenge; nothing at MUST level is left open
+    expect(report.summary.open.filter((c) => c.level === "MUST")).toEqual([]);
     expect(report.discovered?.protectedResource?.location).toBe("challenge");
     expect(report.discovered?.challenge).toEqual({
       url: ENDPOINT,
@@ -285,14 +284,14 @@ describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
     );
   });
 
-  it("challenge-no-pointer: the grade is unaffected, because the well-known way is met", async () => {
+  it("challenge-no-pointer: the summary counts discovery as met, because the well-known way is", async () => {
     const f = fixture("challenge-no-pointer");
     const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
-    expect(report.grade.letter).not.toBe("F");
-    expect(report.grade.label).not.toBe("Withheld");
+    expect(report.summary.open.map((c) => c.feature)).not.toContain("mcp.prm.www-authenticate");
+    expect(report.summary.notes.join(" ")).toContain("counts as supported");
   });
 
-  it("challenge-neither: both discovery cells unsupported, the grade F naming both", async () => {
+  it("challenge-neither: both discovery cells unsupported, the summary naming both", async () => {
     const f = fixture("challenge-neither");
     const { out } = await statuses("challenge-neither");
     expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
@@ -300,8 +299,11 @@ describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
     expect(out["mcp.prm"]?.status).toBe("unknown");
     expect(out["mcp.prm"]?.evidence).toContain("challenge without resource_metadata");
     const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
-    expect(report.grade.letter).toBe("F");
-    expect(report.grade.reasons).toHaveLength(2);
+    expect(
+      report.summary.open
+        .filter((c) => c.level === "MUST" && c.status === "unsupported")
+        .map((c) => c.feature),
+    ).toEqual(expect.arrayContaining(["mcp.prm.well-known", "mcp.prm.www-authenticate"]));
   });
 
   it("challenge-no-header: a 401 without any WWW-Authenticate header is unsupported", async () => {
@@ -470,13 +472,13 @@ describe("the auth suggestion (009 FR-006, SC-004)", () => {
 });
 
 describe("scan() shapes the report (contracts/report.md)", () => {
-  it("fills checks, discovered, requests, grade and observations for a listed server", async () => {
+  it("fills checks, discovered, requests, summary and observations for a listed server", async () => {
     const f = fixture("complete");
     const report = await scan({ url: f.target, serverId: "example" }, data, {
       fetcher: recordingFetcher(f),
       now: "2026-10-15T03:17:04Z",
     });
-    expect(report.version).toBe(1);
+    expect(report.version).toBe(2);
     expect(report.recorded).toBe(false);
     expect(report.target).toEqual({ url: f.target, server: "example" });
     expect(report.revision).toEqual({ spec: "mcp-authorization", revision });
@@ -488,7 +490,9 @@ describe("scan() shapes the report (contracts/report.md)", () => {
       "https://auth2.example.com",
     ]);
     expect(report.discovered?.authorizationServer?.codeChallengeMethodsSupported).toEqual(["S256"]);
-    expect(report.grade.letter).toBe("A");
+    expect(report.summary.open.filter((c) => c.level === "MUST" || c.level === "SHOULD")).toEqual(
+      [],
+    );
     expect(report.observations).toHaveLength(features.length);
     expect(report.observations[0]).toMatchObject({
       server: "example",

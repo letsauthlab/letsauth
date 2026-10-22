@@ -258,7 +258,7 @@ package of the redesign that builds it. Anything not in this table does not anim
 | M9 | Matrix | Row and column crosshair on hover/focus of a cell (`--signal-soft` background, 120ms) | orientation in a large grid | instant | WP4 |
 | M10 | Matrix | Cell dialog: backdrop fades, panel moves up 8px, 220ms, using `@starting-style` | "a detail opened" | appears | WP4 |
 | M11 | Matrix filters | Count text changes with no animation; hidden rows collapse instantly (today's behaviour) | n/a | n/a | WP4 |
-| M12 | Scanner report | The request ladder prints line by line, 60ms apart, when the section scrolls into view, once; the grade appears last | "this is what the scanner did, in order" | all lines shown | WP7 |
+| M12 | Scanner report | The request ladder prints line by line, 60ms apart, when the section scrolls into view, once; the count of checks appears last | "this is what the scanner did, in order" | all lines shown | WP7 |
 | M13 | Breach page | Timeline rail draws in top to bottom, 480ms, dates fade in behind it | "events in sequence" | shown | WP6 |
 | M14 | Long-form pages (`Document.astro`) | Reading progress bar, 2px `--signal`, `animation-timeline: scroll(root)` behind `@supports` | place in the text | hidden | WP2 |
 | M15 | Controls | Colour and border transitions on hover/focus, 120ms | affordance | instant | WP2 |

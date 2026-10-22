@@ -4,7 +4,7 @@ import ScanReport from "@/components/ScanReport.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
 import { latestScan, reportFromView, requestLadder, unscannedFeatures } from "@/lib/scanner";
-import { GRADE_RULE } from "@/scanner/grade";
+import { SUMMARY_RULE } from "@/scanner/summary";
 import type { Server } from "@/schema";
 
 export function getStaticPaths() {
@@ -18,12 +18,11 @@ const report = reportFromView(view, "1970-01-01T00:00:00Z");
 const ladder = requestLadder(view);
 const unscanned = unscannedFeatures(data);
 const repo = "https://github.com/letsauthlab/letsauth";
-const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.label.toLowerCase();
 ---
 
 <Base
   title={`${server.name} · Scanner`}
-  description={`Passive scan report for ${server.name} against MCP Authorization ${view.revisionId}: ${view.scanned ? `${gradeWord}, newest observation ${view.scannedAt?.slice(0, 10)}` : "not scanned yet"}.`}
+  description={`Passive scan report for ${server.name} against MCP Authorization ${view.revisionId}: ${view.scanned ? `${view.summary.label}, newest observation ${view.scannedAt?.slice(0, 10)}` : "not scanned yet"}.`}
   path={`/mcp/servers/${server.id}/scan/`}
   noindex={Boolean(server.withdrawn)}
 >
@@ -68,11 +67,11 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
 
           <div class="after">
             <section class="panel" aria-labelledby="rule-title">
-              <h2 id="rule-title">How the grade is derived</h2>
-              <ol class="rule">{GRADE_RULE.map((line) => <li>{line}</li>)}</ol>
+              <h2 id="rule-title">How the summary is counted</h2>
+              <ol class="rule">{SUMMARY_RULE.map((line) => <li>{line}</li>)}</ol>
               <p class="muted">
-                Derived from the statuses above at build time; never used to sort or rank
-                servers. <a href="/mcp/scanner/#grade-rule">About the scanner</a>.
+                Counted from the statuses above at build time; never used to sort or rank
+                servers. <a href="/mcp/scanner/#summary-rule">About the scanner</a>.
               </p>
             </section>
             <section aria-labelledby="not-title">

@@ -183,20 +183,20 @@ test.describe("matrix page (US1)", () => {
     await expect(page.locator("#matrix")).not.toContainText(/score|rank/i);
   });
 
-  test("each server carries its latest scan grade, linked to the report (004 FR-010)", async ({
+  test("each server links its latest scan report and shows no grade (017 FR-004)", async ({
     page,
   }) => {
     await page.goto("/mcp/");
-    const links = page.locator("#matrix tbody th[scope='row'] a.grade-link");
+    const links = page.locator("#matrix tbody th[scope='row'] a.scan-link");
     await expect(links).toHaveCount(matrix.rows.length);
     for (const server of matrix.rows.slice(0, 5)) {
       const scan = latestScan(data, server, revision.id);
-      const link = page.locator(`#matrix tbody tr[data-server="${server.id}"] a.grade-link`);
+      const link = page.locator(`#matrix tbody tr[data-server="${server.id}"] a.scan-link`);
       await expect(link).toHaveAttribute("href", `/mcp/servers/${server.id}/scan/`);
-      await expect(link).toHaveAttribute("data-grade", scan.grade.letter ?? scan.grade.label);
-      // the badge's word, not its decorative letter, carries the grade for every reader
-      await expect(link.locator(".word")).toHaveText(scan.grade.letter ?? scan.grade.label);
+      await expect(link).toHaveAttribute("data-scan", scan.summary.state);
+      await expect(link).toHaveAccessibleName(`${server.name} scan report`);
     }
+    await expect(page.locator("#matrix [data-grade]")).toHaveCount(0);
   });
 
   test("keyboard-only walkthrough opens and closes a cell", async ({ page }) => {
@@ -349,7 +349,7 @@ test.describe("matrix page (US1)", () => {
     await page.goto("/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page).toHaveScreenshot("matrix.png", {
-      mask: [page.locator("#matrix a.grade-link")],
+      mask: [page.locator("#matrix a.scan-link")],
     });
   });
 });
