@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type AnalyticsConfig, linkEvent, startAnalytics } from "@/lib/analytics";
+import { type AnalyticsConfig, linkEvent, SOFT_NAVIGATION, startAnalytics } from "@/lib/analytics";
 import {
   type EdgeRule,
   edgeRules,
@@ -72,6 +72,14 @@ describe("analytics", () => {
     startAnalytics(win, config);
     win.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: false }));
     win.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: true }));
+    await settle();
+    expect(sent.map((s) => s.body.n)).toEqual(["pageview", "pageview"]);
+  });
+
+  it("counts a page an island swapped in place", async () => {
+    const { win, sent } = fakeWindow();
+    startAnalytics(win, config);
+    win.dispatchEvent(new Event(SOFT_NAVIGATION));
     await settle();
     expect(sent.map((s) => s.body.n)).toEqual(["pageview", "pageview"]);
   });

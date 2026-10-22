@@ -105,6 +105,10 @@
   --dur: 220ms;
   --dur-slow: 480ms;
   --dur-draw: 1200ms;
+  /* the explorer scene: a message draws in, changed claims follow one by one, a step lasts */
+  --dur-message: 300ms;
+  --stagger: 40ms;
+  --dur-step: 2500ms;
 
   /*
    * Legacy names (specs/016-visual-redesign plan 3.2). They alias the tokens above so that
@@ -172,5 +176,7 @@
     --dur: 0ms;
     --dur-slow: 0ms;
     --dur-draw: 0ms;
+    --dur-message: 0ms;
+    --stagger: 0ms;
   }
 }

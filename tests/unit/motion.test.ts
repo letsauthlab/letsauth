@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { reducedMotion } from "@/lib/motion";
+import { durationToken, parseDuration, reducedMotion } from "@/lib/motion";
 
 describe("reducedMotion", () => {
   afterEach(() => {
@@ -25,5 +25,29 @@ describe("reducedMotion", () => {
       "(prefers-reduced-motion: reduce)",
       "(prefers-reduced-motion: reduce)",
     ]);
+  });
+});
+
+describe("parseDuration", () => {
+  it("reads the token units the stylesheet uses", () => {
+    expect(parseDuration("220ms")).toBe(220);
+    expect(parseDuration(" 2.5s ")).toBe(2500);
+    expect(parseDuration("0ms", 300)).toBe(0);
+  });
+
+  it("falls back on anything it cannot read", () => {
+    expect(parseDuration("", 300)).toBe(300);
+    expect(parseDuration("var(--dur)", 120)).toBe(120);
+  });
+});
+
+describe("durationToken", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("is the fallback outside a browser", () => {
+    vi.stubGlobal("getComputedStyle", undefined);
+    expect(durationToken("--dur", 220)).toBe(220);
   });
 });
