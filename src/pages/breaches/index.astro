@@ -27,6 +27,7 @@ const date = (d: string) =>
 >
   <div class="wrap">
     <header class="page-head">
+      <Plate id="breaches" title={SECTION_PLATES.breaches.title} />
       <p class="eyebrow">Breach anatomy</p>
       <h1>Agent auth failures</h1>
       <p class="lede">
@@ -49,8 +50,6 @@ const date = (d: string) =>
         </div>
       </dl>
     </header>
-
-    <Plate id="breaches" title={SECTION_PLATES.breaches.title} />
 
     <ol id="breach-list" class="rows breaches" role="list">
       {

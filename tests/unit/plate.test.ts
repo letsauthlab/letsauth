@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLATE_HEIGHT, PLATE_HUES, PLATE_WIDTH, plate, plateSvg } from "@/lib/plate";
+import { PLATE_HEIGHT, PLATE_WIDTH, plate, plateSvg } from "@/lib/plate";
 
 describe("plate", () => {
   it("draws the same plate for the same page", () => {
@@ -18,28 +18,28 @@ describe("plate", () => {
     expect(drawings.size).toBe(6);
   });
 
-  it("keeps every plate in bounds, connected and small", () => {
+  it("keeps every plate a chain in bounds and small", () => {
     for (let i = 0; i < 300; i++) {
       const p = plate(`page-${i}`, `Title ${i}`);
-      expect(p.hue).toBeGreaterThanOrEqual(0);
-      expect(p.hue).toBeLessThan(PLATE_HUES);
-      expect(p.path.length).toBeGreaterThanOrEqual(3);
-      expect(p.path.length).toBeLessThanOrEqual(5);
-      for (const n of p.nodes) {
-        expect(n.x).toBeGreaterThan(0);
-        expect(n.x).toBeLessThan(PLATE_WIDTH);
-        expect(n.y).toBeGreaterThan(0);
-        expect(n.y).toBeLessThan(PLATE_HEIGHT);
+      expect(p.lanes.length).toBeGreaterThanOrEqual(3);
+      expect(p.lanes.length).toBeLessThanOrEqual(5);
+      for (const x of p.lanes) {
+        expect(x).toBeGreaterThan(0);
+        expect(x).toBeLessThan(PLATE_WIDTH);
       }
-      // the path runs along existing links
-      for (let k = 1; k < p.path.length; k++) {
-        expect(p.links).toContainEqual([p.path[k - 1], p.path[k]]);
+      expect(p.messages.length).toBeGreaterThanOrEqual(4);
+      for (const m of p.messages) {
+        expect(m.from).not.toBe(m.to);
+        expect(m.y).toBeGreaterThan(0);
+        expect(m.y).toBeLessThan(PLATE_HEIGHT);
       }
-      // every node is reached by or leaves on a link
-      const linked = new Set(p.links.flat());
-      expect(linked.size).toBe(p.nodes.length);
+      // the path hands on: each message on it starts where the previous one arrived
+      const path = p.messages.filter((m) => m.path);
+      expect(path.length).toBeGreaterThanOrEqual(2);
+      for (let k = 1; k < path.length; k++) expect(path[k]?.from).toBe(path[k - 1]?.to);
       const { boundary: b } = p;
-      expect(b.y).toBeGreaterThanOrEqual(0);
+      expect(b.x).toBeGreaterThanOrEqual(0);
+      expect(b.x + b.width).toBeLessThanOrEqual(PLATE_WIDTH);
       expect(b.y + b.height).toBeLessThanOrEqual(PLATE_HEIGHT);
       expect(Buffer.byteLength(plateSvg(p))).toBeLessThan(4096);
     }

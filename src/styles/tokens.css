@@ -52,16 +52,6 @@
   --toggle-attack: var(--threat);
   --toggle-misconfiguration: var(--caution);
 
-  /* the decorative plate (WP8): eight hues at one lightness and chroma, never carrying meaning */
-  --plate-0: light-dark(oklch(56% 0.09 175), oklch(76% 0.08 175));
-  --plate-1: light-dark(oklch(56% 0.09 220), oklch(76% 0.08 220));
-  --plate-2: light-dark(oklch(56% 0.09 265), oklch(76% 0.08 265));
-  --plate-3: light-dark(oklch(56% 0.09 310), oklch(76% 0.08 310));
-  --plate-4: light-dark(oklch(56% 0.09 355), oklch(76% 0.08 355));
-  --plate-5: light-dark(oklch(56% 0.09 40), oklch(76% 0.08 40));
-  --plate-6: light-dark(oklch(56% 0.09 85), oklch(76% 0.08 85));
-  --plate-7: light-dark(oklch(56% 0.09 130), oklch(76% 0.08 130));
-
   /* type: Geist for headlines, interface and body; Geist Mono for ids, code and tokens */
   --font-body:
     "Geist Variable", Geist, "Geist Fallback", "SF Pro Text", "Segoe UI", system-ui, -apple-system,

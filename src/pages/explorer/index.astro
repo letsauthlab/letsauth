@@ -29,6 +29,7 @@ for (const { scenario } of scenarios) {
 >
   <div class="wrap">
     <header class="page-head">
+      <Plate id="explorer" title={SECTION_PLATES.explorer.title} />
       <p class="eyebrow">Delegation chain explorer</p>
       <h1>Delegation chains</h1>
       <p class="lede">
@@ -55,8 +56,6 @@ for (const { scenario } of scenarios) {
         </div>
       </dl>
     </header>
-
-    <Plate id="explorer" title={SECTION_PLATES.explorer.title} />
 
     <ul id="scenario-list" class="rows scenarios" role="list">
       {

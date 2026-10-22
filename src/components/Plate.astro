@@ -1,27 +1,36 @@
 ---
 import { plate, plateSvg } from "@/lib/plate";
 
-// The decorative plate (plan WP8): one calm, label-free drawing under the head of a page that has
-// no diagram of its own. Derived from the page's id and title, so it never changes between builds.
-// Hidden from assistive technology. The highlighted path draws in once on load (M4); under reduced
-// motion it is drawn complete. A page that shows data above the fold does not place it.
+// The decorative plate (plan WP8): a small label-free delegation chain in the explorer's own
+// vocabulary (actor heads, lifelines, messages, the trust boundary dash), set into the page head
+// beside the title on wide screens. Derived from the page's id and title, so it never changes
+// between builds. Hidden from assistive technology and on narrow screens. The highlighted path
+// draws in once on load (M4); under reduced motion it is drawn complete. A page that shows data
+// above the fold does not place it. Place it as the first child of `header.page-head`.
 interface Props {
   id: string;
   title: string;
 }
 
 const { id, title } = Astro.props;
-const drawing = plate(id, title);
 ---
 
-<div class="plate decor" style={`--plate: var(--plate-${drawing.hue})`} set:html={plateSvg(drawing)} />
+<div class="decor" set:html={plateSvg(plate(id, title))} />
 
 <style>
-  /* left-aligned with the head and about as wide as a reading column, so it stays a quiet strip */
   .decor {
-    max-width: 48rem;
-    padding: 0;
-    margin: 0 0 var(--space-7);
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    :global(.page-head:has(> .decor)) {
+      display: flow-root;
+    }
+    .decor {
+      display: block;
+      float: right;
+      width: 18rem;
+      margin: 0 0 var(--space-4) var(--space-8);
+    }
   }
   .decor :global(svg) {
     display: block;
@@ -29,32 +38,34 @@ const drawing = plate(id, title);
     height: auto;
     fill: none;
     stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .decor :global(.pb) {
-    stroke: var(--rule-strong);
-    stroke-dasharray: 4 5;
+    stroke: var(--boundary);
+    stroke-dasharray: 4 4;
+    opacity: 0.7;
   }
   .decor :global(.pl) {
+    stroke: var(--rule);
+  }
+  .decor :global(.pa) {
+    fill: var(--ground-2);
     stroke: var(--rule-strong);
-    stroke-width: 1;
-    opacity: 0.6;
+  }
+  .decor :global(.pm) {
+    stroke: var(--rule-strong);
   }
   .decor :global(.ph) {
-    stroke: color-mix(in oklch, var(--plate) 22%, transparent);
-    stroke-width: 9;
+    stroke: var(--signal-soft);
+    stroke-width: 8;
     opacity: 0;
   }
   .decor :global(.pp) {
-    stroke: var(--plate);
+    stroke: var(--signal);
     stroke-width: 2;
   }
-  .decor :global(.pn) {
-    fill: var(--ground);
-    stroke: var(--rule-strong);
-  }
   .decor :global(.po) {
-    fill: var(--plate);
-    stroke: var(--plate);
+    fill: var(--signal);
   }
   @media (prefers-reduced-motion: no-preference) {
     .decor :global(.pp) {
@@ -66,6 +77,9 @@ const drawing = plate(id, title);
       animation:
         plate-draw var(--dur-draw) var(--ease-draw) both,
         plate-halo calc(var(--dur-draw) + var(--dur-slow)) linear both;
+    }
+    .decor :global(.po) {
+      animation: plate-end var(--dur-slow) var(--ease) var(--dur-draw) both;
     }
   }
   @keyframes plate-draw {
@@ -85,6 +99,12 @@ const drawing = plate(id, title);
     2%,
     71% {
       opacity: 1;
+    }
+  }
+  /* the path's ends appear once the path has reached them */
+  @keyframes plate-end {
+    from {
+      opacity: 0;
     }
   }
 </style>

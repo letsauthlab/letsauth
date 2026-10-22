@@ -98,36 +98,34 @@ try {
   await page.screenshot({ path: "public/og.png" });
 
   // The section roots that carry a decorative plate (WP8) get a card of their own: the same layout
-  // as the home card, with the headline over the page's drawing on a plate.
+  // as the home card, with the page's drawing beside the headline as it sits in the page head.
   for (const [id, section] of Object.entries(SECTION_PLATES)) {
-    const drawing = plate(id, section.title);
     await page.setContent(`<style>${tokens}
       @font-face{font-family:Display;src:url('${fontUrl("geist")}');font-weight:100 900}
       @font-face{font-family:Mono;src:url('${fontUrl("geist-mono")}');font-weight:100 900}
       *{box-sizing:border-box}
       body{margin:0;width:1200px;height:630px;padding:56px 64px;background:var(--ground);
-        color:var(--ink);font-family:Display;display:flex;flex-direction:column;
-        justify-content:center;gap:32px}
+        color:var(--ink);font-family:Display;display:grid;grid-template-columns:1fr 400px;
+        gap:64px;align-items:center}
       .logo{position:absolute;top:56px;left:64px;width:220px;height:auto}
-      .eyebrow{margin:0 0 12px;font-size:22px;color:var(--ink-2)}
-      h1{margin:0;font-weight:600;font-size:52px;line-height:1.08;letter-spacing:-0.03em}
+      .eyebrow{margin:0 0 18px;font-size:22px;color:var(--ink-2)}
+      h1{margin:0;font-weight:600;font-size:58px;line-height:1.08;letter-spacing:-0.03em}
       .site{position:absolute;bottom:56px;left:64px;font:22px Mono;color:var(--ink-2)}
-      .plate{--plate:var(--plate-${drawing.hue});width:880px;margin-top:40px;background:var(--ground-2);
-        border:1px solid var(--rule);border-radius:14px;overflow:hidden}
-      svg{display:block;width:100%;height:auto;fill:none;stroke-linecap:round}
-      .pb{stroke:var(--rule-strong);stroke-dasharray:4 5}
-      .pl{stroke:var(--rule-strong);opacity:.6}
+      svg{display:block;width:100%;height:auto;fill:none;stroke-linecap:round;stroke-linejoin:round}
+      .pb{stroke:var(--boundary);stroke-dasharray:4 4;opacity:.7}
+      .pl{stroke:var(--rule)}
+      .pa{fill:var(--ground-2);stroke:var(--rule-strong)}
+      .pm{stroke:var(--rule-strong)}
       .ph{display:none}
-      .pp{stroke:var(--plate);stroke-width:2.5}
-      .pn{fill:var(--ground);stroke:var(--rule-strong)}
-      .po{fill:var(--plate);stroke:var(--plate)}
+      .pp{stroke:var(--signal);stroke-width:2}
+      .po{fill:var(--signal)}
       </style>
       <img class="logo" src="${svgUrl(wordmark)}" alt="letsauth">
       <div>
         <p class="eyebrow">${section.eyebrow}</p>
         <h1>${section.title}</h1>
       </div>
-      <div class="plate">${plateSvg(drawing)}</div>
+      ${plateSvg(plate(id, section.title))}
       <p class="site">letsauth.eu/${id}/</p>`);
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: `public${sectionCard(id as keyof typeof SECTION_PLATES)}` });

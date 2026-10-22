@@ -619,7 +619,11 @@ appears on a page that already has a data view above the fold (matrix, map, chai
 Decided (22 October 2026, review follow-up 10): Jan chose to ship it on `/explorer/`,
 `/breaches/` and the spec pages only. `/mcp/` and `/standards/` keep their data view as the one
 visual, so the drawing stays off them; the cards are per section root (explorer and breaches),
-and spec pages keep the home card. A page leaves the plate out by not placing `<Plate>`, so no
+and spec pages keep the home card. As built, the drawing departs from the file list above: a
+first version (a network on its own plate under the head, one of eight hues) read as added on
+top, so it is a miniature delegation chain in the explorer's vocabulary and existing inks
+(`--signal` path, `--boundary` dash, hairlines), floated beside the title inside the page head
+on wide screens and left out below 64rem. A page leaves it out by not placing `<Plate>`, so no
 `plate: false` prop is needed.
 
 Original decision for Jan: ship this, or keep letsauth's visuals strictly data-derived. The plan

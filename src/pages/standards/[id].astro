@@ -53,6 +53,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   <div class="wrap">
     <Crumbs trail={[{ href: "/standards/", label: "Standards" }]} current={spec.name} />
     <header class="page-head">
+      <Plate id={spec.id} title={spec.name} />
       <p class="eyebrow">{BODY_LABEL[spec.body]} / {FAMILY_LABEL[spec.family]}</p>
       <h1>{spec.name}</h1>
       <p class="lede">{spec.summary}</p>
@@ -65,8 +66,6 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
         <code>{spec.id}</code>
       </p>
     </header>
-
-    <Plate id={spec.id} title={spec.name} />
 
     {
       gone && (

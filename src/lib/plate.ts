@@ -1,34 +1,34 @@
 /**
- * The decorative plate (specs/016-visual-redesign plan, WP8): a small label-free drawing of a
- * delegation graph, derived from a page's id and title so that the same page always gets the
- * same drawing and two pages rarely share one. Three to five columns of nodes, the links between
- * neighbouring columns, one highlighted path from the first column to the last, one dashed trust
- * boundary around a column or two, and one of eight hues. Pure: no randomness, no clock, no DOM.
+ * The decorative plate (specs/016-visual-redesign plan, WP8): a small label-free delegation chain
+ * in the explorer's own vocabulary, derived from a page's id and title so that the same page
+ * always gets the same drawing and two pages rarely share one. Three to five actors as heads on
+ * lifelines, four to six messages between them, one of which chain is the highlighted path, and
+ * one dashed trust boundary around one or two lifelines. Pure: no randomness, no clock, no DOM.
  */
 
-export const PLATE_WIDTH = 800;
-export const PLATE_HEIGHT = 168;
-export const PLATE_HUES = 8;
+export const PLATE_WIDTH = 320;
+export const PLATE_HEIGHT = 200;
 
-const PAD_X = 40;
-const NODE_GAP = 38;
+const PAD_X = 28;
+const HEAD_Y = 6;
+const HEAD_W = 34;
+const HEAD_H = 12;
+const FIRST_ROW = 46;
+const LAST_ROW = PLATE_HEIGHT - 18;
 
-export interface PlateNode {
-  x: number;
+export interface PlateMessage {
+  from: number;
+  to: number;
   y: number;
   /** On the highlighted path. */
   path: boolean;
 }
 
 export interface Plate {
-  /** 0 to PLATE_HUES - 1: which `--plate-N` token colours the path. */
-  hue: number;
-  nodes: PlateNode[];
-  /** Pairs of indexes into `nodes`, always from a column to the next one. */
-  links: [number, number][];
-  /** Indexes into `nodes`, one per column, left to right. */
-  path: number[];
-  /** The dashed trust boundary, a rounded rectangle. */
+  /** The x of each lifeline, left to right. */
+  lanes: number[];
+  messages: PlateMessage[];
+  /** The dashed trust boundary, a rounded rectangle around one or two lifelines. */
   boundary: { x: number; y: number; width: number; height: number };
 }
 
@@ -55,98 +55,90 @@ function random(seed: number): (n: number) => number {
 }
 
 export function plate(id: string, title: string): Plate {
-  const seed = hash(`${id}\n${title}`);
-  const pick = random(seed);
-  const hue = seed % PLATE_HUES;
-  const columnCount = 3 + pick(3);
-  const step = (PLATE_WIDTH - 2 * PAD_X) / (columnCount - 1);
+  const pick = random(hash(`${id}\n${title}`));
+  const laneCount = 3 + pick(3);
+  const step = (PLATE_WIDTH - 2 * PAD_X) / (laneCount - 1);
+  const lanes = Array.from({ length: laneCount }, (_, i) => Math.round(PAD_X + i * step));
 
-  const nodes: PlateNode[] = [];
-  const columns: number[][] = [];
-  for (let c = 0; c < columnCount; c++) {
-    const count = 2 + pick(3);
-    const top = PLATE_HEIGHT / 2 - ((count - 1) * NODE_GAP) / 2;
-    const column: number[] = [];
-    for (let k = 0; k < count; k++) {
-      column.push(nodes.length);
-      nodes.push({
-        x: Math.round(PAD_X + c * step + pick(17) - 8),
-        y: Math.round(top + k * NODE_GAP + pick(13) - 6),
-        path: false,
-      });
+  // The path is a chain of messages, each sent by the lane the previous one reached, so it reads
+  // as authority handed on. Two or three quieter messages sit between its steps.
+  const rowCount = 4 + pick(3);
+  const gap = (LAST_ROW - FIRST_ROW) / (rowCount - 1);
+  const pathRows = new Set<number>([0, rowCount - 1]);
+  while (pathRows.size < Math.min(rowCount - 2, 3 + pick(2))) pathRows.add(1 + pick(rowCount - 2));
+  const other = (lane: number) => {
+    const next = pick(laneCount - 1);
+    return next >= lane ? next + 1 : next;
+  };
+  const messages: PlateMessage[] = [];
+  let at = pick(laneCount);
+  for (let r = 0; r < rowCount; r++) {
+    const y = Math.round(FIRST_ROW + r * gap);
+    if (pathRows.has(r)) {
+      const to = other(at);
+      messages.push({ from: at, to, y, path: true });
+      at = to;
+    } else {
+      const from = pick(laneCount);
+      messages.push({ from, to: other(from), y, path: false });
     }
-    columns.push(column);
   }
 
-  const path = columns.map((column) => column[pick(column.length)] as number);
-  for (const i of path) (nodes[i] as PlateNode).path = true;
-
-  // Each node links to the node at the same height in the next column and, now and then, to one
-  // more; every node of the next column gets at least one incoming link; the path's links exist.
-  const links = new Map<string, [number, number]>();
-  const link = (a: number, b: number) => links.set(`${a}-${b}`, [a, b]);
-  for (let c = 0; c + 1 < columnCount; c++) {
-    const from = columns[c] as number[];
-    const to = columns[c + 1] as number[];
-    from.forEach((a, k) => {
-      link(a, to[Math.round((k * (to.length - 1)) / Math.max(1, from.length - 1))] as number);
-      if (pick(3) === 0) link(a, to[pick(to.length)] as number);
-    });
-    to.forEach((b, k) => {
-      if (![...links.values()].some(([, t]) => t === b)) {
-        link(from[Math.round((k * (from.length - 1)) / Math.max(1, to.length - 1))] as number, b);
-      }
-    });
-    link(path[c] as number, path[c + 1] as number);
-  }
-
-  // The boundary holds one column, or two neighbours when there are four or five.
-  const span = columnCount > 3 && pick(2) === 0 ? 2 : 1;
-  const first = pick(columnCount - span + 1);
-  const inside = columns.slice(first, first + span).flat();
-  const xs = inside.map((i) => (nodes[i] as PlateNode).x);
-  const ys = inside.map((i) => (nodes[i] as PlateNode).y);
-  const x = Math.min(...xs) - 22;
-  const y = Math.max(8, Math.min(...ys) - 20);
+  const span = laneCount > 3 && pick(2) === 0 ? 2 : 1;
+  const first = pick(laneCount - span + 1);
+  const left = lanes[first] as number;
+  const right = lanes[first + span - 1] as number;
   const boundary = {
-    x,
-    y,
-    width: Math.max(...xs) + 22 - x,
-    height: Math.min(PLATE_HEIGHT - 8, Math.max(...ys) + 20) - y,
+    x: left - HEAD_W / 2 - 6,
+    y: HEAD_Y - 4,
+    width: right - left + HEAD_W + 12,
+    height: PLATE_HEIGHT - HEAD_Y,
   };
 
-  return { hue, nodes, links: [...links.values()], path, boundary };
-}
-
-/** A horizontal S-curve from one node to another. */
-function curve(a: PlateNode, b: PlateNode, move = true): string {
-  const mid = Math.round((a.x + b.x) / 2);
-  return `${move ? `M${a.x} ${a.y}` : ""}C${mid} ${a.y} ${mid} ${b.y} ${b.x} ${b.y}`;
+  return { lanes, messages, boundary };
 }
 
 /**
- * The drawing as SVG markup. Classes, not colours: `.pb` boundary, `.pl` links, `.ph` the halo
- * under the path, `.pp` the path, `.pn` nodes, `.po` nodes on the path. The page or the social
- * card generator styles them with tokens and sets `--plate` to the hue.
+ * The drawing as SVG markup. Classes, not colours: `.pb` boundary, `.pa` actor heads, `.pl`
+ * lifelines, `.pm` quiet messages, `.ph` the halo under the path, `.pp` the highlighted path
+ * (`pathLength` 1, for the draw-in), `.po` its ends. The page or the social card generator styles them with tokens.
  */
 export function plateSvg(p: Plate): string {
-  const node = (i: number) => p.nodes[i] as PlateNode;
-  const links = p.links.map(([a, b]) => curve(node(a), node(b))).join("");
-  const route = p.path
-    .slice(1)
-    .map((b, k) => curve(node(p.path[k] as number), node(b), k === 0))
+  const lane = (i: number) => p.lanes[i] as number;
+  const arrow = (m: PlateMessage) => {
+    const dir = m.to > m.from ? 1 : -1;
+    const x = lane(m.to) - dir * 4;
+    return `M${lane(m.from)} ${m.y}H${x}M${x - dir * 5} ${m.y - 3}L${x} ${m.y}L${x - dir * 5} ${m.y + 3}`;
+  };
+  const route = p.messages
+    .filter((m) => m.path)
+    .map((m, k) => `${k === 0 ? "M" : "V"}${k === 0 ? `${lane(m.from)} ` : ""}${m.y}H${lane(m.to)}`)
+    .join("");
+  const ends = p.messages
+    .filter((m) => m.path)
+    .map((m) => `<circle cx="${lane(m.to)}" cy="${m.y}" r="3"/>`)
+    .join("");
+  const heads = p.lanes
+    .map(
+      (x) =>
+        `<rect x="${x - HEAD_W / 2}" y="${HEAD_Y}" width="${HEAD_W}" height="${HEAD_H}" rx="4"/>`,
+    )
+    .join("");
+  const lifelines = p.lanes.map((x) => `M${x} ${HEAD_Y + HEAD_H}V${PLATE_HEIGHT}`).join("");
+  const quiet = p.messages
+    .filter((m) => !m.path)
+    .map(arrow)
     .join("");
   const { x, y, width, height } = p.boundary;
-  const circles = p.nodes
-    .map((n) => `<circle${n.path ? ' class="po"' : ""} cx="${n.x}" cy="${n.y}" r="5"/>`)
-    .join("");
   return (
     `<svg viewBox="0 0 ${PLATE_WIDTH} ${PLATE_HEIGHT}" aria-hidden="true" focusable="false">` +
-    `<rect class="pb" x="${x}" y="${y}" width="${width}" height="${height}" rx="12"/>` +
-    `<path class="pl" d="${links}"/>` +
+    `<rect class="pb" x="${x}" y="${y}" width="${width}" height="${height}" rx="10"/>` +
+    `<path class="pl" d="${lifelines}"/>` +
+    `<g class="pa">${heads}</g>` +
+    `<path class="pm" d="${quiet}"/>` +
     `<path class="ph" pathLength="1" d="${route}"/>` +
     `<path class="pp" pathLength="1" d="${route}"/>` +
-    `<g class="pn">${circles}</g></svg>`
+    `<g class="po">${ends}</g></svg>`
   );
 }
 
