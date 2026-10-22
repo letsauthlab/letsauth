@@ -1,6 +1,7 @@
 ---
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
+import Facts from "@/components/Facts.astro";
 import MaturityTag from "@/components/MaturityTag.astro";
 import Plate from "@/components/Plate.astro";
 import RelationList from "@/components/RelationList.astro";
@@ -21,7 +22,7 @@ import {
   relationsOf,
   specRevisionsNewestFirst,
 } from "@/lib/standards";
-import type { Spec } from "@/schema";
+import { featureLevel, type Spec } from "@/schema";
 
 export function getStaticPaths() {
   return getDataset().specs.map((spec) => ({ params: { id: spec.id }, props: { spec } }));
@@ -40,6 +41,11 @@ if (spec.id === ATLAS_SPEC) {
     diffHref.set(newer.id, `/mcp/changes/${older.id}/${newer.id}/`);
   }
 }
+// features by topic, in the order the matrix uses, and how many carry each level
+const topics = [...Map.groupBy(defined, (d) => d.feature.category)];
+const levels = [...Map.groupBy(defined, (d) => d.entry.level)]
+  .map(([level, items]) => [level, items.length] as const)
+  .sort((a, b) => featureLevel.options.indexOf(a[0]) - featureLevel.options.indexOf(b[0]));
 const gone = spec.maturity === "withdrawn" || spec.maturity === "expired";
 const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/${spec.id}.yaml`;
 ---
@@ -67,84 +73,121 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
       </p>
     </header>
 
-    {
-      gone && (
-        <section class="notice gone" aria-labelledby="gone">
-          <h2 id="gone">{MATURITY_LABEL[spec.maturity]}</h2>
-          <p>
-            {spec.maturity === "withdrawn"
-              ? "This document was withdrawn. It no longer appears on the map, but its page, its revisions and its relations stay so that links and history keep working."
-              : "This document has expired. It stays on the map, marked as expired, because other documents still relate to it."}
-            {spec.maturityNote && <> {spec.maturityNote}.</>}
-          </p>
-        </section>
-      )
-    }
-
-    <section class="revisions-section" aria-labelledby="revisions">
-      <h2 id="revisions">
-        Revisions <span class="n">{revisions.length}</span>
-      </h2>
-      <ol class="timeline revisions" data-revisions>
+    <div class="entry">
+      <div class="entry__main">
         {
-          revisions.map((r) => (
-            <li data-revision={r.id} data-status={r.status}>
-              <time datetime={r.date}>{r.date}</time>
-              <div class="rev-head">
-                <a href={r.url} rel="noopener" class="rev-id">
-                  {r.id}
-                </a>
-                <span class:list={["chip", { signal: r.status === "current" }]}>{r.status}</span>
-                {diffHref.has(r.id) && (
-                  <a class="diff" href={diffHref.get(r.id)}>
-                    What changed since {r.supersedes}
-                  </a>
-                )}
-              </div>
-              {r.changes && <p class="changes">{r.changes}</p>}
-            </li>
-          ))
+          gone && (
+            <section class="notice gone" aria-labelledby="gone">
+              <h2 id="gone">{MATURITY_LABEL[spec.maturity]}</h2>
+              <p>
+                {spec.maturity === "withdrawn"
+                  ? "This document was withdrawn. It no longer appears on the map, but its page, its revisions and its relations stay so that links and history keep working."
+                  : "This document has expired. It stays on the map, marked as expired, because other documents still relate to it."}
+                {spec.maturityNote && <> {spec.maturityNote}.</>}
+              </p>
+            </section>
+          )
         }
-      </ol>
-    </section>
 
-    <section class="relations-section" aria-labelledby="relations">
-      <h2 id="relations">
-        Relations <span class="n">{groups.total}</span>
-      </h2>
-      <RelationList groups={groups} specName={spec.name} />
-    </section>
+        <section aria-labelledby="relations">
+          <h2 id="relations">
+            Relations <span class="n">{groups.total}</span>
+          </h2>
+          <RelationList groups={groups} />
+        </section>
 
-    <section class="defines-section" aria-labelledby="defines">
-      <h2 id="defines">Defines in the shared model</h2>
-      {
-        defined.length === 0 ? (
-          <p class="note">
-            No features of this document are recorded yet. Features are what the atlases observe
-            and the explorer cites; they are added as the products need them.
-          </p>
-        ) : (
-          <>
-            <p class="note">
-              Features of revision <code>{current.id}</code> that the MCP auth atlas observes, with
-              the level the revision puts on them.
-            </p>
-            <ul class="rows features" data-defines>
-              {defined.map(({ feature, entry }) => (
-                <li data-feature={feature.id}>
-                  <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
-                  <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>
-                  <span class="meta">
-                    {PARTY_LABEL[feature.party]} / {CATEGORY_LABEL[feature.category]} /{" "}
-                    <Citation entry={entry} />
+        {
+          defined.length > 0 && (
+            <section aria-labelledby="defines">
+              <h2 id="defines">
+                Features <span class="n">{defined.length}</span>
+              </h2>
+              <p class="note">
+                What revision <code>{current.id}</code> asks of clients and servers, as the MCP
+                auth atlas observes it, grouped by topic.
+              </p>
+              <p class="levels" data-levels>
+                <span class="levels__bar" aria-hidden="true">
+                  {levels.map(([level, n]) => (
+                    <span class={`level-${level}`} style={`flex-grow:${n}`} />
+                  ))}
+                </span>
+                {levels.map(([level, n]) => (
+                  <span class="levels__key">
+                    <span class:list={["level", `level-${level}`]}>{level}</span> {n}
                   </span>
+                ))}
+              </p>
+              <div class="topics" data-defines>
+                {topics.map(([category, items]) => (
+                  <section class="topic" aria-labelledby={`topic-${category}`}>
+                    <h3 id={`topic-${category}`}>
+                      {CATEGORY_LABEL[category]} <span class="n">{items.length}</span>
+                    </h3>
+                    <ul class="features" role="list">
+                      {items.map(({ feature, entry }) => (
+                        <li data-feature={feature.id}>
+                          <span class="features__head">
+                            <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
+                            <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>
+                          </span>
+                          <span class="meta">
+                            {PARTY_LABEL[feature.party]} / <Citation entry={entry} />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="entry__side panel" aria-label="Facts">
+        <Facts
+          label="In numbers"
+          items={[
+            { label: "Revisions", value: revisions.length },
+            { label: "Relations", value: groups.total },
+            ...(defined.length > 0 ? [{ label: "Features", value: defined.length }] : []),
+          ]}
+        />
+        {
+          defined.length === 0 && (
+            <p class="note" data-no-features>
+              No features of this document are recorded yet. They are added when the atlases
+              observe them or the explorer cites them.
+            </p>
+          )
+        }
+        <section aria-labelledby="revisions">
+          <h2 id="revisions">Revisions</h2>
+          <ol class="timeline revisions" data-revisions>
+            {
+              revisions.map((r) => (
+                <li data-revision={r.id} data-status={r.status}>
+                  <time datetime={r.date}>{r.date}</time>
+                  <div class="rev-head">
+                    <a href={r.url} rel="noopener" class="rev-id">
+                      {r.id}
+                    </a>
+                    <span class:list={["chip", { signal: r.status === "current" }]}>{r.status}</span>
+                  </div>
+                  {r.changes && <p class="changes">{r.changes}</p>}
+                  {diffHref.has(r.id) && (
+                    <a class="diff" href={diffHref.get(r.id)}>
+                      What changed since {r.supersedes}
+                    </a>
+                  )}
                 </li>
-              ))}
-            </ul>
-          </>
-        )
-      }
-    </section>
+              ))
+            }
+          </ol>
+        </section>
+      </aside>
+    </div>
 
     <footer class="page-foot prose">
       <p>
@@ -166,21 +209,56 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
     view-transition-name: spec-title;
   }
   .gone {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-7);
+    font-size: var(--small);
   }
   .gone h2 {
     font-size: var(--h3);
     margin-top: 0;
   }
-  .revisions-section,
-  .relations-section,
-  .defines-section {
-    margin-bottom: var(--space-7);
+
+  /*
+   * The entry: relations and features in the wide column, the figures and the revisions beside
+   * them in one panel that stays in view, as on a breach page. One column below 60rem, where
+   * the panel follows the relations.
+   */
+  .entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem);
+    gap: var(--space-7);
+    align-items: start;
   }
-  .revisions-section h2,
-  .relations-section h2,
-  .defines-section h2 {
-    font-size: var(--h2);
+  .entry__main {
+    min-width: 0;
+  }
+  .entry__main > section + section {
+    margin-top: var(--space-7);
+  }
+  .entry h2 {
+    font-size: var(--h3);
+    margin: 0 0 var(--space-4);
+  }
+  .entry__side {
+    position: sticky;
+    top: var(--space-5);
+    display: grid;
+    gap: var(--space-5);
+  }
+  .entry__side h2 {
+    font-size: var(--small);
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: var(--space-3);
+  }
+  .entry__side .facts {
+    gap: var(--space-4) var(--space-6);
+  }
+  .entry__side > .note {
+    margin: 0;
+  }
+
+  .revisions {
+    margin: 0;
   }
   .rev-head {
     display: flex;
@@ -195,36 +273,129 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
     font-weight: 600;
     overflow-wrap: anywhere;
   }
-  .diff {
-    font-size: var(--tiny);
-  }
   .changes {
     margin: var(--space-2) 0 0;
     font-size: var(--small);
     color: var(--ink-2);
-    max-width: var(--measure);
+  }
+  .diff {
+    display: inline-block;
+    margin-top: var(--space-2);
+    font-size: var(--tiny);
+  }
+
+  /* M13: the rail draws in from the top, then the entries fade in behind it; once, on load */
+  @media (prefers-reduced-motion: no-preference) {
+    .revisions::before {
+      transform-origin: top;
+      animation: rail-down var(--dur-slow) var(--ease-draw) both;
+    }
+    .revisions > li {
+      animation: fade-in var(--dur) var(--ease) both;
+      animation-delay: calc(var(--dur-slow) * 0.6);
+    }
+    .revisions > li + li {
+      animation-delay: var(--dur-slow);
+    }
+  }
+  @keyframes rail-down {
+    from {
+      transform: scaleY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* how many features carry each level: a bar in the level inks, with the words beside it */
+  .levels {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin: 0 0 var(--space-6);
+    max-width: none;
+    font-size: var(--small);
+    font-variant-numeric: tabular-nums;
+  }
+  .levels__bar {
+    display: flex;
+    gap: 2px;
+    flex: 1 1 12rem;
+    max-width: 24rem;
+    height: 6px;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .levels__bar > span {
+    background: currentColor;
+  }
+  .levels__key {
+    white-space: nowrap;
+  }
+
+  /* topics pack into columns like the relation groups */
+  .topics {
+    columns: 19rem;
+    column-gap: var(--space-6);
+  }
+  .topic {
+    break-inside: avoid;
+    margin-bottom: var(--space-6);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule-strong);
+  }
+  .topic h3 {
+    font-size: var(--small);
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--ink-2);
+    margin: 0 0 var(--space-3);
   }
   .features {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
     font-size: var(--small);
   }
   .features li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-1) var(--space-3);
-    padding: var(--space-3) 0;
+    display: grid;
+    gap: 0.15rem;
+    margin: 0;
   }
-  .features a {
+  .features__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .features__head a {
     font-weight: 600;
     color: var(--ink);
     text-decoration: none;
   }
-  .features a:hover {
+  .features__head a:hover {
     color: var(--signal);
   }
   .features .meta {
-    flex-basis: 100%;
     color: var(--ink-2);
     font-size: var(--tiny);
+  }
+  .features .meta :global(.citation) {
+    font-size: var(--tiny);
+  }
+
+  @media (max-width: 60rem) {
+    .entry {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+    .entry__side {
+      position: static;
+    }
   }
 </style>

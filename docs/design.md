@@ -249,7 +249,7 @@ package of the redesign that builds it. Anything not in this table does not anim
 | --- | --- | --- | --- | --- | --- |
 | M1 | Every page | Cross-document view transition, root crossfade 220ms | continuity | none (as today) | WP2 |
 | M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate from `MatrixThumb.astro` as `matrix`, map; on the explorer, the scenario title into the page h1) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
-| M3 | Home facts, server page facts (`Facts.astro`) | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
+| M3 | Home facts, server page facts, spec page facts (`Facts.astro`) | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
 | M4 | Standards map, decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, halo fades after, once on load | "follow this path" | path shown complete | WP5, WP8 |
 | M5 | Explorer chain | Per step: the sender and receiver light up in the actor head, the current arrow draws in (300ms, ease-out), the body fades up 8px (220ms); earlier steps keep a quieter arrow and later ones a hairline, in colour, not opacity, so text keeps its contrast | "you are here" | arrow and body shown, highlight and dimming applied without transition | WP6, R-08 |
 | M6 | Explorer chain | One scene clock (a Web Animations API timeline) holds the playhead; Play, Pause, Previous, Next, the scrub bar, a click on a step or a log line and the arrow keys all move it. Steps advance every 2.5 s. Auto-advance (amended by review follow-up 8): armed once per page, it starts when the chain has sat in view for 1 s with no input, and stops for good on hover, touch, focus, scroll or any key; it never restarts by itself and never starts with a step in the URL. Play, once pressed, pauses on any click, key or scroll | guided reading | Play button hidden, no auto-advance; the scrub bar and the step buttons still seek | WP6, R-08 |
@@ -259,7 +259,7 @@ package of the redesign that builds it. Anything not in this table does not anim
 | M10 | Matrix | Cell dialog: backdrop fades, panel moves up 8px, 220ms, using `@starting-style` | "a detail opened" | appears | WP4 |
 | M11 | Matrix filters | Count text changes with no animation; hidden rows collapse instantly (today's behaviour) | n/a | n/a | WP4 |
 | M12 | Scanner report | The request ladder prints line by line, 60ms apart, when the section scrolls into view, once; the grade appears last | "this is what the scanner did, in order" | all lines shown | WP7 |
-| M13 | Breach page | Timeline rail draws in top to bottom, 480ms, dates fade in behind it | "events in sequence" | shown | WP6 |
+| M13 | Breach page, spec page revisions | Timeline rail draws in top to bottom, 480ms, dates fade in behind it | "events in sequence" | shown | WP6 |
 | M14 | Long-form pages (`Document.astro`) | Reading progress bar, 2px `--signal`, `animation-timeline: scroll(root)` behind `@supports` | place in the text | hidden | WP2 |
 | M15 | Controls | Colour and border transitions on hover/focus, 120ms | affordance | instant | WP2 |
 | M16 | Theme toggle | Icon swap only; no rotation | n/a | n/a | WP2 |
