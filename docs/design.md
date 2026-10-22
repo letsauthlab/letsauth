@@ -205,6 +205,13 @@ Deprecated until WP10: `.card` and `.cards` (now flat `--ground-2` panels; move 
 `.rows`), `.pill` and `.pill.accent` (aliases of `.chip` and `.chip.signal`) and
 `.button.primary` (a plain `.button` is the filled one).
 
+The page head of `/explorer/`, `/breaches/` and every spec page carries a decorative drawing
+(`Plate.astro`, WP8): a small delegation chain drawn from the page id and title by
+`src/lib/plate.ts`, so a page always gets the same one. It is the first child of
+`header.page-head`, floats beside the title from 64rem up and is left out below that. It has no
+frame and uses the existing inks only: `--signal` for the path, `--boundary` for the trust
+boundary dash, hairlines for the rest. It never goes on a page with a data view above the fold.
+
 The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
 
 Product surfaces go in `product`. The matrix (`MatrixTable`, `StatusCell`, `ObservationDetail`)
