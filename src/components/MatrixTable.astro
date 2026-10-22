@@ -57,6 +57,20 @@ const phoneCss = `@layer product{@media (max-width: 40rem){${ranges
   .map((r) => `:nth-child(${r.from + 1})`)
   .join(",")}){border-left:1px solid var(--rule)}}}`;
 
+/*
+ * Wide screens (follow-up 6): the table fits the column instead of scrolling past its edge. A
+ * group whose label is wider than its columns, such as a one-column "Transport", takes the
+ * label's width; the other columns share what is left. The label width is an estimate from its
+ * length in --tiny Geist, a little generous; the island redoes the sums when a filter changes
+ * the groups.
+ */
+const NARROW_COLUMN_REM = 2.75;
+const labelOf = (c: string) => CATEGORY_LABEL[c as keyof typeof CATEGORY_LABEL] ?? c;
+const labelRem = (c: string) => Math.ceil((labelOf(c).length * 0.42 + 0.875) * 4) / 4;
+const narrow = groups.filter((g) => labelRem(g.category) > g.count * NARROW_COLUMN_REM);
+const narrowRem = narrow.reduce((sum, g) => sum + labelRem(g.category), 0);
+const wideCols = columns.length - narrow.reduce((sum, g) => sum + g.count, 0);
+
 const changedIds = new Map(diff?.changed.map((c) => [c.feature.id, c]) ?? []);
 const addedIds = new Set(diff?.added.map((f) => f.id) ?? []);
 const changesHref = diff ? `/mcp/changes/${diff.from.id}/${diff.to.id}/` : undefined;
@@ -87,7 +101,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       class="matrix"
       id="matrix"
       data-matrix-revision={revision.id}
-      style={`--cols: ${columns.length}`}
+      style={`--cols: ${columns.length}; --wide-cols: ${wideCols}; --narrow-w: ${narrowRem}rem`}
     >
       <caption class="visually-hidden">
         Support for each feature of MCP Authorization {revision.id} by server. Rows are servers in
@@ -102,8 +116,15 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
           <td></td>
           {
             groups.map((g) => (
-              <th scope="colgroup" colspan={g.count} data-category={g.category}>
-                <span>{CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}</span>
+              <th
+                scope="colgroup"
+                colspan={g.count}
+                data-category={g.category}
+                data-label-rem={labelRem(g.category)}
+                data-narrow={narrow.includes(g) ? "" : undefined}
+                style={`--n: ${g.count}; --label: ${labelRem(g.category)}rem`}
+              >
+                <span>{labelOf(g.category)}</span>
               </th>
             ))
           }
@@ -629,6 +650,36 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       translate: none;
     }
 
+    /*
+     * Wide screens: the table fits the column. Its widths come from the group row, so a group
+     * whose label needs more room than its columns (data-narrow) takes the label's width, and
+     * the other columns share the rest, down to a floor below which the frame scrolls.
+     */
+    @media (width > 40rem) {
+      .matrix {
+        --feature-w: max(
+          2.25rem,
+          calc((100cqi - var(--server-w) - var(--narrow-w, 0rem)) / var(--wide-cols, var(--cols)))
+        );
+        width: calc(
+          var(--server-w) + var(--wide-cols, var(--cols)) * var(--feature-w) + var(--narrow-w, 0rem)
+        );
+      }
+
+      .matrix .matrix__feature-col {
+        width: auto;
+      }
+
+      .matrix .groups th {
+        width: calc(var(--n, 1) * var(--feature-w));
+      }
+
+      .matrix .groups th[data-narrow] {
+        width: var(--label);
+        padding-inline: var(--space-1);
+      }
+    }
+
     /* the group picker and its hint exist for phones only */
     .matrix-tabs,
     .matrix-tabs__hint {
@@ -642,10 +693,13 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
      * peek of the next column and shadows at the edges that scroll. The names link to the server
      * page, which is the same data transposed. .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) is the "All" view, .matrix-view:is([data-view]:not([data-view="all"]), :not([data-view]):has(.matrix-tabs a:not(#mx-all):target)) a group's.
      */
+    .matrix-view {
+      container-type: inline-size;
+    }
+
     @media (max-width: 40rem) {
       .matrix-view {
         --server-w: 7rem;
-        container-type: inline-size;
       }
 
       .matrix-tabs {

@@ -227,6 +227,22 @@ test.describe("matrix page (US1)", () => {
     expect(scroll).toBeLessThanOrEqual(inner ?? 0);
   });
 
+  test("on a wide screen the table fits its frame and no group label is clipped (follow-up 6)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/mcp/");
+    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
+    const region = page.locator(".matrix-scroll");
+    expect(await region.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
+    const clipped = await page
+      .locator("#matrix thead tr.groups th[data-category] span")
+      .evaluateAll((els) =>
+        els.filter((el) => el.scrollWidth > el.clientWidth).map((el) => el.textContent),
+      );
+    expect(clipped).toEqual([]);
+  });
+
   test("a group scrolls inside its region at 320px with the server column sticky (016 WP4)", async ({
     page,
   }) => {
