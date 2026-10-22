@@ -1,0 +1,108 @@
+---
+import type { TreeNode } from "@/lib/graph";
+import { BODY_LABEL, FAMILY_LABEL, RELATION_LABEL } from "@/lib/labels";
+import { currentRevisionOf, type RelationGroups } from "@/lib/standards";
+import type { RelationType, Spec } from "@/schema";
+import MaturityTag from "./MaturityTag.astro";
+
+interface Props {
+  node: TreeNode;
+  groupsOf: (id: string) => RelationGroups;
+  spine: Set<string>;
+  recent: Set<string>;
+}
+
+const { node, groupsOf, spine, recent } = Astro.props;
+const { spec } = node;
+const current = currentRevisionOf(spec);
+const groups = groupsOf(spec.id);
+
+// the cross links as chips: one per type and direction, dependency types excluded because the
+// indentation already says them; a second parent gets its own chip
+interface Chip {
+  type: RelationType;
+  label: string;
+  targets: Spec[];
+}
+const chips: Chip[] = [];
+const cross = (t: RelationType) =>
+  t === "references" || t === "competes-with" || t === "solves-same-problem-as";
+for (const [type, entries] of groups.outgoing) {
+  if (cross(type))
+    chips.push({ type, label: RELATION_LABEL[type].forward, targets: entries.map((e) => e.other) });
+}
+for (const [type, entries] of groups.incoming) {
+  if (cross(type))
+    chips.push({
+      type,
+      label: RELATION_LABEL[type].backward,
+      targets: entries.map((e) => e.other),
+    });
+}
+for (const [type, entries] of groups.related) {
+  chips.push({ type, label: RELATION_LABEL[type].forward, targets: entries.map((e) => e.other) });
+}
+if (node.alsoParents.length > 0) {
+  for (const type of new Set(node.alsoParents.map((p) => p.type))) {
+    chips.unshift({
+      type,
+      label: `also ${RELATION_LABEL[type].forward}`,
+      targets: node.alsoParents.filter((p) => p.type === type).map((p) => p.spec),
+    });
+  }
+}
+---
+
+<li
+  data-spec={spec.id}
+  data-body={spec.body}
+  data-maturity={spec.maturity}
+  data-depth={node.depth}
+  data-spine={spine.has(spec.id) ? "" : undefined}
+  data-recent={recent.has(spec.id) ? "" : undefined}
+>
+  <div class="row">
+    {/* the indent says "builds on"; only the other two dependency words need spelling */}
+    {node.parentType && node.parentType !== "builds-on" && (
+      <span class="rel">{RELATION_LABEL[node.parentType].forward}</span>
+    )}
+    <span class="who">
+      <a href={`/standards/${spec.id}/`}>{spec.name}</a>
+      <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
+    </span>
+    <span class="meta">
+      {BODY_LABEL[spec.body]} / {FAMILY_LABEL[spec.family]} / <code>{current.id}</code>{" "}
+      <time datetime={current.date}>{current.date}</time> /{" "}
+      <a href={spec.url} rel="noopener">Document</a>
+    </span>
+    {
+      chips.length > 0 && (
+        <span class="links">
+          {chips.map((chip) => (
+            <details class="xl" data-type={chip.type}>
+              <summary class="chip">
+                {chip.label} <span class="n">{chip.targets.length}</span>
+              </summary>
+              <ul>
+                {chip.targets.map((t) => (
+                  <li>
+                    <a href={`/standards/${t.id}/`}>{t.name}</a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </span>
+      )
+    }
+  </div>
+  {
+    node.children.length > 0 && (
+      <ul class="tree">
+        {node.children.map((child) => (
+          <Astro.self node={child} groupsOf={groupsOf} spine={spine} recent={recent} />
+        ))}
+      </ul>
+    )
+  }
+</li>

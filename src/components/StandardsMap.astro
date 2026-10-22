@@ -8,29 +8,33 @@ import {
   RELATION_DESCRIPTION,
   RELATION_LABEL,
 } from "@/lib/labels";
-import { buildsOnSpine, RELATION_TYPES } from "@/lib/standards";
-import type { RelationType } from "@/schema";
+import { buildsOnSpine, RELATION_TYPES, type RelationGroups } from "@/lib/standards";
+import type { RelationType, SpecBody } from "@/schema";
 import MaturityTag from "./MaturityTag.astro";
 
 interface Props {
   layout: Layout;
+  /** publishing bodies on the map, in lane order */
+  bodies: SpecBody[];
+  groupsOf: (id: string) => RelationGroups;
+  /** the recently revised specs, id to revision date: a view of the map, not a list beside it */
+  recent: Map<string, string>;
 }
 
-const { layout } = Astro.props;
-const { nodes, edges, lanes, width, height } = layout;
+const { layout, bodies, groupsOf, recent } = Astro.props;
+const { nodes, edges, bands, width, height } = layout;
 const byId = new Map(nodes.map((n) => [n.spec.id, n.spec]));
 const specs = nodes.map((n) => n.spec);
 const relations = edges.map((e) => e.relation);
 const usedTypes = RELATION_TYPES.filter((t) => relations.some((r) => r.type === t));
 const directed = usedTypes.filter((t) => t !== "competes-with" && t !== "solves-same-problem-as");
 const usedMaturities = MATURITY_ORDER.filter((m) => specs.some((s) => s.maturity === m));
+// references are the most and the least telling lines, so the map opens without them
+const shownByDefault = (t: RelationType) => t !== "references";
 
 // M4: the longest builds-on chain draws in from the oldest document to the newest
 const spine = buildsOnSpine(specs, relations);
 const spineStep = new Map(spine.map((r, i) => [`${r.from}|${r.type}|${r.to}`, i]));
-const spineEdges = edges.filter((e) =>
-  spineStep.has(`${e.relation.from}|${e.relation.type}|${e.relation.to}`),
-);
 const spineFirst = spine[0] ? byId.get(spine[0].to) : undefined;
 const spineLast = spine.at(-1) ? byId.get(spine.at(-1)?.from ?? "") : undefined;
 
@@ -45,233 +49,438 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
   return note ? `${phrase}. ${note}` : phrase;
 }
 const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type}|${e.relation.to}`;
+
+/*
+ * The filter is the legend: each toggle is a checkbox, and these rules hide what an unchecked
+ * one covers, in the drawing and in the outline. No script is needed for a filter to take
+ * effect; the island only writes the state into the URL and keeps the count.
+ */
+const scope = "#standards";
+const unchecked = (name: string, value: string) =>
+  `${scope}:has(input[name="${name}"][value="${value}"]:not(:checked))`;
+const filterCss = [
+  ...usedTypes.map(
+    (t) =>
+      `${unchecked("type", t)} :is(#map .edge-${t}, #map .spine-halo[data-type="${t}"]) { visibility: hidden }\n` +
+      `${unchecked("type", t)} #spec-list .xl[data-type="${t}"] { display: none }`,
+  ),
+  `${scope}:has(input[name="view"][value="recent"]:checked) :is(#map .node:not([data-recent]), #map .band, #map .edge, #map .spine-halo) { opacity: 0.2 }`,
+  `${scope}:has(input[name="view"][value="recent"]:checked) #spec-list li:not([data-recent]) > .row { opacity: 0.35 }`,
+  ...bodies.map(
+    (b) =>
+      `${unchecked("body", b)} :is(#map .node[data-body="${b}"], #map .band[data-body="${b}"], #map .edge[data-from-body="${b}"], #map .edge[data-to-body="${b}"]) { visibility: hidden }\n` +
+      `${unchecked("body", b)} #spec-list li[data-body="${b}"] > .row { display: none }`,
+  ),
+].join("\n");
 ---
 
-<figure class="map" aria-labelledby="map-caption">
-  <div
-    class="plate map-frame"
-    id="map-frame"
-    tabindex="0"
-    role="region"
-    aria-label="Standards map, scrolls horizontally"
-  >
-    <svg
-      id="map"
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-labelledby="map-title"
-      data-nodes={nodes.length}
-      data-edges={edges.length}
-    >
-      <title id="map-title">
-        Specifications for agent authorization, one node each, grouped by publishing body in
-        rows and by what they build on in columns, with their relations drawn as lines.
-      </title>
-      <defs>
-        {
-          directed.flatMap((t) => [`arrow-${t}`, `arrow-${t}-full`]).map((id) => (
-            <marker
-              id={id}
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="7"
-              markerHeight="7"
-              orient="auto-start-reverse"
-            >
-              <path
-                d="M0,0 L10,5 L0,10 z"
-                class:list={["arrow", `arrow-${id.replace(/^arrow-|-full$/g, "")}`, { full: id.endsWith("-full") }]}
-              />
-            </marker>
-          ))
-        }
-      </defs>
+<style set:html={filterCss}></style>
 
-      <g class="lanes" aria-hidden="true">
-        {
-          lanes.map((lane, i) => (
-            <g class="lane" data-body={lane.body}>
-              {i > 0 && (
-                <line
-                  x1={PAD / 2}
-                  x2={width - PAD / 2}
-                  y1={lane.y - 13}
-                  y2={lane.y - 13}
-                  class="lane-rule"
-                />
-              )}
-              <text x={PAD} y={lane.y + 14} class="lane-label">
-                {wrapLabel(BODY_LABEL[lane.body], 12, 2).map((line, j) => (
-                  <tspan x={PAD} dy={j === 0 ? 0 : 17}>
-                    {line}
-                  </tspan>
-                ))}
-              </text>
-            </g>
-          ))
-        }
-      </g>
-
-      <g class="edges" aria-hidden="true">
-        {
-          spineEdges.map((e) => (
-            <path
-              class="spine-halo"
-              d={e.d}
-              pathLength="1"
-              style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
-            />
-          ))
-        }
-        {
-          edges.map((e) => {
-            const step = spineStep.get(key(e));
-            const onSpine = step !== undefined;
-            return (
-              <path
-                class:list={[
-                  "edge",
-                  `edge-${e.relation.type}`,
-                  { symmetric: e.symmetric, spine: onSpine },
-                ]}
-                d={e.d}
-                pathLength={onSpine ? "1" : undefined}
-                style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
-                data-relation={key(e)}
-                data-type={e.relation.type}
-                data-from={e.relation.from}
-                data-to={e.relation.to}
-                marker-end={
-                  e.symmetric
-                    ? undefined
-                    : `url(#arrow-${e.relation.type}${onSpine ? "-full" : ""})`
-                }
-              >
-                <title>
-                  {edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}
-                </title>
-              </path>
-            );
-          })
-        }
-      </g>
-
-      <g class="nodes">
-        {
-          nodes.map((n) => {
-            const lines = wrapLabel(n.spec.name, 24, 2);
-            const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
-            const tag = MATURITY_TAG[n.spec.maturity];
-            return (
-              <a
-                href={`/standards/${n.spec.id}/`}
-                class:list={["node", `maturity-${n.spec.maturity}`]}
-                data-spec={n.spec.id}
-                data-body={n.spec.body}
-                data-maturity={n.spec.maturity}
-                aria-label={label}
-              >
-                <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-box" />
-                <rect
-                  x={n.x + 10}
-                  y={n.y + 9}
-                  width={chipWidth(tag)}
-                  height="19"
-                  rx="9.5"
-                  class:list={[
-                    "node-chip",
-                    { draft: draft.has(n.spec.maturity) },
-                  ]}
-                />
-                <text x={n.x + 18} y={n.y + 23} class="node-tag">
-                  {tag}
-                </text>
-                <text x={n.x + 10} y={n.y + 46} class="node-name">
-                  {lines.map((line, i) => (
-                    <tspan x={n.x + 10} dy={i === 0 ? 0 : 16}>
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-              </a>
-            );
-          })
-        }
-      </g>
-    </svg>
-  </div>
-  <figcaption id="map-caption">
-    Rows are publishing bodies. A specification sits one column right of what it builds on,
-    profiles or replaces.{" "}
-    {
-      spineFirst && spineLast && (
-        <>
-          The bold teal line is the longest chain of documents that build on each other, from{" "}
-          {spineFirst.name} to {spineLast.name}.{" "}
-        </>
-      )
-    }
-    Hover or focus a node to trace its relations. The <a href="#spec-list">list below</a> carries
-    the same information as text.
-  </figcaption>
-</figure>
-
-<section class="legend" aria-labelledby="legend-title">
-  <h2 id="legend-title">Legend</h2>
-  <div class="legend__cols">
-    <dl class="panel legend__list" data-legend="relations">
+<div class="map-plate" id="map-plate">
+  <form id="map-filters" class="map-rail" method="get" action="/standards/" aria-label="Filter the map">
+    <fieldset>
+      <legend>Relations</legend>
       {
         usedTypes.map((t) => (
-          <>
-            <dt>
-              <svg class="sample" width="44" height="10" viewBox="0 0 44 10" aria-hidden="true">
-                <path d="M2,5 L40,5" class:list={["edge", `edge-${t}`]} />
-              </svg>
-              {RELATION_LABEL[t].forward}
-            </dt>
-            <dd>{RELATION_DESCRIPTION[t]}</dd>
-          </>
+          <label class="toggle">
+            <input type="checkbox" name="type" value={t} checked={shownByDefault(t)} />
+            <svg class="sample" width="36" height="10" viewBox="0 0 36 10" aria-hidden="true">
+              <path d="M2,5 L34,5" class:list={["edge", `edge-${t}`]} />
+            </svg>
+            <span class="toggle__label" title={RELATION_DESCRIPTION[t]}>{RELATION_LABEL[t].forward}</span>
+          </label>
         ))
       }
-    </dl>
-    <dl class="panel legend__list" data-legend="maturity">
+    </fieldset>
+    <fieldset class="bodies">
+      <legend>Publishing bodies</legend>
       {
-        usedMaturities.map((m) => (
-          <>
-            <dt>
-              <MaturityTag maturity={m} />
-            </dt>
-            <dd>{MATURITY_LABEL[m]}. The publisher's status, not a grade.</dd>
-          </>
+        bodies.map((b) => (
+          <label class="toggle">
+            <input type="checkbox" name="body" value={b} checked />
+            <span class="toggle__label">{BODY_LABEL[b]}</span>
+          </label>
         ))
       }
-    </dl>
+    </fieldset>
+    <fieldset>
+      <legend>View</legend>
+      <label class="toggle">
+        <input type="checkbox" name="view" value="recent" />
+        <span class="toggle__label">Recently revised, the last {recent.size}</span>
+      </label>
+    </fieldset>
+    <fieldset class="maturities">
+      <legend>Maturity, as the publisher states it</legend>
+      {usedMaturities.map((m) => <MaturityTag maturity={m} note="The publisher's status, not a grade." />)}
+    </fieldset>
+    <p class="map-rail__count">
+      <span id="map-count" aria-live="polite">
+        {nodes.length} of {nodes.length} specifications, {relations.length} of {relations.length}{" "}
+        relations
+      </span>
+      <button type="reset" class="button small quiet">Reset</button>
+    </p>
+    <noscript>
+      <p class="note" data-noscript-note>
+        A filter in the link needs JavaScript. The toggles still work.
+      </p>
+    </noscript>
+    <div class="map-card" id="map-card">
+      <p class="note">Hover or focus a node to read its relations here.</p>
+    </div>
+  </form>
+
+  <figure class="map" aria-labelledby="map-caption">
+    <div class="plate map-frame" id="map-frame" tabindex="0" role="region" aria-label="Standards map">
+      <svg
+        id="map"
+        viewBox={`0 0 ${width} ${height}`}
+        width={width}
+        height={height}
+        xmlns="http://www.w3.org/2000/svg"
+        aria-labelledby="map-title"
+        data-nodes={nodes.length}
+        data-edges={edges.length}
+      >
+        <title id="map-title">
+          Specifications for agent authorization, one node each, a column right of what they
+          build on and grouped by publishing body within a column, with their relations drawn as
+          lines.
+        </title>
+        <defs>
+          {
+            directed.flatMap((t) => [`arrow-${t}`, `arrow-${t}-full`]).map((id) => (
+              <marker
+                id={id}
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
+                <path
+                  d="M0,0 L10,5 L0,10 z"
+                  class:list={["arrow", `arrow-${id.replace(/^arrow-|-full$/g, "")}`, { full: id.endsWith("-full") }]}
+                />
+              </marker>
+            ))
+          }
+        </defs>
+
+        <g class="bands">
+          {
+            bands.map((band) => (
+              <g class="band" data-body={band.body}>
+                <rect
+                  x={band.x}
+                  y={band.y}
+                  width={band.width}
+                  height={band.height}
+                  rx="12"
+                  class="band-box"
+                  aria-hidden="true"
+                />
+                <text x={band.x + 10} y={band.y - 6} class="band-label" data-body={band.body}>
+                  {BODY_LABEL[band.body]}
+                </text>
+              </g>
+            ))
+          }
+        </g>
+
+        <g class="edges" aria-hidden="true">
+          {
+            edges
+              .filter((e) => spineStep.has(key(e)))
+              .map((e) => (
+                <path
+                  class="spine-halo"
+                  d={e.d}
+                  pathLength="1"
+                  data-type={e.relation.type}
+                  data-from-body={e.from.spec.body}
+                  data-to-body={e.to.spec.body}
+                  style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
+                />
+              ))
+          }
+          {
+            edges.map((e) => {
+              const step = spineStep.get(key(e));
+              const onSpine = step !== undefined;
+              return (
+                <path
+                  class:list={[
+                    "edge",
+                    `edge-${e.relation.type}`,
+                    { symmetric: e.symmetric, spine: onSpine },
+                  ]}
+                  d={e.d}
+                  pathLength={onSpine ? "1" : undefined}
+                  style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
+                  data-relation={key(e)}
+                  data-type={e.relation.type}
+                  data-from={e.relation.from}
+                  data-to={e.relation.to}
+                  data-from-body={e.from.spec.body}
+                  data-to-body={e.to.spec.body}
+                  marker-end={
+                    e.symmetric
+                      ? undefined
+                      : `url(#arrow-${e.relation.type}${onSpine ? "-full" : ""})`
+                  }
+                >
+                  <title>
+                    {edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}
+                  </title>
+                </path>
+              );
+            })
+          }
+        </g>
+
+        <g class="nodes">
+          {
+            nodes.map((n) => {
+              const lines = wrapLabel(n.spec.name, 24, 2);
+              const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
+              const tag = MATURITY_TAG[n.spec.maturity];
+              return (
+                <a
+                  href={`/standards/${n.spec.id}/`}
+                  class:list={["node", `maturity-${n.spec.maturity}`]}
+                  data-spec={n.spec.id}
+                  data-body={n.spec.body}
+                  data-maturity={n.spec.maturity}
+                  data-recent={recent.has(n.spec.id) ? "" : undefined}
+                  aria-label={recent.has(n.spec.id) ? `${label}, revised ${recent.get(n.spec.id)}` : label}
+                >
+                  <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-box" />
+                  {recent.has(n.spec.id) && (
+                    <text x={n.x + n.w - 10} y={n.y + 23} text-anchor="end" class="node-date">
+                      {recent.get(n.spec.id)}
+                    </text>
+                  )}
+                  <rect
+                    x={n.x + 10}
+                    y={n.y + 9}
+                    width={chipWidth(tag)}
+                    height="19"
+                    rx="9.5"
+                    class:list={["node-chip", { draft: draft.has(n.spec.maturity) }]}
+                  />
+                  <text x={n.x + 18} y={n.y + 23} class="node-tag">
+                    {tag}
+                  </text>
+                  <text x={n.x + 10} y={n.y + 46} class="node-name">
+                    {lines.map((line, i) => (
+                      <tspan x={n.x + 10} dy={i === 0 ? 0 : 16}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                </a>
+              );
+            })
+          }
+        </g>
+      </svg>
+    </div>
+    <figcaption id="map-caption">
+      A specification sits one column right of what it builds on, profiles or replaces, and the
+      tinted bands group each column by publishing body.{" "}
+      {
+        spineFirst && spineLast && (
+          <>
+            The bold teal line is the longest chain of documents that build on each other, from{" "}
+            {spineFirst.name} to {spineLast.name}.{" "}
+          </>
+        )
+      }
+      Each relation type has its own colour and dash pattern, so the map reads without colour.
+      The <a href="#spec-list">outline below</a> carries the same information as text.
+    </figcaption>
+  </figure>
+
+  {/* one card per node, shown in the rail for the node under the pointer or in focus */}
+  <div class="map-cards" hidden>
+    {
+      nodes.map((n) => {
+        const g = groupsOf(n.spec.id);
+        const lines: { label: string; names: string[] }[] = [];
+        for (const [type, entries] of g.outgoing)
+          lines.push({ label: RELATION_LABEL[type].forward, names: entries.map((e) => e.other.name) });
+        for (const [type, entries] of g.incoming)
+          lines.push({ label: RELATION_LABEL[type].backward, names: entries.map((e) => e.other.name) });
+        for (const [type, entries] of g.related)
+          lines.push({ label: RELATION_LABEL[type].forward, names: entries.map((e) => e.other.name) });
+        return (
+          <article data-card={n.spec.id}>
+            <p class="map-card__name">
+              {n.spec.name} <MaturityTag maturity={n.spec.maturity} note={n.spec.maturityNote} />
+            </p>
+            <p class="map-card__body">{BODY_LABEL[n.spec.body]}</p>
+            {lines.length > 0 ? (
+              <dl class="map-card__rels">
+                {lines.map((l) => (
+                  <>
+                    <dt>{l.label}</dt>
+                    <dd>{l.names.join(", ")}</dd>
+                  </>
+                ))}
+              </dl>
+            ) : (
+              <p class="note">No recorded relations.</p>
+            )}
+          </article>
+        );
+      })
+    }
   </div>
-  <p class="note">
-    Each relation type has its own colour and its own dash pattern, so the map also reads without
-    colour. Maturity is the word in the chip, and a dashed chip is a draft. Focusing a node shows
-    its relations at full strength and fades the rest.
-  </p>
-</section>
+</div>
 
 <style>
+  /*
+   * The plate: a rail of toggles on the left that is legend, filter and reading pane in one, and
+   * the drawing on the right at its full height, so the page scrolls and the frame does not.
+   * Below 60rem the rail folds above the drawing; below 40rem the drawing goes and the outline
+   * under the plate is the map.
+   */
+  .map-plate {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+    margin: 0 0 var(--space-7);
+  }
+  .map-rail {
+    position: sticky;
+    top: var(--space-4);
+    display: grid;
+    gap: var(--space-4);
+    font-size: var(--small);
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+  legend {
+    font-size: var(--tiny);
+    font-weight: 500;
+    color: var(--ink-2);
+    padding: 0;
+    margin-bottom: var(--space-2);
+  }
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 1.5rem;
+  }
+  .bodies {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-2);
+  }
+  .bodies legend {
+    grid-column: 1 / -1;
+  }
+  label.toggle {
+    cursor: pointer;
+  }
+  .toggle input {
+    accent-color: var(--signal);
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    flex: none;
+  }
+  /* an unchecked toggle reads quieter: its sample fades, its label drops to the second ink */
+  .toggle:has(input:not(:checked)) .toggle__label {
+    color: var(--ink-2);
+  }
+  .toggle:has(input:not(:checked)) .sample {
+    opacity: 0.45;
+  }
+  .sample {
+    flex: none;
+  }
+  .sample .edge {
+    --edge: var(--c);
+  }
+  .maturities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  .maturities legend {
+    width: 100%;
+  }
+  .map-rail__count {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--tiny);
+    font-variant-numeric: tabular-nums;
+  }
+  .note {
+    margin: 0;
+  }
+  .map-card {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-4);
+    min-height: 6rem;
+  }
+  .map-card :global(.map-card__name) {
+    margin: 0 0 var(--space-1);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .map-card :global(.map-card__body) {
+    margin: 0 0 var(--space-3);
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+  .map-card :global(.map-card__rels) {
+    margin: 0;
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--tiny);
+  }
+  .map-card :global(dt) {
+    color: var(--ink-2);
+  }
+  .map-card :global(dd) {
+    margin: 0 0 var(--space-2);
+    color: var(--ink);
+  }
+
   .map {
-    margin: 0 0 var(--space-6);
+    margin: 0;
+    min-width: 0;
   }
   .map-frame {
     padding: 0;
-    overflow: auto;
-    max-height: 80vh;
+    overflow-x: auto;
   }
   .map-frame:focus-visible {
     outline: 2px solid var(--signal);
     outline-offset: 3px;
   }
-  svg {
+  svg#map {
     display: block;
+    width: 100%;
+    height: auto;
+    min-width: 52rem;
     font-family: var(--font-body);
   }
   figcaption {
@@ -281,14 +490,57 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     max-width: var(--measure);
   }
 
-  .lane-rule {
-    stroke: var(--rule);
-    stroke-width: 1;
+  @media (max-width: 60rem) {
+    .map-plate {
+      grid-template-columns: 1fr;
+    }
+    .map-rail {
+      position: static;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      align-items: start;
+    }
+    .map-rail__count,
+    .map-card {
+      grid-column: 1 / -1;
+    }
   }
-  .lane-label {
-    font-size: 13px;
+  @media (max-width: 40rem) {
+    .map,
+    .map-card {
+      display: none;
+    }
+    .map-plate {
+      margin-bottom: var(--space-6);
+    }
+    .map-rail {
+      grid-template-columns: 1fr;
+    }
+    fieldset {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2) var(--space-4);
+    }
+    legend {
+      width: 100%;
+    }
+  }
+
+  /* a band behind each run of one body's documents in a column, named in the gap above it */
+  .band-box {
+    fill: color-mix(in oklch, var(--ink-2) 7%, transparent);
+  }
+  .band-label {
+    font-size: 11px;
     font-weight: 500;
     fill: var(--ink-2);
+  }
+  :global(#map-frame[data-enhanced] .band-label) {
+    cursor: pointer;
+  }
+  .edge-builds-on,
+  .edge-profiles,
+  .edge-replaces {
+    stroke-linejoin: round;
   }
 
   /*
@@ -446,6 +698,12 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     font-weight: 500;
     fill: var(--m);
   }
+  /* the revision date on a recently revised document, in the ids' face */
+  .node-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--signal);
+  }
   .maturity-expired .node-name,
   .maturity-withdrawn .node-name,
   .maturity-expired .node-tag,
@@ -454,13 +712,7 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
     fill: var(--ink-2);
   }
 
-  /*
-   * Filtering and the neighbourhood highlight, driven by the island. Hidden items keep their box
-   * (visibility, not display) so the spine's one-time draw-in does not restart on a filter.
-   */
-  :global(#map .is-hidden) {
-    visibility: hidden;
-  }
+  /* the neighbourhood highlight, driven by the island */
   :global(#map .is-far) {
     opacity: 0.18;
   }
@@ -483,51 +735,5 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
   :global(#map .node.is-near .node-box) {
     stroke: var(--ink);
     stroke-width: 1.5;
-  }
-
-  .legend {
-    margin: 0 0 var(--space-7);
-  }
-  .legend h2 {
-    font-size: var(--h3);
-  }
-  .legend__cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-3);
-  }
-  .legend__list {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: var(--space-3) var(--space-4);
-    font-size: var(--small);
-    margin: 0;
-    align-content: start;
-  }
-  .legend__list dt {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    font-weight: 500;
-  }
-  .legend__list dd {
-    margin: 0;
-    color: var(--ink-2);
-  }
-  .sample {
-    flex: none;
-  }
-  .sample .edge {
-    --edge: var(--c);
-  }
-  @media (max-width: 40rem) {
-    .legend__list {
-      grid-template-columns: 1fr;
-      gap: var(--space-1) 0;
-    }
-    .legend__list dd {
-      margin-bottom: var(--space-3);
-    }
   }
 </style>

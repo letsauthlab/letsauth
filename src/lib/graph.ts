@@ -1,4 +1,12 @@
-import { isDependency, isSymmetric, type Relation, type Spec, type SpecBody } from "../schema";
+import ELK, { type ElkExtendedEdge, type ElkNode } from "elkjs/lib/elk.bundled.js";
+import {
+  isDependency,
+  isSymmetric,
+  type Relation,
+  type RelationType,
+  type Spec,
+  type SpecBody,
+} from "../schema";
 import { BODY_ORDER, compareSpecs } from "./standards";
 
 /**
@@ -6,18 +14,22 @@ import { BODY_ORDER, compareSpecs } from "./standards";
  * relations always yield the same coordinates, so the SVG is stable across builds and can be
  * compared by screenshot.
  *
- * Columns are dependency depth: a spec sits one column right of the specs it builds on, profiles
- * or replaces. Rows are lanes, one per publishing body in BODY_ORDER. Inside a lane, the specs of
- * one column stack top to bottom in `compareSpecs` order.
+ * The dependency relations (builds-on, profiles, replaces) shape the drawing: ELK's layered
+ * algorithm puts a spec one layer right of what it builds on and routes those edges
+ * orthogonally around the nodes. Within a layer the nodes keep model order, which is
+ * `compareSpecs` order, so each column groups by publishing body in BODY_ORDER; a band behind
+ * each group carries the body's name. The cross links (references, competes-with,
+ * solves-same-problem-as) are not part of the shape and are drawn as curves over it.
  */
 
 export const NODE_W = 200;
 export const NODE_H = 68;
-export const COL_GAP = 84;
-export const ROW_GAP = 14;
-export const LANE_GAP = 26;
-export const LANE_LABEL_W = 120;
+/** the gap between layers, where the orthogonal edges run */
+export const COL_GAP = 72;
+/** the gap between nodes in a layer; a band label sits in the gap above its first node */
+export const ROW_GAP = 24;
 export const PAD = 16;
+export const BAND_PAD = 6;
 
 export interface PlacedNode {
   spec: Spec;
@@ -38,22 +50,25 @@ export interface PlacedEdge {
   from: PlacedNode;
   to: PlacedNode;
   symmetric: boolean;
-  /** SVG path data for a cubic curve from `from` to `to`. */
+  /** SVG path data from `from` to `to`: a polyline for a dependency, a cubic curve otherwise. */
   d: string;
-  /** Point halfway along the curve, for a label or title anchor. */
+  /** Point halfway along the edge, for a label or title anchor. */
   mid: Point;
 }
 
-export interface Lane {
+/** A run of nodes of one publishing body in one column, drawn as a tinted band with a label. */
+export interface Band {
   body: SpecBody;
+  x: number;
   y: number;
+  width: number;
   height: number;
 }
 
 export interface Layout {
   nodes: PlacedNode[];
   edges: PlacedEdge[];
-  lanes: Lane[];
+  bands: Band[];
   columns: number;
   width: number;
   height: number;
@@ -138,56 +153,194 @@ function route(from: PlacedNode, to: PlacedNode): { d: string; mid: Point } {
   return { d, mid: { x: round(m.x), y: round(m.y) } };
 }
 
-export function layoutGraph(specs: Spec[], relations: Relation[]): Layout {
+export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise<Layout> {
   const sorted = [...specs].sort(compareSpecs);
+  const ids = new Set(sorted.map((s) => s.id));
   const depth = dependencyDepths(sorted, relations);
-  const columns = sorted.reduce((max, s) => Math.max(max, (depth.get(s.id) ?? 0) + 1), 0);
+  const dependencies = relations.filter(
+    (r) => isDependency(r.type) && ids.has(r.from) && ids.has(r.to),
+  );
+  const graph: ElkNode = {
+    id: "root",
+    layoutOptions: {
+      "elk.algorithm": "layered",
+      "elk.direction": "RIGHT",
+      "elk.edgeRouting": "ORTHOGONAL",
+      "elk.padding": `[top=${PAD + ROW_GAP},left=${PAD},bottom=${PAD},right=${PAD}]`,
+      "elk.layered.spacing.nodeNodeBetweenLayers": String(COL_GAP),
+      "elk.layered.spacing.edgeNodeBetweenLayers": "20",
+      "elk.spacing.nodeNode": String(ROW_GAP),
+      "elk.spacing.edgeNode": "12",
+      "elk.spacing.edgeEdge": "8",
+      "elk.separateConnectedComponents": "false",
+      "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
+      "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
+      "elk.layered.mergeEdges": "true",
+    },
+    children: sorted.map((s) => ({ id: s.id, width: NODE_W, height: NODE_H })),
+    // the older document is the source, so the drawing reads left to right in time
+    edges: dependencies.map((r, i) => ({ id: `d${i}`, sources: [r.to], targets: [r.from] })),
+  };
+  const out = await new ELK().layout(graph);
 
   const placed = new Map<string, PlacedNode>();
-  const nodes: PlacedNode[] = [];
-  const lanes: Lane[] = [];
-  let y = PAD;
-  for (const body of BODY_ORDER) {
-    const inLane = sorted.filter((s) => s.body === body);
-    if (inLane.length === 0) continue;
-    const perColumn = new Map<number, Spec[]>();
-    for (const spec of inLane) {
-      const d = depth.get(spec.id) ?? 0;
-      const list = perColumn.get(d) ?? [];
-      list.push(spec);
-      perColumn.set(d, list);
-    }
-    const rows = Math.max(...[...perColumn.values()].map((l) => l.length));
-    const height = rows * NODE_H + (rows - 1) * ROW_GAP;
-    lanes.push({ body, y, height });
-    for (const [d, list] of perColumn) {
-      list.forEach((spec, i) => {
-        const node: PlacedNode = {
-          spec,
-          x: PAD + LANE_LABEL_W + d * (NODE_W + COL_GAP),
-          y: y + i * (NODE_H + ROW_GAP),
-          w: NODE_W,
-          h: NODE_H,
-          depth: d,
-        };
-        placed.set(spec.id, node);
-        nodes.push(node);
-      });
-    }
-    y += height + LANE_GAP;
+  for (const child of out.children ?? []) {
+    const spec = sorted.find((s) => s.id === child.id);
+    if (!spec) continue;
+    placed.set(spec.id, {
+      spec,
+      x: round(child.x ?? 0),
+      y: round(child.y ?? 0),
+      w: NODE_W,
+      h: NODE_H,
+      depth: depth.get(spec.id) ?? 0,
+    });
   }
-  const height = y - LANE_GAP + PAD;
-  const width = PAD + LANE_LABEL_W + columns * NODE_W + Math.max(0, columns - 1) * COL_GAP + PAD;
+  const nodes = sorted.map((s) => placed.get(s.id)).filter((n): n is PlacedNode => !!n);
+
+  // bands: consecutive nodes of one body in one column
+  const bands: Band[] = [];
+  const byColumn = new Map<number, PlacedNode[]>();
+  for (const n of nodes) {
+    const list = byColumn.get(n.x) ?? [];
+    list.push(n);
+    byColumn.set(n.x, list);
+  }
+  const columnsX = [...byColumn.keys()].sort((a, b) => a - b);
+  for (const x of columnsX) {
+    const column = (byColumn.get(x) ?? []).sort((a, b) => a.y - b.y);
+    let band: Band | undefined;
+    for (const n of column) {
+      if (band && band.body === n.spec.body && n.y - (band.y + band.height) <= ROW_GAP + 1) {
+        band.height = n.y + n.h + BAND_PAD - band.y;
+      } else {
+        band = {
+          body: n.spec.body,
+          x: n.x - BAND_PAD,
+          y: n.y - BAND_PAD,
+          width: n.w + 2 * BAND_PAD,
+          height: n.h + 2 * BAND_PAD,
+        };
+        bands.push(band);
+      }
+    }
+  }
 
   const edges: PlacedEdge[] = [];
+  const routed = new Map<string, ElkExtendedEdge>();
+  for (const [i, r] of dependencies.entries()) {
+    const e = out.edges?.find((x) => x.id === `d${i}`);
+    if (e) routed.set(`${r.from}|${r.type}|${r.to}`, e);
+  }
   for (const relation of relations) {
     const from = placed.get(relation.from);
     const to = placed.get(relation.to);
     if (!from || !to) continue;
-    edges.push({ relation, from, to, symmetric: isSymmetric(relation.type), ...route(from, to) });
+    const symmetric = isSymmetric(relation.type);
+    const e = routed.get(`${relation.from}|${relation.type}|${relation.to}`);
+    const section = e?.sections?.[0];
+    if (section) {
+      // ELK ran the edge from the older document; the arrow points at it, so reverse the points
+      const points = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint]
+        .map((p) => ({ x: round(p.x), y: round(p.y) }))
+        .reverse();
+      const d = points.map((p, j) => `${j === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+      const m = points[Math.floor(points.length / 2)] ?? points[0] ?? { x: 0, y: 0 };
+      edges.push({ relation, from, to, symmetric, d, mid: m });
+    } else {
+      edges.push({ relation, from, to, symmetric, ...route(from, to) });
+    }
   }
-  nodes.sort((a, b) => compareSpecs(a.spec, b.spec));
-  return { nodes, edges, lanes, columns, width, height };
+  return {
+    nodes,
+    edges,
+    bands,
+    columns: columnsX.length,
+    width: Math.ceil(out.width ?? 0),
+    height: Math.ceil(out.height ?? 0),
+  };
+}
+
+/** One row of the dependency outline: a spec, the relation to its parent, and its children. */
+export interface TreeNode {
+  spec: Spec;
+  /** how this spec relates to the row above it (undefined on a root) */
+  parentType?: RelationType;
+  /** further dependency parents, when a spec builds on more than one document */
+  alsoParents: { spec: Spec; type: RelationType }[];
+  children: TreeNode[];
+  depth: number;
+}
+
+export interface Forest {
+  /** one tree per root, in compareSpecs order of the roots */
+  trees: TreeNode[];
+  /** specs with no dependency relation either way, in compareSpecs order */
+  standalone: Spec[];
+}
+
+/**
+ * The map as an outline (phones, screen readers): the dependency relations (builds-on, profiles,
+ * replaces) form a forest, so every spec sits under one parent. A spec with several parents sits
+ * under the deepest one and names the others, so each spec appears once. Cross links (references,
+ * competes-with, solves-same-problem-as) are not part of the shape; the outline shows them as
+ * chips on the row.
+ */
+export function buildForest(specs: Spec[], relations: Relation[]): Forest {
+  const sorted = [...specs].sort(compareSpecs);
+  const byId = new Map(sorted.map((s) => [s.id, s]));
+  const depth = dependencyDepths(sorted, relations);
+  const parentsOf = new Map<string, { spec: Spec; type: RelationType }[]>();
+  const hasChild = new Set<string>();
+  for (const r of relations) {
+    if (!isDependency(r.type)) continue;
+    const parent = byId.get(r.to);
+    if (!parent || !byId.has(r.from)) continue;
+    const list = parentsOf.get(r.from) ?? [];
+    list.push({ spec: parent, type: r.type });
+    parentsOf.set(r.from, list);
+    hasChild.add(r.to);
+  }
+  const chosen = new Map<string, { spec: Spec; type: RelationType }>();
+  const also = new Map<string, { spec: Spec; type: RelationType }[]>();
+  for (const [id, parents] of parentsOf) {
+    const ranked = [...parents].sort(
+      (a, b) =>
+        (depth.get(b.spec.id) ?? 0) - (depth.get(a.spec.id) ?? 0) || compareSpecs(a.spec, b.spec),
+    );
+    const first = ranked[0];
+    if (!first) continue;
+    chosen.set(id, first);
+    also.set(id, ranked.slice(1));
+  }
+  const childrenOf = new Map<string, Spec[]>();
+  for (const [id, parent] of chosen) {
+    const spec = byId.get(id);
+    if (!spec) continue;
+    const list = childrenOf.get(parent.spec.id) ?? [];
+    list.push(spec);
+    childrenOf.set(parent.spec.id, list);
+  }
+  const seen = new Set<string>();
+  const node = (spec: Spec, d: number): TreeNode => {
+    seen.add(spec.id);
+    const children = (childrenOf.get(spec.id) ?? [])
+      .filter((c) => !seen.has(c.id))
+      .sort(compareSpecs)
+      .map((c) => node(c, d + 1));
+    return {
+      spec,
+      parentType: chosen.get(spec.id)?.type,
+      alsoParents: also.get(spec.id) ?? [],
+      children,
+      depth: d,
+    };
+  };
+  const trees = sorted
+    .filter((s) => !chosen.has(s.id) && hasChild.has(s.id))
+    .map((s) => node(s, 0));
+  const standalone = sorted.filter((s) => !chosen.has(s.id) && !hasChild.has(s.id));
+  return { trees, standalone };
 }
 
 /** Greedy word wrap for node labels; the last line gets an ellipsis when the name does not fit. */

@@ -1,0 +1,209 @@
+---
+import type { Forest, TreeNode } from "@/lib/graph";
+import { BODY_LABEL } from "@/lib/labels";
+import type { RelationGroups } from "@/lib/standards";
+import type { Relation, Spec } from "@/schema";
+import MaturityTag from "./MaturityTag.astro";
+import StandardsOutlineRow from "./StandardsOutlineRow.astro";
+
+interface Props {
+  forest: Forest;
+  groupsOf: (id: string) => RelationGroups;
+  /** the builds-on spine, oldest document first */
+  spine: Relation[];
+  withdrawn: Spec[];
+  recent: Set<string>;
+}
+
+const { forest, groupsOf, spine, withdrawn, recent } = Astro.props;
+const onSpine = new Set(spine.flatMap((r) => [r.from, r.to]));
+const count = (nodes: TreeNode[]): number =>
+  nodes.reduce((n, node) => n + 1 + count(node.children), 0);
+---
+
+<section id="spec-list" class="outline" aria-labelledby="list-title">
+  <h2 id="list-title">Every specification, under what it builds on</h2>
+  <p class="note">
+    A specification sits under the document it builds on, profiles or replaces. The other
+    relations are the chips on its row. Open one to see the documents it names.
+  </p>
+  {
+    forest.trees.map((tree) => (
+      <section class="family" data-tree={tree.spec.id} aria-label={`${tree.spec.name} and what builds on it`}>
+        <p class="family__head">
+          <span class="n">{count([tree])}</span> documents stand on {tree.spec.name}
+        </p>
+        <ul class="tree">
+          <StandardsOutlineRow node={tree} groupsOf={groupsOf} spine={onSpine} recent={recent} />
+        </ul>
+      </section>
+    ))
+  }
+  {
+    forest.standalone.length > 0 && (
+      <section class="family" data-tree="standalone" aria-labelledby="tree-standalone">
+        <p class="family__head" id="tree-standalone">
+          <span class="n">{forest.standalone.length}</span> documents stand alone
+        </p>
+        <ul class="tree">
+          {forest.standalone.map((spec) => (
+            <StandardsOutlineRow
+              node={{ spec, alsoParents: [], children: [], depth: 0 }}
+              groupsOf={groupsOf}
+              spine={onSpine}
+              recent={recent}
+            />
+          ))}
+        </ul>
+      </section>
+    )
+  }
+  {
+    withdrawn.length > 0 && (
+      <section class="family" data-tree="withdrawn" aria-labelledby="tree-withdrawn">
+        <p class="family__head" id="tree-withdrawn">
+          <span class="n">{withdrawn.length}</span> withdrawn
+        </p>
+        <p class="note">Withdrawn documents leave the map but keep their page and their relations.</p>
+        <ul class="tree">
+          {withdrawn.map((spec) => (
+            <li data-withdrawn={spec.id}>
+              <div class="row">
+                <span class="who">
+                  <a href={`/standards/${spec.id}/`}>{spec.name}</a>
+                  <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
+                </span>
+                <span class="meta">{BODY_LABEL[spec.body]}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</section>
+
+<style is:global>
+  /*
+   * The outline: the dependency forest as nested lists. Global because the rows come from a
+   * recursive component. The indent is the builds-on line; a hairline in the signal ink marks the
+   * rows on the spine, so the one drawn idea of the map survives the change of form on phones.
+   */
+  .outline h2 {
+    font-size: var(--h2);
+  }
+  .outline > .note {
+    max-width: var(--measure);
+    margin: 0 0 var(--space-5);
+  }
+  .outline .family {
+    margin-bottom: var(--space-6);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 20rem;
+  }
+  .outline .family__head {
+    font-size: var(--small);
+    font-weight: 600;
+    color: var(--ink-2);
+    margin: 0 0 var(--space-2);
+  }
+  .outline .family__head .n {
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .outline .tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .outline .tree .tree {
+    margin-left: var(--space-3);
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--rule);
+  }
+  .outline li[data-spine] > .row {
+    box-shadow: -2px 0 0 0 var(--signal);
+    margin-left: -2px;
+    padding-left: 2px;
+  }
+  .outline .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .outline .rel {
+    flex-basis: 100%;
+    font-size: var(--tiny);
+    color: var(--ink-2);
+    margin-bottom: calc(-1 * var(--space-1));
+  }
+  .outline .who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    min-width: 0;
+  }
+  .outline .who a {
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .outline .who a:hover {
+    color: var(--signal);
+  }
+  .outline .meta {
+    color: var(--ink-2);
+    font-size: var(--tiny);
+    font-variant-numeric: tabular-nums;
+    margin-left: auto;
+  }
+  .outline .meta code,
+  .outline .meta time {
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    background: none;
+    padding: 0;
+  }
+  .outline .meta a {
+    color: var(--ink-2);
+  }
+  .outline .links {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .outline .xl > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .outline .xl > summary::-webkit-details-marker {
+    display: none;
+  }
+  .outline .xl > summary .n {
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .outline .xl[open] > summary {
+    border-color: var(--ink-2);
+  }
+  .outline .xl > ul {
+    list-style: none;
+    margin: var(--space-2) 0 var(--space-1);
+    padding: 0 0 0 var(--space-3);
+    border-left: 1px solid var(--rule);
+    font-size: var(--small);
+  }
+  .outline .xl > ul li {
+    padding: var(--space-1) 0;
+  }
+  @media (max-width: 40rem) {
+    .outline .meta {
+      margin-left: 0;
+    }
+  }
+</style>

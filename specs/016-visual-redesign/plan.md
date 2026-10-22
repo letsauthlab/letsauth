@@ -70,8 +70,12 @@ Non-goals
   are refreshed per package so an agent can verify its own change.
 - VII — European by default: fonts stay self-hosted; no new third party.
 
-No deviation. One intentional change to a documented convention: headlines move from Bricolage
-Grotesque to Geist (section 3.3). `CLAUDE.md`, `docs/architecture.md` and `tokens.css` are
+One deviation, added by the review follow-up R-04: `elkjs` (the Eclipse Layout Kernel compiled
+to JavaScript) lays out the standards map at build time. It is a dev dependency, runs only in
+`src/lib/graph.ts` during `astro build`, ships no bytes to visitors and is deterministic for a
+fixed input, so screenshot baselines stay stable. The hand-rolled column layout it replaces could
+not route edges around nodes, and the map was unreadable with 67 free curves. One intentional
+change to a documented convention: headlines move from Bricolage Grotesque to Geist (section 3.3). `CLAUDE.md`, `docs/architecture.md` and `tokens.css` are
 updated in the same package (WP1), so the repository never contradicts itself.
 
 ## 3. Design language
@@ -278,7 +282,11 @@ becomes; WP2 builds the shared ones, later packages the product-specific ones.
 - `StandardsMap.astro` / `.svelte`: nodes as rounded rectangles on `--ground-2` with `--ink`
   labels; edges in `--ink-2` at 35%; the hovered node's neighbourhood in `--signal`; relation
   types by dash pattern, not by colour (the legend says so). Path draw-in (M4) on the
-  `builds-on` spine from the oldest to the newest spec.
+  `builds-on` spine from the oldest to the newest spec. After R-04: a rail beside the drawing
+  is legend, filter and reading pane in one (checkboxes filtering through `:has()` rules, no
+  script needed); references are off by default; the dependency edges are routed by ELK and
+  the cross links drawn as curves; below 40rem the drawing gives way to `StandardsOutline.astro`,
+  the dependency forest as an indented outline.
 - `ChainPage.astro`, `Explorer.svelte`, `TokenView.astro`: lanes as 1px `--rule` lifelines;
   arrows as 1.5px `--ink-2` lines with the current one in `--signal` 2px; toggled steps get a
   `--caution`/`--threat` rail; removed steps struck and dimmed. Stepper controls inside an
