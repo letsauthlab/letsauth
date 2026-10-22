@@ -1,8 +1,10 @@
 ---
+import Plate from "@/components/Plate.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
 import { scenarioList } from "@/lib/explorer";
 import { TOGGLE_KIND_LABEL } from "@/lib/labels";
+import { SECTION_PLATES, sectionCard } from "@/lib/plate";
 
 const data = getDataset();
 const scenarios = scenarioList(data);
@@ -23,6 +25,7 @@ for (const { scenario } of scenarios) {
   title="Delegation chain explorer"
   description={`${scenarios.length} scenarios of how authority moves through agent systems: ${stepCount} steps, each with the decoded token and the specification section it follows, and ${toggleCount} attack and misconfiguration toggles.`}
   path="/explorer/"
+  image={sectionCard("explorer")}
 >
   <div class="wrap">
     <header class="page-head">
@@ -52,6 +55,8 @@ for (const { scenario } of scenarios) {
         </div>
       </dl>
     </header>
+
+    <Plate id="explorer" title={SECTION_PLATES.explorer.title} />
 
     <ul id="scenario-list" class="rows scenarios" role="list">
       {

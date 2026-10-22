@@ -1,0 +1,90 @@
+---
+import { plate, plateSvg } from "@/lib/plate";
+
+// The decorative plate (plan WP8): one calm, label-free drawing under the head of a page that has
+// no diagram of its own. Derived from the page's id and title, so it never changes between builds.
+// Hidden from assistive technology. The highlighted path draws in once on load (M4); under reduced
+// motion it is drawn complete. A page that shows data above the fold does not place it.
+interface Props {
+  id: string;
+  title: string;
+}
+
+const { id, title } = Astro.props;
+const drawing = plate(id, title);
+---
+
+<div class="plate decor" style={`--plate: var(--plate-${drawing.hue})`} set:html={plateSvg(drawing)} />
+
+<style>
+  /* left-aligned with the head and about as wide as a reading column, so it stays a quiet strip */
+  .decor {
+    max-width: 48rem;
+    padding: 0;
+    margin: 0 0 var(--space-7);
+  }
+  .decor :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    fill: none;
+    stroke-linecap: round;
+  }
+  .decor :global(.pb) {
+    stroke: var(--rule-strong);
+    stroke-dasharray: 4 5;
+  }
+  .decor :global(.pl) {
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+    opacity: 0.6;
+  }
+  .decor :global(.ph) {
+    stroke: color-mix(in oklch, var(--plate) 22%, transparent);
+    stroke-width: 9;
+    opacity: 0;
+  }
+  .decor :global(.pp) {
+    stroke: var(--plate);
+    stroke-width: 2;
+  }
+  .decor :global(.pn) {
+    fill: var(--ground);
+    stroke: var(--rule-strong);
+  }
+  .decor :global(.po) {
+    fill: var(--plate);
+    stroke: var(--plate);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .decor :global(.pp) {
+      stroke-dasharray: 1;
+      animation: plate-draw var(--dur-draw) var(--ease-draw) both;
+    }
+    .decor :global(.ph) {
+      stroke-dasharray: 1;
+      animation:
+        plate-draw var(--dur-draw) var(--ease-draw) both,
+        plate-halo calc(var(--dur-draw) + var(--dur-slow)) linear both;
+    }
+  }
+  @keyframes plate-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* the halo shows while the path draws (1200 of 1680ms), then fades out */
+  @keyframes plate-halo {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    2%,
+    71% {
+      opacity: 1;
+    }
+  }
+</style>

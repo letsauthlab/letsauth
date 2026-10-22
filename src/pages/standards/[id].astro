@@ -2,6 +2,7 @@
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
 import MaturityTag from "@/components/MaturityTag.astro";
+import Plate from "@/components/Plate.astro";
 import RelationList from "@/components/RelationList.astro";
 import Base from "@/layouts/Base.astro";
 import { ATLAS_SPEC } from "@/lib/atlas";
@@ -64,6 +65,8 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
         <code>{spec.id}</code>
       </p>
     </header>
+
+    <Plate id={spec.id} title={spec.name} />
 
     {
       gone && (

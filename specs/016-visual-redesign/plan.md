@@ -616,7 +616,13 @@ per page; the draw-in (M4) runs once and is static under reduced motion; the dra
 appears on a page that already has a data view above the fold (matrix, map, chain, report); a
 `plate: false` prop removes it.
 
-Decision for Jan: ship this, or keep letsauth's visuals strictly data-derived. The plan
+Decided (22 October 2026, review follow-up 10): Jan chose to ship it on `/explorer/`,
+`/breaches/` and the spec pages only. `/mcp/` and `/standards/` keep their data view as the one
+visual, so the drawing stays off them; the cards are per section root (explorer and breaches),
+and spec pages keep the home card. A page leaves the plate out by not placing `<Plate>`, so no
+`plate: false` prop is needed.
+
+Original decision for Jan: ship this, or keep letsauth's visuals strictly data-derived. The plan
 recommends shipping it on the four section roots and spec pages only, because those pages have
 no diagram of their own and the drawing is what makes the two sites read as a family. Skipping
 it costs nothing else in the plan.
@@ -673,7 +679,7 @@ Decisions for Jan before WP1 starts
    Grotesque for h1 only.
 2. **Neutral hue**: cool graphite like the blog (recommended, hue 250 to 255) or keep the warm
    paper of today (hue 85) with the new flat treatment.
-3. **WP8 plate**: ship or skip (section WP8).
+3. **WP8 plate**: ship or skip (section WP8). Decided: ship, on the explorer, breach and spec pages.
 4. **Search palette**: in WP10 scope or not at all.
 
 If no answer arrives, the packages proceed with the recommended option in each case.

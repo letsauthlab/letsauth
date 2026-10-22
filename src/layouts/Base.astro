@@ -15,9 +15,11 @@ interface Props {
   path?: string;
   /** When set, the page is excluded from search indexing and the sitemap hint. */
   noindex?: boolean;
+  /** The social card, a path under public/. Defaults to the home card. */
+  image?: string;
 }
 
-const { title, description, path, noindex = false } = Astro.props;
+const { title, description, path, noindex = false, image = "/og.png" } = Astro.props;
 const site = Astro.site ?? new URL("https://letsauth.eu");
 const canonical = new URL(path ?? Astro.url.pathname, site);
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | undefined;
@@ -101,7 +103,7 @@ const nav = [
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical.href} />
-    <meta property="og:image" content={new URL("/og.png", site).href} />
+    <meta property="og:image" content={new URL(image, site).href} />
     <meta name="twitter:card" content="summary_large_image" />
     {/* --ground in sRGB: oklch(98.5% 0.003 250) and oklch(21% 0.008 255) (pnpm check:contrast --hex) */}
     <meta name="theme-color" content="#f9fafc" media="(prefers-color-scheme: light)" />
