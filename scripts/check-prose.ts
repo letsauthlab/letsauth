@@ -2,8 +2,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 // Mechanical rules from the voice checklist (specs/016-visual-redesign/plan.md section 8, rule 4).
-// Warn-only until WP9 rewrites the copy: then set FAIL to true (or pass --fail meanwhile).
-const FAIL = false;
+// A gate since WP9 rewrote the copy: any hit fails `pnpm check`.
+const FAIL = true;
 
 const root = process.cwd();
 const fail = FAIL || process.argv.includes("--fail");
@@ -20,6 +20,8 @@ const WORDS = [
   "cutting-edge",
   "next level",
   "game-changing",
+  "game-changer",
+  "holistic",
   "in the era of",
   "in the age of",
   "measured instead of asserted",
@@ -114,5 +116,5 @@ if (hits.length) {
   for (const [name, count] of [...perFile].sort((a, b) => b[1] - a[1]))
     log(`  ${String(count).padStart(4)}  ${name}`);
   if (fail) process.exitCode = 1;
-  else console.log("(warn only; WP9 switches this check to fail)");
+  else console.log("(warn only)");
 } else console.log(`Prose OK: ${files.length} files`);

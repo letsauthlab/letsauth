@@ -8,8 +8,8 @@
 
 <br>
 
-**[letsauth.eu](https://letsauth.eu/)** is an open, vendor-neutral lab for seeing, testing and breaking how AI agents are authorized.
-MCP, A2A and agent delegation meet OAuth, OpenID Connect and workload identity, with a European lens.
+**[letsauth.eu](https://letsauth.eu/)** is an open, vendor-neutral lab for how AI agents are authorized.
+It covers where MCP, A2A and agent delegation meet OAuth, OpenID Connect and workload identity, with EU law in view.
 
 <br>
 
@@ -40,25 +40,23 @@ MCP, A2A and agent delegation meet OAuth, OpenID Connect and workload identity, 
 ## Why this lab exists
 
 Vendors explain agent authorization through their own product. Conformance testers run against one
-server, by its owner, pinned to an older revision of the spec. Nobody shows, over time and for
-everyone, which public MCP servers validate the issuer, bind the audience, or still lean on dynamic
-client registration. Nobody draws WIMSE, AAuth, ID-JAG, A2A and the EU acts on one map.
+server, by its owner, pinned to an older revision of the spec. Nobody shows which public MCP
+servers validate the issuer, bind the audience or still rely on dynamic client registration, for
+all of them and over time. Nobody draws WIMSE, AAuth, ID-JAG, A2A and the EU acts on one map.
 
-letsauth measures instead of asserting. It keeps one open dataset of what the agent protocols
-require and what real servers do:
+letsauth keeps one open dataset of what the agent protocols require and what real servers do:
 
-- **Every claim cites a revision.** Each requirement links to the section of the specification
-  revision it comes from. When the spec moves, the atlas says what changed and keeps the old
-  reading intact.
-- **Every status cites an observation.** A cell is only ever a dated observation with a method and
-  evidence a reviewer can open. Nothing is inferred from silence: an empty cell reads *unknown*,
-  never failure.
-- **Open, append-only data.** The dataset is YAML in this repository under CC BY 4.0. Observations
-  are never edited, so the atlas is also a record of how the ecosystem moved.
-- **Neutral and passive.** Rows are alphabetical, nothing is ranked, and the site contacts no server
-  at build time. The scanner reads public metadata only, never with a token.
-- **European by default.** Hosting, storage and analytics run in the EU. eIDAS 2.0, the AI Act and
-  NIS2 are first-class content wherever they touch agent delegation.
+- **Each requirement cites a revision.** It links to the section of the specification revision it
+  comes from. When the spec changes, the atlas says what changed and keeps the old reading.
+- **Each status cites an observation.** A cell is a dated observation with a method and evidence a
+  reviewer can open. A cell with no observation on record reads *unknown*, and never reads as a
+  failure.
+- **Open, append-only data.** The dataset is YAML in this repository under CC BY 4.0. We never edit
+  an observation, so the atlas also records how servers changed over time.
+- **Neutral and passive.** Rows are in alphabetical order and nothing is ranked. The site build
+  contacts no server. The scanner reads public metadata only and never sends a token.
+- **European.** Hosting, storage and analytics run in the EU. The site covers eIDAS 2.0, the AI
+  Act and NIS2 wherever they touch agent delegation.
 
 ## What is live
 
@@ -82,14 +80,14 @@ the data.
 </picture>
 
 One shared model, many views. Specifications, features, servers, observations and the relations
-between standards live as YAML under [`data/`](data/), validated by a Zod schema at build time and
-changed only through reviewed pull requests. The site is pre-rendered from that data; the scanner
-is the one backend, and its output flows back into the repository as data. The full picture is in
+between standards live as YAML under [`data/`](data/). A Zod schema validates them at build time,
+and they change only through reviewed pull requests. The build pre-renders the site from that
+data. The scanner is the one backend, and its output comes back into the repository as data. The full picture is in
 [`docs/architecture.md`](docs/architecture.md).
 
 ## Use the data
 
-Everything the site shows is yours to download under CC BY 4.0:
+You can download everything the site shows, under CC BY 4.0:
 
 ```sh
 curl -s https://letsauth.eu/mcp/data.json | jq '.servers | length'
@@ -120,5 +118,5 @@ issue.
 ## Licences
 
 Code is [MIT](LICENSE). Data under `data/` and the JSON exports are
-[CC BY 4.0](LICENSE-DATA). Operated by [Jan Brennenstuhl](https://www.janbrennenstuhl.eu/) in
-Berlin as Let's Auth Labs; see the [imprint](https://letsauth.eu/imprint/).
+[CC BY 4.0](LICENSE-DATA). [Jan Brennenstuhl](https://www.janbrennenstuhl.eu/) runs the site in
+Berlin as Let's Auth Labs. The [imprint](https://letsauth.eu/imprint/) has the details.

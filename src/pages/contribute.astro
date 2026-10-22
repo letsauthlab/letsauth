@@ -21,11 +21,11 @@ const entry = `- server: stripe                     # must equal the file's serv
 
 <Document
   title="Contribute"
-  heading="Add what you know, with evidence"
-  description="How to add an observation, correct a cell, list a server or withdraw one from the MCP auth atlas. Two paths, both reviewed before anything is published."
+  heading="Add what you know"
+  description="How to add an observation, correct a cell, list a server or withdraw one from the MCP auth atlas. A maintainer reviews every change before it is published."
   path="/contribute/"
   eyebrow="Contribute"
-  lede="The atlas is a dataset in a git repository. Anyone can add an observation or correct one; a maintainer reviews the evidence before it is published. Nothing is ever edited in place."
+  lede="The atlas is a dataset in a git repository. You can add an observation or correct one, with evidence, and a maintainer reviews it before it goes live."
 >
   <h2>Two ways in</h2>
   <p>
@@ -37,10 +37,10 @@ const entry = `- server: stripe                     # must equal the file's serv
       <p class="eyebrow">Path A</p>
       <h3 class="rows__title">Open an issue</h3>
       <p>
-        The quickest route. The form asks for the same fields as a data entry: server, feature,
-        revision, status, method, date, evidence and your handle. A maintainer turns an accepted
-        issue into a pull request and links the issue as evidence where the issue itself is the
-        evidence.
+        This is the quickest route. The form asks for the same fields as a data entry: server,
+        feature, revision, status, method, date, evidence and your handle. A maintainer turns an
+        accepted issue into a pull request. When the issue itself is the evidence, the entry
+        links to it.
       </p>
       <p><a class="button" href={issue} rel="noopener">Open the issue form</a></p>
     </li>
@@ -48,8 +48,9 @@ const entry = `- server: stripe                     # must equal the file's serv
       <p class="eyebrow">Path B</p>
       <h3 class="rows__title">Open a pull request</h3>
       <p>
-        Append an entry to the server's observation file yourself. Validation runs locally and
-        again in CI, so a reviewer only has to open the evidence. The steps are below.
+        You append an entry to the server's observation file yourself. The checks run on your
+        machine and again in CI, so a reviewer only has to open the evidence. The steps are
+        below.
       </p>
       <p><a class="button quiet" href={repo} rel="noopener">Open the repository</a></p>
     </li>
@@ -71,21 +72,23 @@ const entry = `- server: stripe                     # must equal the file's serv
   <h3>Entry format</h3>
   <pre tabindex="0"><code>{entry}</code></pre>
   <p>
-    <strong>Evidence</strong> is a URL a reviewer can open (a metadata document, a
-    documentation page, a response capture) or a precise note. <strong>Method</strong> says
-    how you know: <code>manual</code> for something you checked by hand,
-    <code>vendor-claim</code> for what the vendor says, <code>passive-scan</code> for reading
-    public metadata, <code>active-scan</code> for sending requests. When two observations of a
-    cell exist, the newest one is shown; equal timestamps are broken by method strength
-    (active-scan over passive-scan over manual over vendor-claim).
+    <strong>Evidence</strong> is a URL a reviewer can open, such as a metadata document, a
+    documentation page or a response capture. A precise note works too.
+    <strong>Method</strong> says how you know. Use <code>manual</code> for something you checked
+    by hand, <code>vendor-claim</code> for what the vendor says, <code>passive-scan</code> for
+    reading public metadata and <code>active-scan</code> for sending requests.
+  </p>
+  <p>
+    When a cell has two observations, the atlas shows the newest. If both have the same time,
+    the stronger method wins: active-scan, then passive-scan, then manual, then vendor-claim.
   </p>
 
   <h2>Let the scanner write it</h2>
   <p>
-    For the {scannerChecks} requirements the <a href="/mcp/scanner/">passive scanner</a> can read
-    from public metadata, prefer <code>pnpm scan &lt;server-id&gt; --write</code> over a hand-written
-    entry. It appends exactly the observations whose status or evidence changed, with evidence
-    anyone can reproduce by running the same command. The nightly run does the same for every
+    The <a href="/mcp/scanner/">passive scanner</a> can read {scannerChecks} requirements from
+    public metadata. For those, run <code>pnpm scan &lt;server-id&gt; --write</code> instead of
+    writing the entry by hand. It appends only the observations whose status or evidence changed,
+    and anyone can repeat the same command to check them. The nightly run does this for every
     listed server and opens its own pull request.
   </p>
 
@@ -93,7 +96,7 @@ const entry = `- server: stripe                     # must equal the file's serv
   <div class="callout">
     <p class="callout__title">Observations are never edited or removed</p>
     <p>
-      A correction is a new entry with a newer <code>observedAt</code>; the old one stays in the
+      A correction is a new entry with a newer <code>observedAt</code>. The old one stays in the
       history on the server page. CI fails any pull request that changes or deletes an existing
       entry.
     </p>
@@ -101,24 +104,24 @@ const entry = `- server: stripe                     # must equal the file's serv
 
   <h2>Listing a server</h2>
   <p>
-    Add <code>data/servers/&lt;id&gt;.yaml</code> with the endpoint, transport and
-    <code>listed</code>. If you maintain the server, use <code>listed: opt-in</code>; otherwise
-    give the <code>source</code> that lists it publicly. Servers are listed as they appear in
-    public directories; nobody is scored or ranked.
+    Add <code>data/servers/&lt;id&gt;.yaml</code> with the endpoint, the transport and
+    <code>listed</code>. If you maintain the server, use <code>listed: opt-in</code>. If not,
+    give the <code>source</code> that lists it publicly. We list servers as they appear in public
+    directories, and we score or rank nobody.
   </p>
 
   <h2>Withdrawing a server</h2>
   <p>
-    If you maintain a server and do not want it listed, use the issue form with
-    "withdraw my server" and a way to verify that you maintain it. A pull request then sets
-    <code>withdrawn</code> on the server. It leaves the matrix and the export; its observations
-    stay in the repository history.
+    If you maintain a server and do not want it listed, use the issue form. Choose "withdraw my
+    server" and give us a way to check that you maintain it. A pull request then sets
+    <code>withdrawn</code> on the server. It leaves the matrix and the export, and its
+    observations stay in the repository history.
   </p>
 
   <h2>Licences</h2>
   <p>
-    Data you contribute is published under <a href={`${repo}/blob/main/LICENSE-DATA`} rel="noopener">CC BY 4.0</a>;
-    the site's code is <a href={`${repo}/blob/main/LICENSE`} rel="noopener">MIT</a>.
+    Data you contribute is published under <a href={`${repo}/blob/main/LICENSE-DATA`} rel="noopener">CC BY 4.0</a>.
+    The site's code is <a href={`${repo}/blob/main/LICENSE`} rel="noopener">MIT</a>.
   </p>
 
   <Fragment slot="aside">

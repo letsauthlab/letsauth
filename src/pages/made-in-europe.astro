@@ -32,7 +32,7 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
   {
     what: "Fonts",
     who: "Served from letsauth.eu itself",
-    note: "Geist and Geist Mono are open-source fonts bundled with the site; no font service is contacted.",
+    note: "Geist and Geist Mono are open-source fonts that ship with the site. No font service is contacted.",
     where: "eu",
   },
   {
@@ -56,16 +56,16 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
   path="/made-in-europe/"
   eyebrow="Made in Europe"
   heading="Made in Europe, hosted in the EU"
-  lede="letsauth is built in Berlin and runs on European infrastructure: EU hosting, EU analytics, an .eu domain. Here is every service the site depends on, including the one that is not European."
-  updated="2026-10-14"
+  lede="We build letsauth in Berlin and run it on European services. This page lists every service the site depends on, including the one outside the EU."
+  updated="2026-10-22"
 >
   <h2>Why it matters here</h2>
   <p>
-    This lab studies who gets to act on whose behalf. Where your data goes, and under which law,
-    is part of the same question. European rules (the GDPR, eIDAS 2.0 and the EUDI wallet, the
-    AI Act, NIS2) shape how agents may be delegated authority, so the site that writes about them
-    keeps to them too: no cookies that need consent, visitor data handled only by EU companies,
-    and no third-party scripts beyond EU analytics.
+    This lab studies who may act on whose behalf. Where your data goes, and under which law, is
+    part of the same question. European rules shape how agents may receive authority: the GDPR,
+    eIDAS 2.0 and the EUDI wallet, the AI Act and NIS2. A site that writes about them should keep
+    to them. So the site sets no cookies that need consent, and only EU companies handle visitor
+    data. The only third-party script is the EU analytics.
   </p>
 
   <h2>What the site runs on</h2>
@@ -88,19 +88,20 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
 
   <h2>The exception</h2>
   <p>
-    The code, the data and the automated checks live on GitHub, a US company, because that is where open-source
-    contributors already are and where a pull request can be reviewed in public. Visitors to
-    letsauth.eu never touch it: no script, font or image on the site is loaded from GitHub. If
-    you contribute, GitHub's terms apply to what you do there; the{" "}
+    The code, the data and the automated checks live on GitHub, a US company. We use it because
+    open-source contributors are already there and a pull request can be reviewed in public.
+    Visitors to letsauth.eu never touch it, because the site loads no script, font or image from
+    GitHub. If you contribute, GitHub's terms apply to what you do there, and the{" "}
     <a href="/privacy/">privacy note</a> has the details. The whole history is in git, so the
     project can move to a European forge without losing anything.
   </p>
 
   <h2>Check it yourself</h2>
   <p>
-    Open your browser's network panel on any page: every request goes to letsauth.eu. Even the
-    analytics count is sent there and forwarded to Plausible by the CDN. The deployment and hosting setup is documented in the{" "}
-    <a href={`${REPO}/blob/main/docs/deploy.md`} rel="noopener">repository</a>.
+    Open your browser's network panel on any page. Every request goes to letsauth.eu, even the
+    analytics count, which the CDN forwards to Plausible. The{" "}
+    <a href={`${REPO}/blob/main/docs/deploy.md`} rel="noopener">deployment guide</a> in the
+    repository documents the hosting setup.
   </p>
 </Document>
 
