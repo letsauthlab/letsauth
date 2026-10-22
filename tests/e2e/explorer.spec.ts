@@ -158,25 +158,56 @@ test.describe("scenario page (US1)", () => {
     }
   });
 
-  test("Play never starts by itself, advances when pressed and pauses on any key (M6)", async ({
+  test("auto-advance starts once the chain is in view and stops for good on input (M6)", async ({
     page,
   }) => {
     await page.goto(`/explorer/${scenario.id}/`);
-    const bar = page.locator("[data-enhanced]");
-    const first = page.locator("#chain-steps li[data-step]").first();
-    await page.waitForTimeout(3000);
-    await expect(first).toHaveAttribute("aria-current", "step");
-    const play = bar.locator("button[data-play]");
+    const play = page.locator("[data-enhanced] button[data-play]");
     await expect(play).toHaveText("Play");
-    await play.click();
-    await expect(play).toHaveText("Pause");
+    // scrolled into view by script, so no wheel or key reaches the page
+    await page.locator("#chain-steps").evaluate((el) => el.scrollIntoView({ block: "start" }));
+    await expect(play).toHaveText("Pause", { timeout: 4000 });
     await expect(page.locator("#chain-steps li[data-step]").nth(1)).toHaveAttribute(
       "aria-current",
       "step",
       { timeout: 4000 },
     );
+    await expect(page.locator(".actor.is-from")).toHaveCount(1);
+    await expect(page.locator(".chain-log li")).toHaveCount(2);
     await page.keyboard.press("Shift");
     await expect(play).toHaveText("Play");
+    // the dimmed steps keep their text contrast
+    await expectNoSeriousA11yViolations(page);
+    await page.waitForTimeout(3500);
+    await expect(play).toHaveText("Play");
+    await expect(page.locator("#chain-steps li[data-step]").nth(1)).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+  });
+
+  test("Play advances when pressed and pauses on any key; the scrub bar and the log seek (M6, M18)", async ({
+    page,
+  }) => {
+    const firstId = chain.steps[0]?.id ?? "";
+    // a step in the URL keeps the auto-advance off
+    await page.goto(`/explorer/${scenario.id}/#step-${firstId}`);
+    const bar = page.locator("[data-enhanced]");
+    const steps = page.locator("#chain-steps li[data-step]");
+    const play = bar.locator("button[data-play]");
+    await page.waitForTimeout(2000);
+    await expect(play).toHaveText("Play");
+    await play.click();
+    await expect(play).toHaveText("Pause");
+    await expect(steps.nth(1)).toHaveAttribute("aria-current", "step", { timeout: 4000 });
+    await page.keyboard.press("Shift");
+    await expect(play).toHaveText("Play");
+    await bar.getByRole("slider", { name: "Position in the chain" }).fill("4");
+    await expect(steps.nth(3)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".chain-log li")).toHaveCount(4);
+    await page.locator(".chain-log li a").first().click();
+    await expect(steps.first()).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".chain-log li")).toHaveCount(1);
   });
 
   test("the token diff is in the markup before any script runs (M7)", async ({ browser }) => {
@@ -203,6 +234,13 @@ test.describe("scenario page (US1)", () => {
     await expectEndStateUnderReducedMotion(page, "#chain-steps");
     await expect(page.locator("[data-enhanced]")).toHaveCount(1);
     await expect(page.locator("button[data-play]")).toHaveCount(0);
+    // the scene never starts by itself under reduced motion
+    await page.locator("#chain-steps").evaluate((el) => el.scrollIntoView({ block: "start" }));
+    await page.waitForTimeout(2500);
+    await expect(page.locator(`#chain-steps li[data-step="${third}"]`)).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
     await page.getByRole("button", { name: "Next step" }).click();
     await expectEndStateUnderReducedMotion(page, "#chain-steps li[aria-current='step'] .arrow");
     await expectEndStateUnderReducedMotion(page, "#chain-steps [data-token]");
@@ -280,6 +318,32 @@ test.describe("toggle page (US2)", () => {
       .first()
       .evaluate((el) => getComputedStyle(el).borderLeftColor);
     expect(rail).not.toBe("rgba(0, 0, 0, 0)");
+  });
+
+  test("a toggle swaps the chain in place and back (M17)", async ({ page }) => {
+    await page.goto(`/explorer/${scenario.id}/`);
+    await expect(page.locator("[data-enhanced]")).toHaveCount(1);
+    await page.locator(`nav[aria-label="Toggles"] a[data-toggle="${passthrough.id}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`/explorer/${scenario.id}/${passthrough.id}/$`));
+    await expect(page.locator("[data-toggle-notice]")).toHaveCount(1);
+    await expect(page.locator("#chain-steps")).toHaveAttribute(
+      "data-steps",
+      String(chain.steps.length),
+    );
+    await expect(
+      page.locator(`nav[aria-label="Toggles"] a[data-toggle="${passthrough.id}"]`),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(page).toHaveTitle(new RegExp(passthrough.name));
+    // the island keeps working on the swapped chain, and there is still one of it
+    await expect(page.locator("[data-enhanced]")).toHaveCount(1);
+    await page.getByRole("button", { name: "Next step" }).click();
+    await expect(page.locator("#chain-steps li[data-step]").nth(1)).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`/explorer/${scenario.id}/(#.*)?$`));
+    await expect(page.locator("[data-toggle-notice]")).toHaveCount(0);
   });
 
   test("is accessible in this theme", async ({ page }) => {

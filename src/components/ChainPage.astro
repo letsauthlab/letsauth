@@ -164,6 +164,8 @@ function arrow(from: string, to: string) {
                 class:list={["step", { "is-toggled": s.toggled && !s.removed, "is-removed": s.removed }]}
                 data-step={s.id}
                 data-index={s.index}
+                data-from={s.from}
+                data-to={s.to}
                 data-toggled={s.toggled && !s.removed ? "" : undefined}
                 data-removed={s.removed ? "" : undefined}
                 data-replaces={s.replaces}
@@ -390,8 +392,8 @@ function arrow(from: string, to: string) {
     grid-template-columns: var(--lanes-w) var(--body-w);
     border-top: 1px solid var(--rule);
     border-left: 2px solid transparent;
-    scroll-margin-top: calc(var(--header-h) + 5rem);
-    transition: opacity var(--dur) var(--ease);
+    scroll-margin-top: calc(var(--header-h) + 6rem);
+    transition: background-color var(--dur-fast) var(--ease);
   }
   .step:first-child {
     border-top: 0;
@@ -580,7 +582,22 @@ function arrow(from: string, to: string) {
     color: var(--ink-2);
   }
 
-  /* step-through, driven by the island: the current step in the signal, later ones dimmed */
+  /*
+   * The scene, driven by the island (M5): the sender and receiver light up in the actor head,
+   * the current step carries the signal on a faint tint, earlier steps keep their arrow in a
+   * quieter ink and later ones only a hairline. Colour, not opacity, so no text loses contrast.
+   */
+  .actor__name {
+    padding-bottom: 2px;
+    border-bottom: 2px solid transparent;
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+  .actor:is(.is-from, .is-to) .actor__name {
+    color: var(--signal);
+    border-bottom-color: var(--signal);
+  }
   .step[aria-current="step"] .step__lanes {
     color: var(--signal);
   }
@@ -595,50 +612,97 @@ function arrow(from: string, to: string) {
   .step[aria-current="step"] .step__body {
     border-left-color: var(--signal);
   }
-  .step.is-future {
-    opacity: 0.45;
+  .chain__steps[data-stepping] .step[aria-current="step"] {
+    background: color-mix(in oklch, var(--signal) 5%, transparent);
+  }
+  .step.is-past .step__lanes {
+    color: var(--rule-strong);
+  }
+  .step:is(.is-past, .is-future) .step__message {
+    color: var(--ink-2);
+  }
+  .step.is-future .step__lanes {
+    color: var(--rule);
   }
 
   /*
-   * M5: once the reader steps, the current arrow draws in (300ms) and its body rises 8px
-   * (220ms). M8: on a toggle page the rails of the touched steps light up once, 40ms apart and
-   * no later than 400ms. Neither runs under reduced motion; both end where the static page is.
+   * M8: on a toggle page the rails of the touched steps light up once, 40ms apart and no later
+   * than 400ms; this also runs on the steps a toggle swaps in (M17). M5 and M7 run in the island
+   * through the Web Animations API. None of it runs under reduced motion.
    */
   @media (prefers-reduced-motion: no-preference) {
-    .chain__steps[data-stepping] .step[aria-current="step"] .arrow__line {
-      animation: draw-x 300ms var(--ease-draw) both;
-    }
-    .chain__steps[data-stepping] .step[aria-current="step"] .arrow::after,
-    .chain__steps[data-stepping] .step[aria-current="step"] .arrow-self {
-      animation: fade-in 300ms var(--ease) both;
-    }
-    .chain__steps[data-stepping] .step[aria-current="step"] .step__body > * {
-      animation: rise var(--dur) var(--ease) both;
-    }
     .step:is([data-toggled], [data-removed]) {
       animation: rail-in var(--dur-slow) var(--ease) both;
-      animation-delay: min(calc(var(--touched, 0) * 40ms), 400ms);
-    }
-  }
-  @keyframes draw-x {
-    from {
-      transform: scaleX(0);
-    }
-  }
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-  }
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
+      animation-delay: min(calc(var(--touched, 0) * var(--stagger)), 400ms);
     }
   }
   @keyframes rail-in {
     from {
       border-left-color: transparent;
+    }
+  }
+
+  /* M17: the toggle morph, a same-document view transition at the morph duration */
+  :global(:root.toggle-morph::view-transition-group(*)),
+  :global(:root.toggle-morph::view-transition-old(*)),
+  :global(:root.toggle-morph::view-transition-new(*)) {
+    animation-duration: var(--dur);
+    animation-timing-function: var(--ease);
+  }
+
+  /* M18: the decision log the island writes under the chain, one quiet line per step */
+  :global(.chain-log) {
+    margin-top: var(--space-4);
+    font-size: var(--tiny);
+  }
+  :global(.chain-log__title) {
+    margin: 0 0 var(--space-2);
+    font-size: var(--tiny);
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  :global(.chain-log__list) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  :global(.chain-log__list a) {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 14rem) minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 0.2em 0.5em;
+    border-left: 2px solid transparent;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+  :global(.chain-log__list a:hover) {
+    color: var(--ink);
+  }
+  :global(.chain-log__list [aria-current] a) {
+    border-left-color: var(--signal);
+    color: var(--ink);
+  }
+  :global(.chain-log__num) {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  :global(.chain-log__msg) {
+    font-family: var(--font-mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 40rem) {
+    :global(.chain-log__list a) {
+      grid-template-columns: 1.5rem minmax(0, 1fr);
+    }
+    :global(.chain-log__msg) {
+      grid-column: 2;
     }
   }
 

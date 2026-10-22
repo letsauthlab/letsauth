@@ -104,6 +104,7 @@ const headerLine = token.header
     border-left: 2px solid transparent;
     align-items: start;
   }
+  /* M7: the island starts these rails in the signal and settles them here, timed to the message */
   .claims > div[data-changed] {
     border-left-color: var(--rule);
   }
@@ -145,18 +146,6 @@ const headerLine = token.header
     color: var(--ink-2);
     font-size: var(--tiny);
     max-width: none;
-  }
-
-  /* M7: when the reader steps here, the rails start in the signal and settle on the rule */
-  @media (prefers-reduced-motion: no-preference) {
-    :global(.is-fresh) .claims > div[data-changed] {
-      animation: rail-settle var(--dur-slow) var(--ease) both;
-    }
-  }
-  @keyframes rail-settle {
-    from {
-      border-left-color: var(--signal);
-    }
   }
 
   @media (max-width: 40rem) {

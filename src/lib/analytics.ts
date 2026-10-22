@@ -5,13 +5,18 @@
  *
  * One pageview per shown document. A page prerendered by speculation rules runs its scripts
  * before the reader opens it, or although they never do; it waits for `prerenderingchange`.
- * A page restored from the back/forward cache counts again, as Plausible's own script does.
+ * A page restored from the back/forward cache counts again, as Plausible's own script does, and
+ * so does a page an island swaps in place (the explorer's toggles), which says so with
+ * `SOFT_NAVIGATION`.
  *
  * Only the browser bundle runs `startAnalytics`; the build imports nothing here that fetches.
  */
 
 /** Needs a file extension: Bunny answers an extensionless path with a 301 before an edge rule. */
 export const PLAUSIBLE_EVENT_PATH = "/r/e.json";
+
+/** The window event an island dispatches after it pushed a new URL and swapped the page in place. */
+export const SOFT_NAVIGATION = "letsauth:navigate";
 
 export interface AnalyticsConfig {
   domain: string;
@@ -107,6 +112,7 @@ export function startAnalytics(win: Win, config: AnalyticsConfig): Send | null {
   win.addEventListener("pageshow", (event) => {
     if ((event as PageTransitionEvent).persisted) send("pageview");
   });
+  win.addEventListener(SOFT_NAVIGATION, () => send("pageview"));
 
   const onClick = (event: Event) => {
     const e = event as MouseEvent;
