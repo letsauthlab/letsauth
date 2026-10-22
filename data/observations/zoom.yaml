@@ -488,3 +488,23 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://zoom.us/.well-known/oauth-authorization-server — HTTP 200; all 2 endpoints use https
+- server: zoom
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-22T01:18:38Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zoom.us/mcp/zoom/streamable — HTTP 401; WWW-Authenticate resource_metadata: https://zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable"
+- server: zoom
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-22T01:18:38Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.zoom.us/mcp/zoom/streamable — HTTP 401; WWW-Authenticate: Bearer resource_metadata="https://zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable", no scope parameter'
