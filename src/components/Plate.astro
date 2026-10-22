@@ -1,0 +1,110 @@
+---
+import { plate, plateSvg } from "@/lib/plate";
+
+// The decorative plate (plan WP8): a small label-free delegation chain in the explorer's own
+// vocabulary (actor heads, lifelines, messages, the trust boundary dash), set into the page head
+// beside the title on wide screens. Derived from the page's id and title, so it never changes
+// between builds. Hidden from assistive technology and on narrow screens. The highlighted path
+// draws in once on load (M4); under reduced motion it is drawn complete. A page that shows data
+// above the fold does not place it. Place it as the first child of `header.page-head`.
+interface Props {
+  id: string;
+  title: string;
+}
+
+const { id, title } = Astro.props;
+---
+
+<div class="decor" set:html={plateSvg(plate(id, title))} />
+
+<style>
+  .decor {
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    :global(.page-head:has(> .decor)) {
+      display: flow-root;
+    }
+    .decor {
+      display: block;
+      float: right;
+      width: 18rem;
+      margin: 0 0 var(--space-4) var(--space-8);
+    }
+  }
+  .decor :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .decor :global(.pb) {
+    stroke: var(--boundary);
+    stroke-dasharray: 4 4;
+    opacity: 0.7;
+  }
+  .decor :global(.pl) {
+    stroke: var(--rule);
+  }
+  .decor :global(.pa) {
+    fill: var(--ground-2);
+    stroke: var(--rule-strong);
+  }
+  .decor :global(.pm) {
+    stroke: var(--rule-strong);
+  }
+  .decor :global(.ph) {
+    stroke: var(--signal-soft);
+    stroke-width: 8;
+    opacity: 0;
+  }
+  .decor :global(.pp) {
+    stroke: var(--signal);
+    stroke-width: 2;
+  }
+  .decor :global(.po) {
+    fill: var(--signal);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .decor :global(.pp) {
+      stroke-dasharray: 1;
+      animation: plate-draw var(--dur-draw) var(--ease-draw) both;
+    }
+    .decor :global(.ph) {
+      stroke-dasharray: 1;
+      animation:
+        plate-draw var(--dur-draw) var(--ease-draw) both,
+        plate-halo calc(var(--dur-draw) + var(--dur-slow)) linear both;
+    }
+    .decor :global(.po) {
+      animation: plate-end var(--dur-slow) var(--ease) var(--dur-draw) both;
+    }
+  }
+  @keyframes plate-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* the halo shows while the path draws (1200 of 1680ms), then fades out */
+  @keyframes plate-halo {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    2%,
+    71% {
+      opacity: 1;
+    }
+  }
+  /* the path's ends appear once the path has reached them */
+  @keyframes plate-end {
+    from {
+      opacity: 0;
+    }
+  }
+</style>

@@ -1,8 +1,10 @@
 ---
+import Plate from "@/components/Plate.astro";
 import Base from "@/layouts/Base.astro";
 import { breachList } from "@/lib/breaches";
 import { getDataset } from "@/lib/data";
 import { PARTY_LABEL, TOGGLE_KIND_LABEL, VULNERABILITY_CLASS_LABEL } from "@/lib/labels";
+import { SECTION_PLATES, sectionCard } from "@/lib/plate";
 import { REPO } from "@/lib/site";
 
 const data = getDataset();
@@ -21,9 +23,11 @@ const date = (d: string) =>
   title="Breach anatomy"
   description={`${breaches.length} published vulnerabilities and incidents in how agents were authorized, each traced to the control that was missing and the atlas requirements that name it.`}
   path="/breaches/"
+  image={sectionCard("breaches")}
 >
   <div class="wrap">
     <header class="page-head">
+      <Plate id="breaches" title={SECTION_PLATES.breaches.title} />
       <p class="eyebrow">Breach anatomy</p>
       <h1>Agent auth failures</h1>
       <p class="lede">

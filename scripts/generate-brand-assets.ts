@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { cellKey, currentRevision, matrixFor } from "../src/lib/atlas";
 import { getDataset } from "../src/lib/data";
+import { plate, plateSvg, SECTION_PLATES, sectionCard } from "../src/lib/plate";
 
 // Run with `pnpm generate:brand` after changing public/brand, the tokens or the data. No network
 // requests are made.
@@ -95,6 +96,40 @@ try {
     <p class="site">letsauth.eu</p>`);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: "public/og.png" });
+
+  // The section roots that carry a decorative plate (WP8) get a card of their own: the same layout
+  // as the home card, with the page's drawing beside the headline as it sits in the page head.
+  for (const [id, section] of Object.entries(SECTION_PLATES)) {
+    await page.setContent(`<style>${tokens}
+      @font-face{font-family:Display;src:url('${fontUrl("geist")}');font-weight:100 900}
+      @font-face{font-family:Mono;src:url('${fontUrl("geist-mono")}');font-weight:100 900}
+      *{box-sizing:border-box}
+      body{margin:0;width:1200px;height:630px;padding:56px 64px;background:var(--ground);
+        color:var(--ink);font-family:Display;display:grid;grid-template-columns:1fr 400px;
+        gap:64px;align-items:center}
+      .logo{position:absolute;top:56px;left:64px;width:220px;height:auto}
+      .eyebrow{margin:0 0 18px;font-size:22px;color:var(--ink-2)}
+      h1{margin:0;font-weight:600;font-size:58px;line-height:1.08;letter-spacing:-0.03em}
+      .site{position:absolute;bottom:56px;left:64px;font:22px Mono;color:var(--ink-2)}
+      svg{display:block;width:100%;height:auto;fill:none;stroke-linecap:round;stroke-linejoin:round}
+      .pb{stroke:var(--boundary);stroke-dasharray:4 4;opacity:.7}
+      .pl{stroke:var(--rule)}
+      .pa{fill:var(--ground-2);stroke:var(--rule-strong)}
+      .pm{stroke:var(--rule-strong)}
+      .ph{display:none}
+      .pp{stroke:var(--signal);stroke-width:2}
+      .po{fill:var(--signal)}
+      </style>
+      <img class="logo" src="${svgUrl(wordmark)}" alt="letsauth">
+      <div>
+        <p class="eyebrow">${section.eyebrow}</p>
+        <h1>${section.title}</h1>
+      </div>
+      ${plateSvg(plate(id, section.title))}
+      <p class="site">letsauth.eu/${id}/</p>`);
+    await page.evaluate(() => document.fonts.ready);
+    await page.screenshot({ path: `public${sectionCard(id as keyof typeof SECTION_PLATES)}` });
+  }
 } finally {
   await browser.close();
 }
