@@ -184,8 +184,9 @@ const nav = [
             <BrandLogo />
           </a>
           <p>
-            An independent lab for agent authorization, run by {LAB}. Each cell cites its source
-            and the data is open. Only a nightly scan of public metadata ever contacts a server.
+            An independent lab for agent authorization, run by{" "}
+            <a class="site-footer__author" href={OPERATOR.site}>{OPERATOR.name}</a>. Each cell cites
+            its source and the data is open. Only a nightly scan of public metadata ever contacts a server.
           </p>
           <a class="site-footer__eu" href="/made-in-europe/">Made in Europe, hosted in the EU</a>
         </div>
@@ -425,6 +426,17 @@ const nav = [
   .site-footer__about p {
     margin: 0 0 var(--space-4);
     max-width: 36ch;
+  }
+  /* the one inline link in the statement: the person behind the lab, a plain followed link */
+  .site-footer__author {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-fast) var(--ease);
+  }
+  .site-footer__author:hover {
+    text-decoration-color: currentColor;
   }
   .site-footer__eu {
     display: inline-flex;
