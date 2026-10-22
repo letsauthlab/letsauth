@@ -284,28 +284,19 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
     font-size: var(--tiny);
   }
 
-  /* M13: the rail draws in from the top, then the entries fade in behind it; once, on load */
+  /*
+   * M13: the rail draws in from the top, once, on load. The entries stand still: they sit in
+   * view on the tinted panel, where a fade would drop their contrast while it runs.
+   */
   @media (prefers-reduced-motion: no-preference) {
     .revisions::before {
       transform-origin: top;
       animation: rail-down var(--dur-slow) var(--ease-draw) both;
     }
-    .revisions > li {
-      animation: fade-in var(--dur) var(--ease) both;
-      animation-delay: calc(var(--dur-slow) * 0.6);
-    }
-    .revisions > li + li {
-      animation-delay: var(--dur-slow);
-    }
   }
   @keyframes rail-down {
     from {
       transform: scaleY(0);
-    }
-  }
-  @keyframes fade-in {
-    from {
-      opacity: 0;
     }
   }
 
