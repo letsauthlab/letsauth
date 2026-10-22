@@ -7,10 +7,12 @@ import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from 
 const data = getDataset();
 const revision = currentRevision(data);
 const matrix = matrixFor(data, revision.id);
+const cells = [...matrix.cells.values()];
+// cells observed, not observations on record: the append-only history counts every entry
 const facts = [
   matrix.rows.length,
   matrix.columns.length,
-  data.observations.length,
+  cells.filter((c) => !c.derived).length,
   specNodes(data).length,
 ].map(String);
 
@@ -26,6 +28,14 @@ test.describe("home page (016 WP3)", () => {
     await expect(products.first().locator(".chip")).toHaveText(`${matrix.rows.length} servers`);
     await expect(page.locator(".latest__list > li")).toHaveCount(6);
     await expect(page.locator(".latest__list > li .status-cell")).toHaveCount(6);
+    // one row per requirement and per server, so a scan run of one feature fills one row only
+    for (const kind of ["servers", "features"]) {
+      const hrefs = await page
+        .locator(`.latest__list > li a[href^="/mcp/${kind}/"]`)
+        .evaluateAll((as) => as.map((a) => a.getAttribute("href")));
+      expect(new Set(hrefs).size, kind).toBe(6);
+    }
+    await expect(page.locator(".home-facts .facts__of")).toHaveText(`of ${cells.length}`);
   });
 
   test("keeps one filled button and loads no script file or island", async ({ page }) => {

@@ -4,10 +4,11 @@
  * view, a tiny inline script counts each one up from 0 over 600ms, once (plan 016, M3). Under
  * reduced motion, or without IntersectionObserver, it does nothing and the figures stand.
  * Each figure reserves the width of its final value, so counting never moves the layout.
+ * An item with `of` reads "611 of 897": the total stands still beside the counting figure.
  */
 interface Props {
   label: string;
-  items: { label: string; value: number }[];
+  items: { label: string; value: number; of?: number }[];
 }
 
 const { label, items } = Astro.props;
@@ -22,6 +23,7 @@ const { label, items } = Astro.props;
           <span data-count={item.value} style={`min-inline-size:${String(item.value).length}ch`}>
             {item.value}
           </span>
+          {item.of !== undefined && <span class="facts__of">of {item.of}</span>}
         </dd>
       </div>
     ))
@@ -34,5 +36,11 @@ const { label, items } = Astro.props;
 <style>
   dd span {
     display: inline-block;
+  }
+  .facts__of {
+    margin-inline-start: 0.3em;
+    font-size: var(--small);
+    font-weight: 400;
+    color: var(--ink-2);
   }
 </style>

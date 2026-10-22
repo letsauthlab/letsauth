@@ -3,13 +3,14 @@ import Facts from "@/components/Facts.astro";
 import MatrixThumb from "@/components/MatrixThumb.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
-import { currentRevision, matrixFor } from "@/lib/atlas";
+import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { breachList } from "@/lib/breaches";
 import { getDataset } from "@/lib/data";
 import { scenarioList } from "@/lib/explorer";
 import { CATEGORY_LABEL, METHOD_LABEL } from "@/lib/labels";
 import { scannerFacts, scannerIndex } from "@/lib/scanner";
 import { mapRelations, specNodes } from "@/lib/standards";
+import type { Observation } from "@/schema";
 
 const data = getDataset();
 const revision = currentRevision(data);
@@ -27,16 +28,24 @@ const newest = data.observations
   ?.slice(0, 10);
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// the newest observation of each of the six most recently observed servers
+// the six newest observations of the current matrix, one per requirement and one per server,
+// so a scan run that touched every server at once still shows six different rows
 const serverName = new Map(data.servers.map((s) => [s.id, s]));
 const featureName = new Map(data.features.map((f) => [f.id, f]));
-const latest = [...data.observations]
-  .filter(
-    (o) => !serverName.get(o.server)?.withdrawn && featureName.get(o.feature)?.party !== "client",
-  )
-  .sort((a, b) => b.observedAt.localeCompare(a.observedAt) || a.server.localeCompare(b.server))
-  .filter((o, i, all) => all.findIndex((p) => p.server === o.server) === i)
-  .slice(0, 6);
+const latest: Observation[] = [];
+const seen = new Set<string>();
+for (const o of [...data.observations].sort(
+  (a, b) => b.observedAt.localeCompare(a.observedAt) || a.server.localeCompare(b.server),
+)) {
+  if (latest.length === 6) break;
+  if (!matrix.cells.has(cellKey(o.server, o.feature))) continue;
+  if (o.revision.spec !== matrix.spec.id || o.revision.revision !== revision.id) continue;
+  if (seen.has(o.feature) || seen.has(o.server)) continue;
+  seen.add(o.feature).add(o.server);
+  latest.push(o);
+}
+const cells = [...matrix.cells.values()];
+const observedCells = cells.filter((c) => !c.derived).length;
 
 const products = [
   {
@@ -126,10 +135,10 @@ const products = [
       <Facts
         label="The dataset at a glance"
         items={[
-          { label: "Servers listed", value: matrix.rows.length },
-          { label: `Requirements in ${revision.id}`, value: matrix.columns.length },
-          { label: "Observations on record", value: data.observations.length },
-          { label: "Specifications mapped", value: specs },
+          { label: "Servers", value: matrix.rows.length },
+          { label: "Requirements", value: matrix.columns.length },
+          { label: "Cells observed", value: observedCells, of: cells.length },
+          { label: "Specifications", value: specs },
         ]}
       />
     </div>
@@ -183,8 +192,7 @@ const products = [
           }
         </ol>
         <p class="latest__note">
-          Seed data comes from vendor documentation and public directories, and each entry names
-          its method. A cell with no observation on record reads unknown.
+          Each row names its method. A cell with no observation on record reads unknown.
         </p>
         <p class="latest__more">
           <a class="button quiet small" href="/mcp/">See the full matrix</a>
