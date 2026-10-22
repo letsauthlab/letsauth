@@ -13,6 +13,8 @@ let opener: HTMLElement | null = null;
 
 const PARAMS = ["level", "category", "party", "q", "access", "auth", "group"] as const;
 type Param = (typeof PARAMS)[number];
+// the width in rem below which a group's label counts as wider than its columns (MatrixTable)
+const NARROW_COLUMN_REM = 2.75;
 
 onMount(() => {
   const table = document.getElementById("matrix");
@@ -117,10 +119,20 @@ onMount(() => {
         perCategory.set(c, (perCategory.get(c) ?? 0) + 1);
       }
     }
+    // on wide screens a group whose label outgrows its columns takes the label's width
+    let narrowRem = 0;
+    let wideCols = 0;
     for (const gh of groupHeads) {
       const n = perCategory.get(gh.dataset.category ?? "") ?? 0;
       gh.hidden = n === 0;
-      if (n > 0) gh.colSpan = n;
+      if (n === 0) continue;
+      gh.colSpan = n;
+      gh.style.setProperty("--n", String(n));
+      const label = Number(gh.dataset.labelRem ?? 0);
+      const narrow = label > n * NARROW_COLUMN_REM;
+      gh.toggleAttribute("data-narrow", narrow);
+      if (narrow) narrowRem += label;
+      else wideCols += n;
     }
     const featureKey = [...visibleFeatures].join(" ");
     const columnsChanged = featureKey !== shownFeatures;
@@ -141,6 +153,8 @@ onMount(() => {
     if (columnsChanged) {
       // the table's layout is fixed: its width and the feature column follow the columns shown
       table.style.setProperty("--cols", String(visibleFeatures.size));
+      table.style.setProperty("--wide-cols", String(wideCols));
+      table.style.setProperty("--narrow-w", `${narrowRem}rem`);
       if (featureCol) featureCol.span = Math.max(visibleFeatures.size, 1);
     }
     regroup(s.group, visibleFeatures.size);
