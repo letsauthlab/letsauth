@@ -25,17 +25,23 @@ const fullTitle =
   title === "letsauth" ? "letsauth · the lab for agent authorization" : `${title} · letsauth`;
 const here = path ?? Astro.url.pathname;
 // Who publishes the site, for search engines: the lab, founded and run by one person.
+const author = {
+  "@type": "Person",
+  name: OPERATOR.name,
+  url: OPERATOR.site,
+  sameAs: [OPERATOR.mastodon.url, OPERATOR.bluesky],
+};
 const publisher = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "letsauth",
   url: site.href,
-  author: { "@type": "Person", name: OPERATOR.name, url: OPERATOR.site },
+  author,
   publisher: {
     "@type": "Organization",
     name: LAB,
     url: site.href,
-    founder: { "@type": "Person", name: OPERATOR.name, url: OPERATOR.site },
+    founder: author,
   },
 };
 // Footer link groups: what you can read, what you can take, and who is behind it.
@@ -111,6 +117,9 @@ const nav = [
     <link rel="canonical" href={canonical.href} />
     <meta name="author" content={OPERATOR.name} />
     <link rel="author" href={OPERATOR.site} />
+    <link rel="me" href={OPERATOR.mastodon.url} />
+    <link rel="me" href={OPERATOR.bluesky} />
+    <meta name="fediverse:creator" content={OPERATOR.mastodon.handle} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="letsauth" />
