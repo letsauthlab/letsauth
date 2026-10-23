@@ -150,8 +150,12 @@ test.describe("scan on the server page (US2)", () => {
   test("has no serious accessibility violations once the ladder has printed", async ({ page }) => {
     test.skip(!scanned, "no server with a scanner observation in the dataset yet");
     await page.goto(`/mcp/servers/${scanned?.server.id}/`);
-    await page.locator("[data-ladder]").scrollIntoViewIfNeeded();
-    // contrast is judged on the end state, not on a ladder line still fading in (M12)
+    const ladder = page.locator("[data-ladder]");
+    await ladder.scrollIntoViewIfNeeded();
+    // contrast is judged on the end state, not on a ladder line still fading in (M12): wait
+    // until the ladder has started printing, then until its last line has finished
+    await expect(ladder).toHaveAttribute("data-play", "");
+    await expect(page.locator("[data-verdict]")).toHaveCSS("opacity", "1");
     await page.waitForFunction(() =>
       document.getAnimations().every((a) => a.playState !== "running"),
     );
