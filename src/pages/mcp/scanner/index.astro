@@ -5,7 +5,7 @@ import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
 import { passiveChecks, scannerFacts, scannerIndex, unscannedFeatures } from "@/lib/scanner";
 import { MAX_REQUESTS } from "@/scanner/discovery";
-import { GRADE_RULE } from "@/scanner/grade";
+import { SUMMARY_RULE } from "@/scanner/summary";
 import { wellKnownAsUrls, wellKnownPrmUrls } from "@/scanner/urls";
 import { USER_AGENT } from "@/scanner/version";
 
@@ -55,7 +55,7 @@ const ladder = [
 
 <Base
   title="Scanner"
-  description={`The passive scanner behind the MCP auth atlas: what it reads, how it grades, and where its reports for the ${facts.servers} listed servers show against MCP Authorization ${revision.id}.`}
+  description={`The passive scanner behind the MCP auth atlas: what it reads, how it reports, and where its reports for the ${facts.servers} listed servers show against MCP Authorization ${revision.id}.`}
   path="/mcp/scanner/"
 >
   <div class="wrap">
@@ -138,13 +138,13 @@ const ladder = [
             value, so a reviewer can open it.
           </p>
         </section>
-        <section class="panel" id="grade-rule" aria-labelledby="grade-title">
-          <h3 id="grade-title">How the grade is derived</h3>
+        <section class="panel" id="summary-rule" aria-labelledby="summary-title">
+          <h3 id="summary-title">How the summary is counted</h3>
           <ol class="rule">
-            {GRADE_RULE.map((line) => <li>{line}</li>)}
+            {SUMMARY_RULE.map((line) => <li>{line}</li>)}
           </ol>
           <p>
-            The grade is a property of one report at one time, derived from the statuses shown.
+            The summary belongs to one report at one time and is counted from the statuses shown.
             The atlas never sorts or ranks servers by it.
           </p>
         </section>
@@ -155,9 +155,9 @@ const ladder = [
       <h2 id="where-title">Where the results show</h2>
       <p>
         The scanner has no list of its own. Its results live in the{" "}
-        <a href="/mcp/">MCP auth atlas</a>: the letter next to each server name in the matrix is
-        that server's latest grade, and every <a href="/mcp/">server page</a> carries the
-        same grade with a link to the full report at <code>/mcp/servers/&lt;server&gt;/scan/</code>, which lists
+        <a href="/mcp/">MCP auth atlas</a>: the matrix cells are the latest observations, and
+        "report" next to each server name, like every <a href="/mcp/">server page</a>, links to
+        the full report at <code>/mcp/servers/&lt;server&gt;/scan/</code>, which lists
         each of the {checks.length} checks with the metadata it read. A server without a scanner
         observation reads "not scanned": the nightly run has not yet been able to read its metadata, or
         has not run since it was listed. Servers whose <a href="/mcp/#f-auth">auth class</a> is API

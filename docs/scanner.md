@@ -126,7 +126,7 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 4. when nothing under `data/observations/` changed, logs "nothing to append" and stops;
 5. otherwise commits to a new branch `scanner/<date>-<hhmm>` (UTC), pushes it, and opens one pull
    request `Scanner: <date> <hh:mm> UTC` whose description is the run summary (per server the
-   grade, the cells appended and the checks that could not be judged);
+   scan summary, the cells appended and the checks that could not be judged);
 6. keeps earlier scanner pull requests and branches open: each run compares against `main`,
    and later results do not include every earlier unmerged observation. Review and merge pending
    evidence in chronological order, resolving append-only list conflicts by retaining both runs.
@@ -218,27 +218,31 @@ Set up once, by the owner:
 The workflow never creates or changes the job's schedule, resources or secret; it only moves
 the image forward, so those settings stay where the owner put them.
 
-## The grade
+## The summary
 
-Shown on report pages, on atlas server pages and next to each server name in the atlas matrix,
-never used to sort or rank:
+The scanner does not grade, score or rank. A report shows each check with its status, and a
+summary that counts those statuses per requirement level (spec 017, which replaced the A–F grade
+of 004 FR-008):
 
-1. F when a MUST-level check is unsupported or partial.
-2. Withheld (no letter) when a MUST-level check is unknown.
-3. C when every MUST-level check is supported and a SHOULD-level check is unsupported or partial.
-4. B when every MUST-level check is supported, no SHOULD-level check fails, and a SHOULD-level
-   check is unknown.
-5. A when every MUST-level and SHOULD-level check is supported.
+```
+MUST    8 checks   supported 7, unsupported 1
+SHOULD  4 checks   unsupported 3, unknown 1
+MAY     2 checks   unsupported 2
+```
 
-A MUST the server may meet in either of two ways is met when either way is supported, and counts
-as unknown while the other way is unknown. Protected resource metadata may be served at a
-well-known location or announced in the `WWW-Authenticate` challenge; the scanner reads both, so
-a server that offers only the challenge is graded, one where the challenge could not be judged
-and the well-known document is missing is withheld, and only a server that offers neither fails
-on discovery. MAY-level and deprecated requirements are listed and never change
-the grade. Servers whose `auth` class (`docs/data-model.md` › Server, roadmap 009) is `api-key`
-or `none` are neither scanned nor graded ("No OAuth"); the class is an evidenced statement on the
-server file.
+Under the counts, each level names the checks that are not supported, linked to their rows. The
+levels are never added up into one number, and nothing on the site sorts servers by a scan. The
+atlas matrix shows the cells themselves and a quiet "report" link next to each server name; the
+server page shows how many checks ran and when.
+
+`unknown` is counted as unknown, never as unsupported. A MUST the server may meet in either of
+two ways counts as supported when either way is supported, and as unknown while the other way is
+unknown. Protected resource metadata may be served at a well-known location or announced in the
+`WWW-Authenticate` challenge; the scanner reads both, so a server that offers only the challenge
+counts as meeting discovery, and the summary says in a sentence when a count differs from its
+row. Deprecated requirements are counted under their own level. Servers whose `auth` class
+(`docs/data-model.md` › Server, roadmap 009) is `api-key` or `none` are not scanned and read
+"No OAuth"; the class is an evidenced statement on the server file.
 
 ## What there is not
 

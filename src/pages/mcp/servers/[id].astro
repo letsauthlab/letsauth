@@ -198,7 +198,11 @@ const classes = [
                 <span class="scan__label">Passive scan</span>
                 {scanView.scanned ? (
                   <>
-                    <strong>{scanView.grade.letter ? `Grade ${scanView.grade.letter}` : scanView.grade.label}</strong>
+                    <span>
+                      {scanView.summary.state === "scanned"
+                        ? `${scanView.checks.length} checks`
+                        : scanView.summary.label}
+                    </span>
                     {" · "}
                     <time datetime={scanView.scannedAt}>{scanView.scannedAt?.slice(0, 10)}</time>
                     {" · "}

@@ -104,7 +104,7 @@ observation is one about a feature: `{ class, method, evidence, observedAt, obse
 page and corrected in place by pull request; git keeps the history. A server without one is
 rendered as a *derived* `unknown`, like a cell without an observation, never as a verdict. The
 atlas filters and groups by both classes; the scanner scans a server unless its `auth` is
-`api-key` or `none`, grades none of those ("No OAuth"), and reports in its run summary when what
+`api-key` or `none`, scans none of those ("No OAuth"), and reports in its run summary when what
 an endpoint answered does not sit with the stated class. The scanner never writes a
 classification.
 

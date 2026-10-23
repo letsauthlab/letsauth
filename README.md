@@ -66,7 +66,7 @@ letsauth keeps one open dataset of what the agent protocols require and what rea
 | 🕸️ | **[Agent auth atlas](https://letsauth.eu/standards/)** | The specifications, drafts and EU acts behind agent authorization as one map of what builds on, profiles, competes with and replaces what, with maturity and dated revisions per document. Export: [`data.json`](https://letsauth.eu/standards/data.json). |
 | 🔗 | **[Delegation chain explorer](https://letsauth.eu/explorer/)** | Scenarios of how authority travels from a person to an agent to an API, step by step, with the decoded token at each hop and toggles for the attacks and misconfigurations that break the chain. Every step cites a specification revision. Export: [`data.json`](https://letsauth.eu/explorer/data.json). |
 | 🩻 | **[Breach anatomy](https://letsauth.eu/breaches/)** | Published vulnerabilities and incidents in how agents were authorized, each written from its advisory and traced to the control that was missing, the atlas requirements that stand for it, and a replay toggle in the explorer. Export: [`data.json`](https://letsauth.eu/breaches/data.json). |
-| 🔍 | **[Scanner](https://letsauth.eu/mcp/scanner/)** | A passive scanner that reads each listed server's public OAuth metadata every night, grades it against the MCP Authorization specification and opens one pull request of observations. The grade shows next to each server in the atlas; one report per server at `/mcp/servers/<id>/scan/` and `/mcp/servers/<id>/scan.json`. |
+| 🔍 | **[Scanner](https://letsauth.eu/mcp/scanner/)** | A passive scanner that reads each listed server's public OAuth metadata every night, checks it against the MCP Authorization specification and opens one pull request of observations. Nothing is graded: the atlas shows each status, and every report counts them per requirement level; one report per server at `/mcp/servers/<id>/scan/` and `/mcp/servers/<id>/scan.json`. |
 
 Next on the [roadmap](docs/roadmap.md): agents under EU rules, and a changelog generated from
 the data.
@@ -93,7 +93,7 @@ You can download everything the site shows, under CC BY 4.0:
 curl -s https://letsauth.eu/mcp/data.json | jq '.servers | length'
 curl -s https://letsauth.eu/standards/data.json | jq '.relations[0]'
 curl -s https://letsauth.eu/explorer/data.json | jq '.scenarios[0].toggles | length'
-curl -s https://letsauth.eu/mcp/servers/notion/scan.json | jq '.grade'
+curl -s https://letsauth.eu/mcp/servers/notion/scan.json | jq '.summary'
 ```
 
 Or read the YAML directly: one file per entity under [`data/`](data/), with the schema in

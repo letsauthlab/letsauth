@@ -1,5 +1,5 @@
-import { type Grade, grade, NOT_SCANNED, noOAuth } from "../scanner/grade";
 import { type CheckResult, passiveFeatures, REPORT_VERSION, type Report } from "../scanner/report";
+import { NOT_SCANNED, noOAuth, type Summary, summarize } from "../scanner/summary";
 import { wellKnownPrmUrls } from "../scanner/urls";
 import { SCANNER_ID } from "../scanner/version";
 import type { Feature, FeatureRevision, Observation, Server } from "../schema";
@@ -15,7 +15,7 @@ import type { Dataset } from "./data";
 
 /**
  * The scanner as a view on the model, for the pages: the report for a server is the set of its
- * newest scanner observations per passive feature under the current revision, graded at render
+ * newest scanner observations per passive feature under the current revision, summarized at render
  * time. Nothing here contacts a server; the modules imported from `src/scanner/` are pure.
  */
 
@@ -44,7 +44,7 @@ export interface ScanView {
   /** The newest scanner observation date across the checks; undefined when never scanned. */
   scannedAt?: string;
   scanned: boolean;
-  grade: Grade;
+  summary: Summary;
 }
 
 /** True for an observation the scanner wrote (any version). */
@@ -95,15 +95,15 @@ export function latestScan(
     checks,
     scannedAt,
     scanned,
-    grade: hasNoOAuth(server)
+    summary: hasNoOAuth(server)
       ? noOAuth(authOf(server).value as "api-key" | "none")
       : scanned
-        ? grade(checks)
+        ? summarize(checks)
         : NOT_SCANNED,
   };
 }
 
-/** Every listed server with its view, by name. Never ordered by grade (FR-009). */
+/** Every listed server with its view, by name. Never ordered by the scan (017 FR-004). */
 export function scannerIndex(data: Dataset, revisionId = currentRevision(data).id): ScanView[] {
   return data.servers
     .filter((s) => !s.withdrawn)
@@ -134,7 +134,7 @@ export function reportFromView(view: ScanView, generatedAt = new Date().toISOStr
     requests: [],
     discovered: null,
     checks: view.checks,
-    grade: view.grade,
+    summary: view.summary,
     observations: [],
   };
 }

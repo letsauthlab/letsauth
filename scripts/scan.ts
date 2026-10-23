@@ -76,8 +76,9 @@ function printReport(report: Report): void {
     `${report.scanner} · ${report.target.url}${report.target.server ? ` (${report.target.server})` : ""}`,
   );
   out.push(`against ${report.revision.spec} ${report.revision.revision} · ${report.generatedAt}`);
-  out.push(`grade: ${report.grade.label}`);
-  for (const r of report.grade.reasons) out.push(`  ${r}`);
+  out.push(`summary: ${report.summary.label}`);
+  for (const c of report.summary.open) out.push(`  ${c.level} ${c.status}: ${c.name}`);
+  for (const n of report.summary.notes) out.push(`  ${n}`);
   out.push("");
   for (const c of report.checks) {
     out.push(`${STATUS_WORD[c.status] ?? c.status}  ${c.level.padEnd(6)} ${c.feature}`);

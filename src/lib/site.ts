@@ -12,6 +12,9 @@ export const OPERATOR = {
   country: "Germany",
   email: "letsauth@janbrennenstuhl.eu",
   site: "https://www.janbrennenstuhl.eu/",
+  /** Social profiles: linked with rel="me" for verification and listed as sameAs in the JSON-LD. */
+  mastodon: { handle: "@jbspeakr@infosec.exchange", url: "https://infosec.exchange/@jbspeakr" },
+  bluesky: "https://bsky.app/profile/janbrennenstuhl.eu",
 } as const;
 
 export const REPO = "https://github.com/letsauthlab/letsauth";

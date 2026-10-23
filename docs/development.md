@@ -43,7 +43,7 @@ set.
 
 - **Unit tests** live in `tests/unit/` with fixtures in `tests/fixtures/`. They cover the matrix
   derivation, the standards graph, exports, citations, data validation and every scanner module
-  (guard, urls, checks, grade, append rule, nightly job). The scanner tests never make a network
+  (guard, urls, checks, summary, append rule, nightly job). The scanner tests never make a network
   request: fetch is stubbed with fixture responses.
 - **End-to-end tests** live in `tests/e2e/` and run against the built site. They check that pages
   read without JavaScript, that the islands work with it, accessibility with axe, and
@@ -80,7 +80,7 @@ that workflow does not start CI, so push any further commit (or merge the base b
 green run. Update baselines only for intended changes.
 
 Scanner pull requests must not need new baselines: the scanner pages mark text the nightly run
-changes with `data-nightly`, and the screenshot tests fix those values and mask the grades.
+changes with `data-nightly`, and the screenshot tests fix those values and mask the report links.
 
 ## Working on the scanner
 

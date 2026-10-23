@@ -1,7 +1,7 @@
 ---
 /**
- * The scan report (research R10): the grade, the request ladder as a transcript (M12), then the
- * checks as rows with a StatusCell each. Static HTML; the only script prints the ladder line by
+ * The scan report (research R10): the summary (status counts per level, spec 017), the request
+ * ladder as a transcript (M12), then the checks as rows with a StatusCell each. Static HTML; the only script prints the ladder line by
  * line once, and the page reads the same without it.
  */
 import StatusCell from "@/components/StatusCell.astro";
@@ -24,7 +24,8 @@ const PARTY_LABEL: Record<string, string> = {
 };
 const parties = ["mcp-server", "authorization-server"] as const;
 const notScanned = !report.checks.some((c) => c.observedAt);
-const gradeWord = report.grade.letter ? `Grade ${report.grade.letter}` : report.grade.label;
+const { summary } = report;
+const judged = report.checks.length;
 
 function splitEvidence(text: string): { url?: string; note: string } {
   const m = text.match(/^(https:\/\/\S+)\s*(.*)$/s);
@@ -34,26 +35,61 @@ function splitEvidence(text: string): { url?: string; note: string } {
 ---
 
 <section class="report" data-report aria-label="Scan report">
-  <div class="grade" data-grade-label={report.grade.label}>
-    <span class={`letter letter-${report.grade.letter ?? "none"}`} aria-hidden="true">
-      {report.grade.letter ?? "–"}
-    </span>
-    <div class="grade__text">
-      <p class="grade__word" data-grade-letter={report.grade.letter ?? undefined}>{gradeWord}</p>
-      {
-        notScanned ? (
-          <p class="grade__note" id="not-scanned">
-            No passive scan recorded yet for this server. The nightly run adds one when it can
-            read the server's metadata; until then the atlas page shows what documentation says.
-          </p>
-        ) : (
-          <ul class="grade__reasons">
-            {report.grade.reasons.map((reason) => <li>{reason}</li>)}
-          </ul>
-        )
-      }
-    </div>
-  </div>
+  <section class="found" aria-labelledby="found-title" data-summary={summary.state}>
+    <h2 id="found-title">What the scan found</h2>
+    {
+      summary.state === "no-oauth" &&
+        summary.notes.map((note) => <p class="found__note">{note}</p>)
+    }
+    {
+      notScanned ? (
+        <p class="found__note" id="not-scanned">
+          No passive scan recorded yet for this server. The nightly run adds one when it can read
+          the server's metadata; until then the atlas page shows what documentation says.
+        </p>
+      ) : summary.state !== "scanned" ? null : (
+        <>
+          <dl class="tally">
+            {summary.tallies.map((t) => (
+              <div data-level={t.level}>
+                <dt>
+                  <span class={`level level-${t.level}`}>{t.level}</span>
+                  <span class="tally__total">
+                    {t.total} {t.total === 1 ? "check" : "checks"}
+                  </span>
+                </dt>
+                <dd>
+                  <ul>
+                    {t.counts.map((c) => (
+                      <li>
+                        <StatusCell status={c.status} variant="label" />{" "}
+                        <span class="num">{c.n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {summary.open.some((c) => c.level === t.level) && (
+                    <ul class="tally__open">
+                      {summary.open
+                        .filter((c) => c.level === t.level)
+                        .map((c) => (
+                          <li>
+                            <StatusCell status={c.status} />
+                            <a href={`#check-${c.feature}`}>{c.name}</a>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {summary.notes.map((note) => (
+            <p class="found__note">{note}</p>
+          ))}
+        </>
+      )
+    }
+  </section>
 
   {
     ladder.length > 0 && (
@@ -74,7 +110,9 @@ function splitEvidence(text: string): { url?: string; note: string } {
           ))}
           <li class="verdict" style={`--i: ${ladder.length}`} data-verdict>
             <span class="transcript__method" aria-hidden="true">=</span>
-            <span class="transcript__url">{gradeWord}</span>
+            <span class="transcript__url">
+              {judged} checks, each with its status below
+            </span>
           </li>
         </ol>
       </section>
@@ -93,7 +131,7 @@ function splitEvidence(text: string): { url?: string; note: string } {
                 const ev = splitEvidence(c.evidence);
                 const observed = Boolean(c.observedAt);
                 return (
-                  <li data-check={c.feature} data-status={c.status}>
+                  <li id={`check-${c.feature}`} data-check={c.feature} data-status={c.status}>
                     <div class="rows__head">
                       <h3 class="rows__title">
                         <a href={`/mcp/features/${c.feature}/`}>{c.name}</a>
@@ -154,7 +192,7 @@ function splitEvidence(text: string): { url?: string; note: string } {
 <script>
   import { reducedMotion } from "@/lib/motion";
 
-  // M12: the ladder prints line by line, once, when it scrolls into view; the grade comes last.
+  // M12: the ladder prints line by line, once, when it scrolls into view; the count comes last.
   // The static list is the end state, so without JavaScript or with reduced motion it simply shows.
   for (const ladder of document.querySelectorAll<HTMLElement>("[data-ladder]")) {
     if (reducedMotion() || !("IntersectionObserver" in window)) continue;
@@ -181,58 +219,67 @@ function splitEvidence(text: string): { url?: string; note: string } {
     margin: 0 0 var(--space-3);
   }
 
-  .grade {
+  /* Counts only, in the status glyphs the rows use; no letter, no colour of its own. */
+  .found h2 {
+    margin-bottom: var(--space-4);
+  }
+  .tally {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-4) var(--space-5);
-    align-items: start;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4);
   }
-  /* The letter is always accompanied by its word and reasons; colour is a second channel. */
-  .letter {
-    --c: var(--ink-2);
-    display: inline-grid;
-    place-items: center;
-    width: 4rem;
-    height: 4rem;
-    border-radius: var(--radius);
-    font-weight: 600;
-    font-size: 2.25rem;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    color: var(--c);
-    border: 1px solid var(--c);
+  .tally > div {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: var(--space-1) var(--space-4);
+    align-items: baseline;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--line);
   }
-  .letter-A {
-    --c: var(--ok);
+  .tally dt {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
   }
-  .letter-B {
-    --c: var(--signal);
-  }
-  .letter-C {
-    --c: var(--caution);
-  }
-  .letter-F {
-    --c: var(--threat);
-  }
-  .letter-none {
-    border-style: dashed;
-  }
-  .grade__word {
-    font-weight: 600;
-    font-size: var(--h3);
-    margin: 0 0 var(--space-2);
-  }
-  .grade__reasons {
-    margin: 0;
-    padding-left: 1.2em;
-    font-size: var(--small);
+  .tally__total {
+    font-size: var(--tiny);
     color: var(--ink-2);
   }
-  .grade__reasons li {
-    margin-bottom: var(--space-1);
-  }
-  .grade__note {
+  .tally dd {
     margin: 0;
+  }
+  .tally ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--small);
+  }
+  .tally .num {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .tally .tally__open {
+    gap: var(--space-1) var(--space-4);
+    margin-top: var(--space-1);
+    font-size: var(--tiny);
+  }
+  .tally__open li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+  }
+  .tally__open :global(.status-cell) {
+    --size: 0.75rem;
+    align-self: center;
+  }
+  .tally__open a {
+    color: var(--ink-2);
+  }
+  .found__note {
+    margin: 0 0 var(--space-2);
     font-size: var(--small);
     color: var(--ink-2);
   }
@@ -318,6 +365,9 @@ function splitEvidence(text: string): { url?: string; note: string } {
 
   /* On a phone the answer moves under the address, and the two frames give back their padding. */
   @media (max-width: 40rem) {
+    .tally > div {
+      grid-template-columns: 1fr;
+    }
     .ladder {
       padding: var(--space-3);
     }

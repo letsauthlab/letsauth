@@ -3,7 +3,6 @@ import { cellKey, featureInRevision, type Matrix, type RevisionDiff } from "@/li
 import { ACCESS_LABEL, AUTH_LABEL, accessOf, authOf } from "@/lib/classes";
 import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
 import type { ScanView } from "@/lib/scanner";
-import GradeBadge from "./GradeBadge.astro";
 import ObservationDetail from "./ObservationDetail.astro";
 import StatusCell from "./StatusCell.astro";
 
@@ -12,9 +11,9 @@ interface Props {
   /** Diff against the previous revision, used to badge columns whose level changed. */
   diff?: RevisionDiff;
   /**
-   * The nightly scanner's latest view per server id. Its grade sits next to the server's name
-   * and links to the report; it is derived from the cells by a published rule and is never a
-   * sort key.
+   * The nightly scanner's latest view per server id. A quiet link next to the server's name
+   * opens the report; the row's cells already show what the scan found, so nothing is added
+   * here and nothing is a sort key.
    */
   scans?: Map<string, ScanView>;
 }
@@ -137,7 +136,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
               {scans && (
                 <>
                   {" · "}
-                  <a href="/mcp/scanner/">nightly scan grade</a>
+                  <a href="/mcp/scanner/">nightly scan</a>
                 </>
               )}
             </span>
@@ -198,11 +197,6 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
             const access = accessOf(server);
             const auth = authOf(server);
             const scan = scans?.get(server.id);
-            const word = scan
-              ? scan.grade.letter
-                ? `grade ${scan.grade.letter}`
-                : scan.grade.label.toLowerCase()
-              : "";
             return (
               <tr
                 data-server={server.id}
@@ -215,12 +209,12 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                     <a class="server-link" href={`/mcp/servers/${server.id}/`}>{server.name}</a>
                     {scan && (
                       <a
-                        class="grade-link"
+                        class="scan-link"
                         href={`/mcp/servers/${server.id}/scan/`}
-                        data-grade={scan.grade.letter ?? scan.grade.label}
-                        aria-label={`${server.name}, nightly scan: ${word}. Open the report`}
+                        data-scan={scan.summary.state}
+                        title={scan.summary.label}
                       >
-                        <GradeBadge grade={scan.grade} variant="cell" />
+                        <span class="visually-hidden">{server.name} scan </span>report
                       </a>
                     )}
                   </span>
@@ -519,11 +513,17 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       text-underline-offset: 0.2em;
     }
 
-    .matrix .grade-link {
-      display: inline-flex;
+    /* the row's own cells are the scan's result; this only opens the report behind them */
+    .matrix .scan-link {
       flex: none;
-      border-radius: var(--radius-focus);
+      font-size: var(--tiny);
+      color: var(--ink-2);
       text-decoration: none;
+    }
+    .matrix .scan-link:hover {
+      color: var(--ink);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
     }
 
     .matrix .classes {

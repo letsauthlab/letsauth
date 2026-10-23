@@ -108,7 +108,7 @@ builds on, profiles or replaces, in the row of its publishing body.
   `observedAt` and the page that shows the change; git keeps the history. Leave the field out
   rather than guess: a missing class renders as a dashed "unknown" and the server is still
   scanned. `auth: api-key` or `auth: none` takes the server out of the nightly scan and gives it
-  the "No OAuth" grade; when a scan's run summary says the endpoint's answer suggests another
+  "No OAuth" in its scan summary; when a scan's run summary says the endpoint's answer suggests another
   class, check the page and correct the file, not the observations.
 - `transport: stdio-only` makes every cell `not-applicable` without observations.
 - The seed list came from `jaw9c/awesome-remote-mcp-servers` (research R4). To re-seed from a
@@ -187,4 +187,4 @@ further commit (or merge the base branch) to get a green run.
 
 Scanner pull requests must not need new baselines. The scanner screenshots set every
 `[data-nightly]` element (counts and dates the nightly run changes) to a fixed value and mask the
-grades and report rows, so mark any new nightly-changing text on those pages with `data-nightly`.
+counts and report rows, so mark any new nightly-changing text on those pages with `data-nightly`.

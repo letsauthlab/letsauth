@@ -234,7 +234,7 @@ describe("authNote (009 FR-006)", () => {
 });
 
 describe("summarise", () => {
-  it("lists every server with grade, appended cells and unknown count", async () => {
+  it("lists every server with its scan summary, appended cells and unknown count", async () => {
     const r = await report();
     const md = summarise(
       [
@@ -263,7 +263,7 @@ describe("summarise", () => {
     );
     expect(md).toContain("1 observation appended");
     expect(md).toContain(
-      `| ${server?.name} (\`${server?.id}\`) | A | 1: \`${r.observations[0]?.feature}\` supported | 0 | held by hand: \`mcp.as.dcr\` partial (manual, jbspeakr) over scan supported |`,
+      `| ${server?.name} (\`${server?.id}\`) | ${r.summary.label} | 1: \`${r.observations[0]?.feature}\` supported | 0 | held by hand: \`mcp.as.dcr\` partial (manual, jbspeakr) over scan supported |`,
     );
     expect(md).toContain("| Down (`down`) | – | 0 | 0 | error: refused |");
   });

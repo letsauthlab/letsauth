@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
 import { passiveChecks, requestLadder, scannerIndex } from "../../src/lib/scanner";
-import { GRADE_RULE } from "../../src/scanner/grade";
+import { SUMMARY_RULE } from "../../src/scanner/summary";
 import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
@@ -14,7 +14,7 @@ if (!first) throw new Error("the seed data needs at least one listed server");
 
 /**
  * Screenshots guard the design, not the nightly data: blank what each scanner pull request
- * changes (counts, dates, grades, statuses) so those pull requests do not need new baselines.
+ * changes (counts, dates, statuses) so those pull requests do not need new baselines.
  */
 async function hideNightlyData(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -26,7 +26,7 @@ async function hideNightlyData(page: Page): Promise<void> {
 }
 
 test.describe("scanner index (US2)", () => {
-  test("has no list of its own and points at the atlas where the grades show (FR-010)", async ({
+  test("has no list of its own and points at the atlas where the results show (FR-010)", async ({
     page,
   }) => {
     await page.goto("/mcp/scanner/");
@@ -41,11 +41,14 @@ test.describe("scanner index (US2)", () => {
     await expect(page.locator("[data-nightly]")).toHaveCount(2);
   });
 
-  test("publishes the grade rule next to the grades (FR-008)", async ({ page }) => {
+  test("publishes how the summary is counted, and that nothing is scored (017 FR-003)", async ({
+    page,
+  }) => {
     await page.goto("/mcp/scanner/");
-    const rule = page.locator("#grade-rule li");
-    await expect(rule).toHaveCount(GRADE_RULE.length);
-    await expect(rule.first()).toContainText("MUST");
+    const rule = page.locator("#summary-rule li");
+    await expect(rule).toHaveCount(SUMMARY_RULE.length);
+    await expect(page.locator("#summary-rule")).toContainText("MUST");
+    await expect(page.locator("#summary-rule")).toContainText("no grade and no score");
   });
 
   test("reads fully without JavaScript (FR-013)", async ({ browser }) => {
@@ -54,7 +57,7 @@ test.describe("scanner index (US2)", () => {
     await page.goto("/mcp/scanner/");
     await expect(page.locator("[data-enhanced]")).toHaveCount(0);
     await expect(page.locator("a[href='/mcp/']").first()).toBeVisible();
-    await expect(page.locator("#grade-rule li")).toHaveCount(GRADE_RULE.length);
+    await expect(page.locator("#summary-rule li")).toHaveCount(SUMMARY_RULE.length);
     await context.close();
   });
 
@@ -103,7 +106,9 @@ test.describe("scan report page (US2)", () => {
     await page.goto(`/mcp/servers/${scanned?.server.id}/scan/`);
     const rows = page.locator("[data-report] [data-check]");
     await expect(rows).toHaveCount(checks.length);
-    await expect(page.locator("[data-report] [data-grade-label]")).toHaveCount(1);
+    await expect(page.locator("[data-report] [data-summary='scanned'] .tally > div")).toHaveCount(
+      scanned?.summary.tallies.length ?? 0,
+    );
     const row = rows.first();
     await expect(row.locator(".level")).toHaveCount(1);
     await expect(row.locator(".status-cell")).toHaveCount(1);
@@ -117,7 +122,7 @@ test.describe("scan report page (US2)", () => {
     test.skip(!unscanned, "every server has a scanner observation");
     await page.goto(`/mcp/servers/${unscanned?.server.id}/scan/`);
     await expect(page.locator("#not-scanned")).toBeVisible();
-    await expect(page.locator("[data-grade-letter]")).toHaveCount(0);
+    await expect(page.locator("[data-report] .tally")).toHaveCount(0);
     const rows = page.locator("[data-report] [data-check]");
     await expect(rows).toHaveCount(checks.length);
     await expect(page.locator("[data-report] [data-check][data-status='unsupported']")).toHaveCount(
@@ -129,7 +134,9 @@ test.describe("scan report page (US2)", () => {
     await expect(page.locator("[data-transcript]")).toHaveCount(0);
   });
 
-  test("links the atlas, the server page, the JSON and the grade rule", async ({ page }) => {
+  test("links the atlas, the server page, the JSON and how the summary is counted", async ({
+    page,
+  }) => {
     await page.goto(`/mcp/servers/${first.server.id}/scan/`);
     await expect(page.locator(".crumbs a[href='/mcp/']")).toBeVisible();
     await expect(page.locator(`.crumbs a[href='/mcp/servers/${first.server.id}/']`)).toBeVisible();
@@ -141,7 +148,9 @@ test.describe("scan report page (US2)", () => {
     const response = await page.request.get(`/mcp/servers/${first.server.id}/scan.json`);
     expect(response.ok()).toBe(true);
     const body = await response.json();
-    expect(body.version).toBe(1);
+    expect(body.version).toBe(2);
+    expect(body.grade).toBeUndefined();
+    expect(body.summary.state).toBe(first.summary.state);
     expect(body.recorded).toBe(true);
     expect(body.checks).toHaveLength(checks.length);
   });
@@ -182,12 +191,12 @@ test.describe("scan report page (US2)", () => {
     }
     await expect(page.locator("[data-transcript] > li").last()).toHaveAttribute("data-verdict", "");
     await expect(page.locator("[data-transcript] [data-verdict]")).toContainText(
-      scanned.grade.letter ? `Grade ${scanned.grade.letter}` : scanned.grade.label,
+      `${scanned.checks.length} checks`,
     );
     await context.close();
   });
 
-  test("the ladder prints once when it scrolls into view, the grade last (M12)", async ({
+  test("the ladder prints once when it scrolls into view, the count last (M12)", async ({
     page,
   }) => {
     test.skip(!scanned, "no server with a scanner observation in the dataset yet");
