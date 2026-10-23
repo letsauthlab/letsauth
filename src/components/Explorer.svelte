@@ -18,8 +18,8 @@
  * Durations come from the motion tokens, which are 0ms under reduced motion.
  */
 import { onMount } from "svelte";
-import { SOFT_NAVIGATION } from "@/lib/analytics";
 import { durationToken, reducedMotion } from "@/lib/motion";
+import { SOFT_NAVIGATION } from "@/lib/reach";
 
 /** M6: how long the chain must sit in view, untouched, before the scene starts by itself. */
 const SETTLE_MS = 1000;

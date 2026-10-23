@@ -5,5 +5,5 @@ Contact: mailto:letsauth@janbrennenstuhl.eu
 Contact: https://github.com/letsauthlab/letsauth/security/advisories/new
 Expires: 2027-10-14T00:00:00.000Z
 Preferred-Languages: en, de
-Canonical: https://letsauth.eu/.well-known/security.txt
+Canonical: https://www.letsauth.eu/.well-known/security.txt
 Policy: https://github.com/letsauthlab/letsauth/blob/main/SECURITY.md

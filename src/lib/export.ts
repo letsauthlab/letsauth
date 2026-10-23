@@ -38,7 +38,7 @@ export function buildExport(data: Dataset, generatedAt = new Date().toISOString(
     version: EXPORT_VERSION,
     generatedAt,
     license: licenseLine(),
-    source: "https://letsauth.eu/mcp/",
+    source: "https://www.letsauth.eu/mcp/",
     spec: { id: spec.id, name: spec.name, currentRevision: current.id, revisions: spec.revisions },
     features: data.features,
     servers: matrix.rows,
@@ -67,7 +67,7 @@ export function buildServerExport(
     version: EXPORT_VERSION,
     generatedAt,
     license: licenseLine(),
-    source: `https://letsauth.eu/mcp/servers/${server.id}/`,
+    source: `https://www.letsauth.eu/mcp/servers/${server.id}/`,
     spec: {
       id: spec.id,
       name: spec.name,

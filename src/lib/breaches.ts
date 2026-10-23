@@ -60,7 +60,7 @@ export function buildBreachesExport(data: Dataset, generatedAt = new Date().toIS
     version: BREACHES_EXPORT_VERSION,
     generatedAt,
     license: licenseLine(),
-    source: "https://letsauth.eu/breaches/",
+    source: "https://www.letsauth.eu/breaches/",
     vulnerabilities: breachList(data).map(({ vulnerability, replay }) => ({
       ...vulnerability,
       replay: replay ? `/explorer/${replay.scenario.id}/${replay.toggle.id}/` : null,

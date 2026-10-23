@@ -183,7 +183,7 @@ describe("scenarioList, featureSupport and the export (FR-006, FR-008, FR-009)",
       version: 1,
       generatedAt: "2026-10-15T00:00:00.000Z",
       license: "CC BY 4.0",
-      source: "https://letsauth.eu/explorer/",
+      source: "https://www.letsauth.eu/explorer/",
     });
     expect(out.scenarios).toEqual([scenario]);
   });

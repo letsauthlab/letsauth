@@ -1,4 +1,4 @@
-import { PLAUSIBLE_EVENT_PATH } from "../../src/lib/analytics";
+import { PLAUSIBLE_EVENT_PATH, PLAUSIBLE_SCRIPT, PLAUSIBLE_SCRIPT_PATH } from "../../src/lib/reach";
 
 /**
  * The Bunny pull zone edge rules this repository owns. Each carries `MANAGED_PREFIX` in its
@@ -51,6 +51,27 @@ export function edgeRules(): EdgeRule[] {
     // Plausible proxy (https://plausible.io/docs/proxy/introduction). Host is set in case the
     // pull zone forwards the visitor's; X-Forwarded-For carries the visitor's IP, without which
     // Plausible sees every visit come from the CDN and its bot filter drops them.
+    {
+      Description: `${MANAGED_PREFIX}Plausible script`,
+      Enabled: true,
+      ActionType: Action.OriginUrl,
+      ActionParameter1: `https://plausible.io/js/${PLAUSIBLE_SCRIPT}`,
+      ActionParameter2: null,
+      ActionParameter3: null,
+      Triggers: [
+        {
+          Type: Trigger.Url,
+          PatternMatches: [`*${PLAUSIBLE_SCRIPT_PATH}`],
+          PatternMatchingType: Match.Any,
+          Parameter1: null,
+        },
+      ],
+      TriggerMatchingType: Match.Any,
+      ExtraActions: [
+        extra(Action.SetRequestHeader, "Host", "plausible.io"),
+        extra(Action.OverrideCacheTime, "3600"),
+      ],
+    },
     {
       Description: `${MANAGED_PREFIX}Plausible events`,
       Enabled: true,

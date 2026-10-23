@@ -4,8 +4,8 @@ import "@/styles/global.css";
 // (the fontsource CSS declares them with font-display: swap; Vite gives both the same hashed URL).
 import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
-import Analytics from "@/components/Analytics.astro";
 import BrandLogo from "@/components/BrandLogo.astro";
+import Reach from "@/components/Reach.astro";
 import { LAB, LEGAL_LINKS, OPERATOR, REPO } from "@/lib/site";
 
 interface Props {
@@ -20,7 +20,7 @@ interface Props {
 }
 
 const { title, description, path, noindex = false, image = "/og.png" } = Astro.props;
-const site = Astro.site ?? new URL("https://letsauth.eu");
+const site = Astro.site ?? new URL("https://www.letsauth.eu");
 const canonical = new URL(path ?? Astro.url.pathname, site);
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | undefined;
 const fullTitle =
@@ -149,7 +149,7 @@ const nav = [
         if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    {plausibleDomain && <Analytics domain={plausibleDomain} notFound={here === "/404.html"} />}
+    {plausibleDomain && <Reach notFound={here === "/404.html"} />}
     <slot name="head" />
   </head>
   <body>

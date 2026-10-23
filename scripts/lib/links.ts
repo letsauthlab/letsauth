@@ -11,7 +11,7 @@ export function brokenLinks(directory: string): string[] {
       if (entry.isDirectory()) visit(file);
       else if (entry.isFile() && entry.name.endsWith(".html")) {
         const route = `/${relative(root, file).split(sep).join("/")}`;
-        const base = new URL(route, "https://letsauth.eu");
+        const base = new URL(route, "https://www.letsauth.eu");
         // Astro emits quoted hrefs; fragments are not file targets and are intentionally ignored.
         for (const match of readFileSync(file, "utf8").matchAll(
           /\bhref\s*=\s*["']([^"']*)["']/gi,

@@ -179,7 +179,7 @@ export function buildExplorerExport(data: Dataset, generatedAt = new Date().toIS
     version: EXPLORER_EXPORT_VERSION,
     generatedAt,
     license: licenseLine(),
-    source: "https://letsauth.eu/explorer/",
+    source: "https://www.letsauth.eu/explorer/",
     scenarios: scenarioList(data).map((s) => s.scenario),
   };
 }

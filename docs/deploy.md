@@ -43,28 +43,32 @@ call alone. Rotate both from the Bunny dashboard and update the secrets.
 
 ## Plausible through letsauth.eu
 
-Pages do not load Plausible's script. `src/lib/analytics.ts`, bundled into each page, posts
-events to `/r/e.json` on letsauth.eu, and a pull zone edge rule forwards that path to
+Pages load the site's personal Plausible script from `/r/s.js` and it sends events to
+`/r/e.json`, both on letsauth.eu. Two pull zone edge rules forward them to plausible.io: the
+script to `https://plausible.io/js/<personal script>` (cached for an hour), the events to
 `https://plausible.io/api/event` with the visitor's IP in `X-Forwarded-For` (without it,
-Plausible sees every visit come from the CDN and its bot filter drops them). The path is neutral
-on purpose: blocklists match `/js/script.js` and `/analytics/`, and it has an extension because
-Bunny answers an extensionless path with a 301 before an edge rule applies
-([Plausible's proxy guide](https://plausible.io/docs/proxy/introduction)).
+Plausible sees every visit come from the CDN and its bot filter drops them). The paths are
+neutral on purpose: blocklists match `/js/script.js` and `/analytics/`, and they have an
+extension because Bunny answers an extensionless path with a 301 before an edge rule applies
+([Plausible's proxy guide](https://plausible.io/docs/proxy/introduction)). The personal script
+name is `PLAUSIBLE_SCRIPT` in `src/lib/reach.ts` (Plausible, site settings, "Site
+installation"); change it there if Plausible issues a new one.
 
 The rules live in `scripts/lib/bunny-edge-rules.ts`. `pnpm edge-rules` prints them;
 `pnpm edge-rules --apply` (with `BUNNY_API_KEY` and `BUNNY_PULL_ZONE_ID`) syncs them. The deploy
 workflow runs the sync before the upload once `BUNNY_SYNC_EDGE_RULES` is `true`, and fails while
-`PLAUSIBLE_DOMAIN` is set without it, because the pages would post to a path nothing forwards.
+`PLAUSIBLE_DOMAIN` is set without it, because the pages would load a path nothing forwards.
 Only rules whose description starts with `[repo] ` are created, updated or deleted; rules made
 by hand in the dashboard, such as the redirects below, are left alone.
 
-The script reports only on the production host, never under automation (Playwright,
-Lighthouse), and not in a browser where `localStorage.plausible_ignore` is `"true"`. It sends a
-pageview when a page is shown: a page prerendered by speculation rules waits for
-`prerenderingchange`, so it counts once if opened and never if not. A page restored from the
-back/forward cache counts again, as with Plausible's own script. It also sends
-`Outbound Link: Click`, `File Download` (the JSON exports) and `404` with a `path` property;
-add those three as custom event goals in the Plausible site settings to see them.
+Outbound link clicks and file downloads are the script's own, switched on in the Plausible site
+settings; the init snippet adds `json` to the download extensions so the exports count.
+Pageviews are sent by `src/lib/reach.ts` (a neutral name, because bundles are named after
+their modules and blocklists match "analytics" in a path) (`autoCapturePageviews: false`), only on
+letsauth.eu or www.letsauth.eu and never under automation (Playwright, Lighthouse): a page
+prerendered by speculation rules waits for `prerenderingchange`, so it counts once if opened and
+never if not. A back/forward cache restore and an island's in-place navigation count again. A
+404 also sends a `404` event with a `path` property; add it as a custom event goal to see it.
 
 ## Manual deploy
 
