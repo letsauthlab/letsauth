@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
 import { BODY_LABEL, MATURITY_LABEL } from "../../src/lib/labels";
 import { buildsOnSpine, mapRelations, specNodes, specsByBody } from "../../src/lib/standards";
-import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
+import { expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const nodes = specNodes(data);
@@ -178,40 +178,75 @@ test.describe("standards map (US1)", () => {
     await expect(page).not.toHaveURL(/view=/);
   });
 
-  test("the builds-on spine draws in once, from the oldest document (M4)", async ({ page }) => {
+  test("the builds-on spine is drawn bold and still, with nothing animating on load (R-12)", async ({
+    page,
+  }) => {
     test.skip(spine.length === 0, "no builds-on chain in the seed data");
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
-    const edges = page.locator("#map path.edge.spine");
-    await expect(edges).toHaveCount(spine.length);
-    const runs = await edges.evaluateAll((els) =>
-      els.flatMap((el) =>
-        el.getAnimations().map((a) => ({
-          name: (a as CSSAnimation).animationName,
-          iterations: a.effect?.getTiming().iterations,
-        })),
-      ),
-    );
-    expect(runs.length).toBe(spine.length);
-    for (const run of runs) expect(run).toEqual({ name: "map-draw", iterations: 1 });
+    await expect(page.locator("#map path.edge.spine")).toHaveCount(spine.length);
     const first = spine[0];
     await expect(
       page.locator(`#map path[data-relation="${first?.from}|builds-on|${first?.to}"]`),
     ).toHaveClass(/spine/);
+    const running = await page
+      .locator("#map")
+      .evaluate((svg) => svg.getAnimations({ subtree: true }).length);
+    expect(running).toBe(0);
   });
 
-  test("under reduced motion the spine is drawn complete with no halo (M4)", async ({ page }) => {
+  test("a sweep across the map does not flash the drawing; resting on a node highlights it (M19)", async ({
+    page,
+  }) => {
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
-    await expectEndStateUnderReducedMotion(page, "#map-frame");
-    const offsets = await page
-      .locator("#map path.edge.spine")
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).strokeDashoffset));
-    for (const offset of offsets) expect(offset).toBe("0px");
-    const halos = await page
-      .locator("#map .spine-halo")
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
-    for (const opacity of halos) expect(opacity).toBe("0");
+    await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
+    await page.locator("#map").scrollIntoViewIfNeeded();
+    // the fullest column of the drawing, swept from top to bottom within the viewport
+    const sweep = await page.locator("#map").evaluate((svg) => {
+      const columns = new Map<number, DOMRect[]>();
+      for (const node of svg.querySelectorAll(".node-box")) {
+        const r = node.getBoundingClientRect();
+        const x = Math.round(r.x);
+        columns.set(x, [...(columns.get(x) ?? []), r]);
+      }
+      const [column] = [...columns.values()].sort((a, b) => b.length - a.length);
+      const first = column?.[0];
+      if (!first) throw new Error("no nodes in the drawing");
+      const bottom = Math.max(...column.map((r) => r.bottom));
+      return {
+        x: first.x + first.width / 2,
+        from: Math.max(0, Math.min(...column.map((r) => r.top)) - 10),
+        to: Math.min(window.innerHeight - 1, bottom + 10),
+      };
+    });
+    // count the nodes the pointer crosses, and how often the drawing switches between all lit
+    // and dimmed; before hover intent every node crossed was a switch on and a switch off
+    await page.locator("#map").evaluate((svg) => {
+      const w = window as unknown as { flips: number; crossed: number };
+      w.flips = 0;
+      w.crossed = 0;
+      for (const node of svg.querySelectorAll("a[data-spec]"))
+        node.addEventListener("pointerenter", () => (w.crossed += 1));
+      let dim = false;
+      new MutationObserver(() => {
+        const now = svg.querySelector(".is-far") !== null;
+        if (now !== dim) w.flips += 1;
+        dim = now;
+      }).observe(svg, { attributes: true, subtree: true, attributeFilter: ["class"] });
+    });
+    await page.mouse.move(sweep.x, sweep.from);
+    await page.mouse.move(sweep.x, sweep.to, { steps: 30 });
+    await page.mouse.move(0, 0);
+    await expect(page.locator("#map .is-far")).toHaveCount(0);
+    const { flips, crossed } = await page.evaluate(() => {
+      const w = window as unknown as { flips: number; crossed: number };
+      return { flips: w.flips, crossed: w.crossed };
+    });
+    expect(crossed).toBeGreaterThanOrEqual(3);
+    expect(flips).toBeLessThanOrEqual(2);
+    await page.locator(`#map a[data-spec="${first.id}"]`).hover();
+    await expect(page.locator("#map a[data-spec].is-far")).not.toHaveCount(0);
   });
 
   test("filter state in the URL restores the filtered view (FR-007)", async ({ page }) => {

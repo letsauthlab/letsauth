@@ -32,9 +32,9 @@ const usedMaturities = MATURITY_ORDER.filter((m) => specs.some((s) => s.maturity
 // references are the most and the least telling lines, so the map opens without them
 const shownByDefault = (t: RelationType) => t !== "references";
 
-// M4: the longest builds-on chain draws in from the oldest document to the newest
+// the longest builds-on chain is drawn bold, from the oldest document to the newest
 const spine = buildsOnSpine(specs, relations);
-const spineStep = new Map(spine.map((r, i) => [`${r.from}|${r.type}|${r.to}`, i]));
+const onSpine = new Set(spine.map((r) => `${r.from}|${r.type}|${r.to}`));
 const spineFirst = spine[0] ? byId.get(spine[0].to) : undefined;
 const spineLast = spine.at(-1) ? byId.get(spine.at(-1)?.from ?? "") : undefined;
 
@@ -61,10 +61,10 @@ const unchecked = (name: string, value: string) =>
 const filterCss = [
   ...usedTypes.map(
     (t) =>
-      `${unchecked("type", t)} :is(#map .edge-${t}, #map .spine-halo[data-type="${t}"]) { visibility: hidden }\n` +
+      `${unchecked("type", t)} #map .edge-${t} { visibility: hidden }\n` +
       `${unchecked("type", t)} #spec-list .xl[data-type="${t}"] { display: none }`,
   ),
-  `${scope}:has(input[name="view"][value="recent"]:checked) :is(#map .node:not([data-recent]), #map .band, #map .edge, #map .spine-halo) { opacity: 0.2 }`,
+  `${scope}:has(input[name="view"][value="recent"]:checked) :is(#map .node:not([data-recent]), #map .band, #map .edge) { opacity: 0.2 }`,
   `${scope}:has(input[name="view"][value="recent"]:checked) #spec-list li:not([data-recent]) > .row { opacity: 0.35 }`,
   ...bodies.map(
     (b) =>
@@ -192,34 +192,16 @@ const filterCss = [
 
         <g class="edges" aria-hidden="true">
           {
-            edges
-              .filter((e) => spineStep.has(key(e)))
-              .map((e) => (
-                <path
-                  class="spine-halo"
-                  d={e.d}
-                  pathLength="1"
-                  data-type={e.relation.type}
-                  data-from-body={e.from.spec.body}
-                  data-to-body={e.to.spec.body}
-                  style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
-                />
-              ))
-          }
-          {
             edges.map((e) => {
-              const step = spineStep.get(key(e));
-              const onSpine = step !== undefined;
+              const spined = onSpine.has(key(e));
               return (
                 <path
                   class:list={[
                     "edge",
                     `edge-${e.relation.type}`,
-                    { symmetric: e.symmetric, spine: onSpine },
+                    { symmetric: e.symmetric, spine: spined },
                   ]}
                   d={e.d}
-                  pathLength={onSpine ? "1" : undefined}
-                  style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
                   data-relation={key(e)}
                   data-type={e.relation.type}
                   data-from={e.relation.from}
@@ -229,7 +211,7 @@ const filterCss = [
                   marker-end={
                     e.symmetric
                       ? undefined
-                      : `url(#arrow-${e.relation.type}${onSpine ? "-full" : ""})`
+                      : `url(#arrow-${e.relation.type}${spined ? "-full" : ""})`
                   }
                 >
                   <title>
@@ -290,7 +272,9 @@ const filterCss = [
     </div>
     <figcaption id="map-caption">
       A specification sits one column right of what it builds on, profiles or replaces, and the
-      tinted bands group each column by publishing body.{" "}
+      tinted bands group each column by publishing body. Families that build on none of the
+      OAuth documents, and documents that stand alone, fill the free room beside the larger
+      family.{" "}
       {
         spineFirst && spineLast && (
           <>
@@ -561,7 +545,7 @@ const filterCss = [
     stroke: var(--edge);
     stroke-width: 1.5;
     transition:
-      opacity var(--dur-fast) var(--ease),
+      opacity var(--dur) var(--ease),
       stroke var(--dur-fast) var(--ease);
   }
   .edge-builds-on,
@@ -597,56 +581,16 @@ const filterCss = [
     fill: var(--c);
   }
 
-  /* the builds-on spine: full colour, drawn in once on load from the oldest end (M4) */
+  /* the builds-on spine: full colour and a heavier line, drawn as it is */
   .edge.spine {
     --edge: var(--c);
     stroke-width: 2;
-    stroke-dasharray: 1;
-  }
-  .spine-halo {
-    fill: none;
-    stroke: var(--signal-soft);
-    stroke-width: 9;
-    stroke-linecap: round;
-    stroke-dasharray: 1;
-    opacity: 0;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .edge.spine {
-      animation: map-draw calc(var(--dur-draw) / var(--n)) linear
-        calc(var(--dur-draw) / var(--n) * var(--i)) both;
-    }
-    .spine-halo {
-      animation:
-        map-draw calc(var(--dur-draw) / var(--n)) linear
-          calc(var(--dur-draw) / var(--n) * var(--i)) both,
-        map-halo calc(var(--dur-draw) + var(--dur-slow)) linear both;
-    }
-  }
-  /* a negative offset reveals the path from its end, where the older document sits */
-  @keyframes map-draw {
-    from {
-      stroke-dashoffset: -1;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-  /* the halo shows while the spine draws (1200 of 1680ms), then fades out */
-  @keyframes map-halo {
-    0%,
-    100% {
-      opacity: 0;
-    }
-    2%,
-    71% {
-      opacity: 1;
-    }
   }
 
   .node {
     cursor: pointer;
     text-decoration: none;
+    transition: opacity var(--dur) var(--ease);
   }
   .node-box {
     fill: var(--ground);

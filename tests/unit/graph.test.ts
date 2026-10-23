@@ -115,6 +115,15 @@ describe("layoutGraph", () => {
     }
   });
 
+  it("puts documents with no dependency on the largest family into its free columns", () => {
+    // a2a depends on nothing: it sits in the room beside the family, not in a row under it
+    const family = ["oauth", "pkce", "oidc", "mcp"].map(node);
+    const bottom = Math.max(...family.map((n) => n.y + n.h));
+    expect(node("a2a").x).toBe(node("oauth").x);
+    expect(node("a2a").y).toBeGreaterThan(node("oauth").y + node("oauth").h);
+    expect(node("a2a").y).toBeLessThan(bottom);
+  });
+
   it("covers every node with width and height", () => {
     for (const n of layout.nodes) {
       expect(n.x + n.w).toBeLessThanOrEqual(layout.width);

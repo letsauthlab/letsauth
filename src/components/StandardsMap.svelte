@@ -111,7 +111,10 @@ onMount(() => {
     (neighbours.get(a) ?? neighbours.set(a, new Set()).get(a))?.add(b);
     (neighbours.get(b) ?? neighbours.set(b, new Set()).get(b))?.add(a);
   }
+  let current: string | null = null;
   function highlight(id: string | null) {
+    if (id === current) return;
+    current = id;
     show(id);
     if (!id) {
       for (const el of [...nodes, ...edges]) el.classList.remove("is-near", "is-far");
@@ -130,12 +133,36 @@ onMount(() => {
       edge.classList.toggle("is-far", !isNear);
     }
   }
+  /*
+   * Hover intent: a pointer crossing the map passes over many nodes, and switching the whole
+   * drawing on each one reads as flicker. A node takes the highlight once the pointer rests on
+   * it, and leaving waits a moment, so a sweep from one node to the next moves the highlight
+   * once instead of clearing and refilling the map. Keyboard focus is deliberate and acts at once.
+   * These are delays of intent, not motion, so they hold under reduced motion too.
+   */
+  const REST_MS = 90;
+  const LEAVE_MS = 160;
+  let pending: ReturnType<typeof setTimeout> | undefined;
+  const later = (ms: number, id: string | null) => {
+    clearTimeout(pending);
+    pending = setTimeout(() => highlight(id), ms);
+  };
+  const focused = () => nodes.find((n) => n === document.activeElement)?.dataset.spec ?? null;
+  const now = (id: string | null) => {
+    clearTimeout(pending);
+    highlight(id);
+  };
   for (const node of nodes) {
     const id = node.dataset.spec ?? null;
-    node.addEventListener("mouseenter", () => highlight(id));
-    node.addEventListener("mouseleave", () => highlight(null));
-    node.addEventListener("focus", () => highlight(id));
-    node.addEventListener("blur", () => highlight(null));
+    node.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "touch") later(id === current ? 0 : REST_MS, id);
+    });
+    // leaving goes back to the node in keyboard focus, if there is one
+    node.addEventListener("pointerleave", (e) => {
+      if (e.pointerType !== "touch") later(LEAVE_MS, focused());
+    });
+    node.addEventListener("focus", () => now(id));
+    node.addEventListener("blur", () => now(null));
   }
 
   // M2: name the followed link for the view transition. A map node is SVG, which a view

@@ -182,7 +182,7 @@ export function recentlyRevised(data: Dataset, n = 5): { spec: Spec; revision: R
  * The `builds-on` spine of the map: the longest chain of builds-on relations, ordered from the
  * oldest document (the one everything else builds on) to the newest. Ties go to the chain whose
  * documents come first in `compareSpecs` order, so the result is stable across builds. The map
- * draws this chain in on load (plan 016, M4).
+ * draws this chain bold, in full colour.
  */
 export function buildsOnSpine(specs: Spec[], relations: Relation[]): Relation[] {
   const byId = new Map(specs.map((s) => [s.id, s]));
