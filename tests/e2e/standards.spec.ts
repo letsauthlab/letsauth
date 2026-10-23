@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
 import { BODY_LABEL, MATURITY_LABEL } from "../../src/lib/labels";
 import { buildsOnSpine, mapRelations, specNodes, specsByBody } from "../../src/lib/standards";
-import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
+import { expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const nodes = specNodes(data);
@@ -178,40 +178,60 @@ test.describe("standards map (US1)", () => {
     await expect(page).not.toHaveURL(/view=/);
   });
 
-  test("the builds-on spine draws in once, from the oldest document (M4)", async ({ page }) => {
+  test("the builds-on spine is drawn complete and the map does not animate on load", async ({
+    page,
+  }) => {
     test.skip(spine.length === 0, "no builds-on chain in the seed data");
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
     const edges = page.locator("#map path.edge.spine");
     await expect(edges).toHaveCount(spine.length);
-    const runs = await edges.evaluateAll((els) =>
-      els.flatMap((el) =>
-        el.getAnimations().map((a) => ({
-          name: (a as CSSAnimation).animationName,
-          iterations: a.effect?.getTiming().iterations,
-        })),
-      ),
-    );
-    expect(runs.length).toBe(spine.length);
-    for (const run of runs) expect(run).toEqual({ name: "map-draw", iterations: 1 });
     const first = spine[0];
     await expect(
       page.locator(`#map path[data-relation="${first?.from}|builds-on|${first?.to}"]`),
     ).toHaveClass(/spine/);
+    const animations = await page
+      .locator("#map")
+      .evaluate((el) => el.getAnimations({ subtree: true }).length);
+    expect(animations).toBe(0);
   });
 
-  test("under reduced motion the spine is drawn complete with no halo (M4)", async ({ page }) => {
+  test("moving from one node to the next keeps the highlight instead of flashing the map", async ({
+    page,
+  }) => {
+    const rel = relations.find((r) => r.type !== "references");
+    test.skip(!rel, "no relation in the seed data");
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
-    await expectEndStateUnderReducedMotion(page, "#map-frame");
-    const offsets = await page
-      .locator("#map path.edge.spine")
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).strokeDashoffset));
-    for (const offset of offsets) expect(offset).toBe("0px");
-    const halos = await page
-      .locator("#map .spine-halo")
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
-    for (const opacity of halos) expect(opacity).toBe("0");
+    await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
+    const map = page.locator("#map");
+    const a = map.locator(`a[data-spec="${rel?.from}"]`);
+    const b = map.locator(`a[data-spec="${rel?.to}"]`);
+    await a.scrollIntoViewIfNeeded();
+    await a.hover();
+    await expect(a).toHaveClass(/is-near/);
+    // record every moment the map is without a highlight while the pointer crosses to b
+    await page.evaluate(() => {
+      const w = window as unknown as { cleared: number };
+      w.cleared = 0;
+      new MutationObserver(() => {
+        if (!document.querySelector("#map .is-far")) w.cleared += 1;
+      }).observe(document.getElementById("map") as Element, {
+        subtree: true,
+        attributeFilter: ["class"],
+      });
+    });
+    await b.hover();
+    await expect(b).toHaveClass(/is-near/);
+    expect(await page.evaluate(() => (window as unknown as { cleared: number }).cleared)).toBe(0);
+    await expect(page.locator("#map-card")).toBeVisible();
+    // the card floats beside the node and never takes the pointer
+    expect(
+      await page.locator("#map-card").evaluate((el) => getComputedStyle(el).pointerEvents),
+    ).toBe("none");
+    await page.mouse.move(1, 1);
+    await expect(page.locator("#map .is-far")).toHaveCount(0);
+    await expect(page.locator("#map-card")).toBeHidden();
   });
 
   test("filter state in the URL restores the filtered view (FR-007)", async ({ page }) => {

@@ -25,10 +25,12 @@ import { BODY_ORDER, compareSpecs } from "./standards";
 export const NODE_W = 200;
 export const NODE_H = 68;
 /** the gap between layers, where the orthogonal edges run */
-export const COL_GAP = 72;
+export const COL_GAP = 56;
 /** the gap between nodes in a layer; a band label sits in the gap above its first node */
 export const ROW_GAP = 24;
 export const PAD = 16;
+/** the gap between families of documents, wide enough for a band label above the next row */
+export const FAMILY_GAP = 40;
 export const BAND_PAD = 6;
 
 export interface PlacedNode {
@@ -172,7 +174,7 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
       "elk.spacing.nodeNode": String(ROW_GAP),
       "elk.spacing.edgeNode": "12",
       "elk.spacing.edgeEdge": "8",
-      "elk.separateConnectedComponents": "false",
+      "elk.separateConnectedComponents": "true",
       "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
       "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
       "elk.layered.mergeEdges": "true",
@@ -182,15 +184,21 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
     edges: dependencies.map((r, i) => ({ id: `d${i}`, sources: [r.to], targets: [r.from] })),
   };
   const out = await new ELK().layout(graph);
+  const { offsets, width, height } = packComponents(sorted, dependencies, out);
+  const shift = (id: string, p: Point): Point => {
+    const o = offsets.get(id) ?? { x: 0, y: 0 };
+    return { x: p.x + o.x, y: p.y + o.y };
+  };
 
   const placed = new Map<string, PlacedNode>();
   for (const child of out.children ?? []) {
     const spec = sorted.find((s) => s.id === child.id);
     if (!spec) continue;
+    const at = shift(spec.id, { x: child.x ?? 0, y: child.y ?? 0 });
     placed.set(spec.id, {
       spec,
-      x: round(child.x ?? 0),
-      y: round(child.y ?? 0),
+      x: round(at.x),
+      y: round(at.y),
       w: NODE_W,
       h: NODE_H,
       depth: depth.get(spec.id) ?? 0,
@@ -242,6 +250,7 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
     if (section) {
       // ELK ran the edge from the older document; the arrow points at it, so reverse the points
       const points = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint]
+        .map((p) => shift(relation.to, p))
         .map((p) => ({ x: round(p.x), y: round(p.y) }))
         .reverse();
       const d = points.map((p, j) => `${j === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
@@ -256,9 +265,86 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
     edges,
     bands,
     columns: columnsX.length,
-    width: Math.ceil(out.width ?? 0),
-    height: Math.ceil(out.height ?? 0),
+    width: Math.ceil(width),
+    height: Math.ceil(height),
   };
+}
+
+/**
+ * ELK lays out each connected family of documents on its own; this places the families in rows
+ * as wide as the widest of them, largest first, so the documents with few or no dependency
+ * relations fill rows under the big family instead of stretching its first column down the page.
+ * Returns the shift for each spec id and the size of the whole drawing.
+ */
+function packComponents(
+  sorted: Spec[],
+  dependencies: Relation[],
+  out: ElkNode,
+): { offsets: Map<string, Point>; width: number; height: number } {
+  const parent = new Map(sorted.map((s) => [s.id, s.id]));
+  const find = (id: string): string => {
+    const up = parent.get(id) ?? id;
+    if (up === id) return id;
+    const root = find(up);
+    parent.set(id, root);
+    return root;
+  };
+  for (const r of dependencies) parent.set(find(r.from), find(r.to));
+
+  const at = new Map((out.children ?? []).map((c) => [c.id, { x: c.x ?? 0, y: c.y ?? 0 }]));
+  const families = new Map<string, { ids: string[]; points: Point[] }>();
+  for (const s of sorted) {
+    const p = at.get(s.id);
+    if (!p) continue;
+    const root = find(s.id);
+    const family = families.get(root) ?? families.set(root, { ids: [], points: [] }).get(root);
+    family?.ids.push(s.id);
+    family?.points.push(p, { x: p.x + NODE_W, y: p.y + NODE_H });
+  }
+  for (const [i, r] of dependencies.entries()) {
+    const section = out.edges?.find((x) => x.id === `d${i}`)?.sections?.[0];
+    if (!section) continue;
+    families
+      .get(find(r.to))
+      ?.points.push(section.startPoint, ...(section.bendPoints ?? []), section.endPoint);
+  }
+
+  const boxes = [...families.values()].map((f, order) => {
+    const xs = f.points.map((p) => p.x);
+    const ys = f.points.map((p) => p.y);
+    const x = Math.min(...xs);
+    const y = Math.min(...ys);
+    return { ...f, order, x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+  });
+  // largest family first; equal sizes keep compareSpecs order, which groups them by body
+  boxes.sort((a, b) => b.ids.length - a.ids.length || a.order - b.order);
+
+  const rowWidth = Math.max(4 * NODE_W + 3 * COL_GAP, ...boxes.map((b) => b.w));
+  // the rows keep to the columns of the largest family, so a document stays in a column
+  const first = boxes[0];
+  const columns = [
+    ...new Set(first ? first.ids.map((id) => (at.get(id)?.x ?? 0) - first.x) : [0]),
+  ].sort((a, b) => a - b);
+  const pitch = NODE_W + COL_GAP;
+  const last = columns.at(-1) ?? 0;
+  const column = (x: number) =>
+    columns.find((c) => c >= x) ?? last + Math.ceil((x - last) / pitch) * pitch;
+  const offsets = new Map<string, Point>();
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  for (const box of boxes) {
+    if (x > 0 && x + box.w > rowWidth) {
+      x = 0;
+      y += rowHeight + FAMILY_GAP;
+      rowHeight = 0;
+    }
+    const offset = { x: PAD + x - box.x, y: PAD + ROW_GAP + y - box.y };
+    for (const id of box.ids) offsets.set(id, offset);
+    x = column(x + box.w + 1);
+    rowHeight = Math.max(rowHeight, box.h);
+  }
+  return { offsets, width: rowWidth + 2 * PAD, height: PAD + ROW_GAP + y + rowHeight + PAD };
 }
 
 /** One row of the dependency outline: a spec, the relation to its parent, and its children. */
