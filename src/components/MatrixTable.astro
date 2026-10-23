@@ -214,20 +214,23 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                         data-scan={scan.summary.state}
                         title={scan.summary.label}
                       >
-                        <span class="visually-hidden">{server.name} </span>scan
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M2.5 8h2l1.5-4 3 8 1.5-4h3" />
+                        </svg>
+                        <span class="visually-hidden">{server.name} scan</span>
                       </a>
                     )}
                   </span>
                   <span class="classes">
                     <span
-                      class:list={["class", "chip", { derived: access.derived }]}
+                      class:list={["class", { derived: access.derived }]}
                       title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
                     >
                       <span class="visually-hidden">Access: </span>
                       {ACCESS_LABEL[access.value].toLowerCase()}
                     </span>
                     <span
-                      class:list={["class", "chip", { derived: auth.derived }]}
+                      class:list={["class", { derived: auth.derived }]}
                       title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
                     >
                       <span class="visually-hidden">Auth: </span>
@@ -418,8 +421,15 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       text-underline-offset: 0.2em;
     }
 
+    /*
+     * The level is quiet text beside the party, not an outlined pill in its level colour: it
+     * repeats on every column, and the status glyphs below are what the matrix is for.
+     */
     .matrix .feature-head .level {
-      padding: 0.4em 0.25em;
+      padding: 0;
+      border: 0;
+      color: var(--ink-2);
+      font-weight: 500;
       letter-spacing: 0.04em;
     }
 
@@ -514,35 +524,57 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     }
 
     /* the row's own cells are the scan's result; this only opens the requests behind them */
+    /*
+     * A small trace glyph rather than the word on every row: faint until its row is under the
+     * pointer or the focus. Its name is the hidden text, its tooltip the scan's summary.
+     */
     .matrix .scan-link {
       flex: none;
-      font-size: var(--tiny);
-      color: var(--ink-2);
-      text-decoration: none;
+      display: inline-grid;
+      place-items: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: color-mix(in oklch, var(--ink-2) 55%, transparent);
+      border-radius: var(--radius-focus);
+      transition: color var(--dur-fast) var(--ease);
     }
-    .matrix .scan-link:hover {
-      color: var(--ink);
-      text-decoration: underline;
-      text-underline-offset: 0.2em;
+    .matrix .scan-link svg {
+      width: 0.9rem;
+      height: 0.9rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .matrix tr:is(:hover, :focus-within) .scan-link {
+      color: var(--ink-2);
+    }
+    .matrix .scan-link:is(:hover, :focus-visible) {
+      color: var(--signal);
     }
 
+    /* the row's classes, one quiet line under the name: "public · oauth" */
     .matrix .classes {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--space-1);
-      margin-top: var(--space-1);
-    }
-
-    .matrix .classes .chip {
-      color: var(--ink);
-      border-color: var(--rule-strong);
-    }
-
-    /* a class nobody has stated yet: dashed, like a recorded unknown */
-    .matrix .classes .chip.derived {
+      margin-top: 0.1rem;
+      font-size: var(--tiny);
       color: var(--ink-2);
-      border-color: var(--rule-strong);
-      border-style: dashed;
+    }
+
+    .matrix .classes .class + .class::before {
+      content: "\00b7";
+      /* an inline block takes no part in a derived class's underline */
+      display: inline-block;
+      padding-inline: 0.4em;
+    }
+
+    /* a class nobody has stated yet: dashed underline, like the dashed ring of a recorded unknown */
+    .matrix .classes .class.derived {
+      text-decoration: underline dashed;
+      text-decoration-color: var(--rule-strong);
+      text-underline-offset: 0.25em;
     }
 
     /* group header rows the island inserts when the reader groups by a class */
