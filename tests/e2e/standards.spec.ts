@@ -169,10 +169,15 @@ test.describe("standards map (US1)", () => {
     await expect(page.locator("#spec-list li[data-spec][data-recent]")).toHaveCount(5);
     const narrow = (page.viewportSize()?.width ?? 1280) < 640;
     if (!narrow) {
-      const faded = page.locator("#map a[data-spec]:not([data-recent])").first();
-      expect(await faded.evaluate((el) => getComputedStyle(el).opacity)).toBe("0.2");
-      const kept = page.locator("#map a[data-spec][data-recent]").first();
-      expect(await kept.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+      // the fade is a transition, so wait for it to settle rather than read it mid-way
+      await expect(page.locator("#map a[data-spec]:not([data-recent])").first()).toHaveCSS(
+        "opacity",
+        "0.2",
+      );
+      await expect(page.locator("#map a[data-spec][data-recent]").first()).toHaveCSS(
+        "opacity",
+        "1",
+      );
     }
     await page.locator("#map-filters input[value='recent']").uncheck();
     await expect(page).not.toHaveURL(/view=/);
