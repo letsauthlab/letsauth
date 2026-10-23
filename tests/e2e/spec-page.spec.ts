@@ -79,6 +79,35 @@ test.describe("spec page (US2)", () => {
     }
   });
 
+  test("the facts and revisions sit beside the relations on wide screens and after them on phones", async ({
+    page,
+  }) => {
+    await page.goto(`/standards/${mcp.id}/`);
+    const main = await page.locator(".entry__main").boundingBox();
+    const side = await page.locator(".entry__side").boundingBox();
+    if (!main || !side) throw new Error("the entry columns are missing");
+    const wide = (page.viewportSize()?.width ?? 0) >= 960;
+    if (wide) expect(side.x).toBeGreaterThan(main.x + main.width - 1);
+    else expect(side.y).toBeGreaterThan(main.y + main.height - 1);
+    await expect(page.locator(".entry__side .facts dt")).toHaveText([
+      "Revisions",
+      "Relations",
+      "Features",
+    ]);
+    await expect(page.locator("[data-levels] .levels__key")).toHaveCount(
+      new Set(mcpDefined.map((d) => d.entry.level)).size,
+    );
+  });
+
+  test("a spec with no recorded features says so and shows no zero (unknown is not none)", async ({
+    page,
+  }) => {
+    await page.goto("/standards/rfc8693/");
+    await expect(page.locator("[data-no-features]")).toBeVisible();
+    await expect(page.locator(".entry__side .facts dt")).toHaveText(["Revisions", "Relations"]);
+    await expect(page.locator("#defines")).toHaveCount(0);
+  });
+
   test("the title carries the view transition name the map hands over (M2)", async ({ page }) => {
     await page.goto(`/standards/${mcp.id}/`);
     const name = await page

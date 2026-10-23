@@ -6,11 +6,9 @@ import MaturityTag from "./MaturityTag.astro";
 
 interface Props {
   groups: RelationGroups;
-  /** The spec the groups belong to, for phrasing. */
-  specName: string;
 }
 
-const { groups, specName } = Astro.props;
+const { groups } = Astro.props;
 
 interface Section {
   id: string;
@@ -18,13 +16,16 @@ interface Section {
   entries: RelationEntry[];
 }
 
+// the page's own name is the subject, so the group heading is the verb phrase alone
+const sentence = (phrase: string) => phrase.charAt(0).toUpperCase() + phrase.slice(1);
+
 const sections: Section[] = [];
 for (const type of RELATION_TYPES) {
   const out = groups.outgoing.get(type);
   if (out?.length) {
     sections.push({
       id: `out-${type}`,
-      heading: `${specName} ${RELATION_LABEL[type].forward}`,
+      heading: sentence(RELATION_LABEL[type].forward),
       entries: out,
     });
   }
@@ -34,7 +35,7 @@ for (const type of RELATION_TYPES) {
   if (rel?.length) {
     sections.push({
       id: `rel-${type}`,
-      heading: `${specName} ${RELATION_LABEL[type].forward}`,
+      heading: sentence(RELATION_LABEL[type].forward),
       entries: rel,
     });
   }
@@ -44,7 +45,7 @@ for (const type of RELATION_TYPES) {
   if (inc?.length) {
     sections.push({
       id: `in-${type}`,
-      heading: `${specName} ${RELATION_LABEL[type].backward}`,
+      heading: sentence(RELATION_LABEL[type].backward),
       entries: inc,
     });
   }
@@ -62,18 +63,25 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
           <h3 id={s.id}>
             {s.heading} <span class="n">{s.entries.length}</span>
           </h3>
-          <ul class="rows">
+          <ul class="entries" role="list">
             {s.entries.map(({ relation, other }) => (
               <li data-other={other.id} data-type={typeOf(s.id)}>
                 <span class="who">
                   <a href={`/standards/${other.id}/`}>{other.name}</a>
                   <MaturityTag maturity={other.maturity} note={other.maturityNote} />
                 </span>
-                {relation.note && <span class="why">{relation.note}</span>}
-                {relation.source && (
-                  <a class="src" href={relation.source} rel="noopener">
-                    Source
-                  </a>
+                {(relation.note || relation.source) && (
+                  <span class="why">
+                    {relation.note}
+                    {relation.source && (
+                      <>
+                        {" "}
+                        <a class="src" href={relation.source} rel="noopener">
+                          Source
+                        </a>
+                      </>
+                    )}
+                  </span>
                 )}
               </li>
             ))}
@@ -85,31 +93,46 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
 }
 
 <style>
+  /*
+   * The groups flow into as many columns as the width holds, packed top to bottom so a long
+   * group leaves no hole beside a short one. Each opens on a hairline with its verb phrase and
+   * a count, and lists the other documents without rules between them.
+   */
   .relations {
-    display: grid;
-    gap: var(--space-5);
+    columns: 19rem;
+    column-gap: var(--space-6);
+  }
+  .group {
+    break-inside: avoid;
+    margin-bottom: var(--space-6);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule-strong);
   }
   .group h3 {
     font-size: var(--small);
     font-weight: 600;
     letter-spacing: 0;
     color: var(--ink-2);
-    margin: 0 0 var(--space-2);
+    margin: 0 0 var(--space-3);
   }
-  .rows {
+  .entries {
+    display: grid;
+    gap: var(--space-4);
     margin: 0;
+    padding: 0;
+    list-style: none;
   }
   li {
     display: grid;
     gap: var(--space-1);
-    padding: var(--space-3) 0;
+    margin: 0;
     font-size: var(--small);
   }
   .who {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-1) var(--space-3);
+    gap: var(--space-1) var(--space-2);
   }
   .who a {
     font-weight: 600;
@@ -125,6 +148,6 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
   }
   .src {
     font-size: var(--tiny);
-    justify-self: start;
+    white-space: nowrap;
   }
 </style>
