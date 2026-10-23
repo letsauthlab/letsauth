@@ -32,7 +32,7 @@ own PR, and every product that renders the entity picks the field up.
 
 ### II. Every Claim Cites a Revision
 
-Every feature, scenario step, grade and matrix cell MUST link to the spec revision and section it
+Every feature, scenario step, scan result and matrix cell MUST link to the spec revision and section it
 is derived from. A claim without a citation does not ship. When a spec revision changes, the
 affected pages say so and keep rendering correctly against the revision they cite; nothing is
 silently re-interpreted against a newer revision. Dates on observations are mandatory.
@@ -128,4 +128,4 @@ Report in the PR description. MAJOR for a changed or removed principle, MINOR fo
 principle or section, PATCH for wording. Every plan's Constitution Check lists each principle and
 states how the feature complies or justifies the deviation in its Complexity Tracking table.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-13
+**Version**: 1.0.1 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-22

@@ -44,7 +44,7 @@ const usedLevels = new Set(
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
 const hrefFor = (id: string) => (id === current.id ? "/mcp/" : `/mcp/revisions/${id}/`);
 
-// the nightly scanner's grade per server, shown next to the name and never sorted on
+// the nightly scanner's view per server: its report is linked next to the name, never sorted on
 const scans = new Map(matrix.rows.map((s) => [s.id, latestScan(data, s, revisionId)]));
 const scannerChecks = passiveChecks(data, revisionId).length;
 
@@ -193,9 +193,9 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       feature. <abbr title="MCP server (resource server)">RS</abbr>
       {" and "}
       <abbr title="Authorization server">AS</abbr> name the party the feature is observed on. The
-      letter next to a server's name is the <a href="/mcp/scanner/">nightly scanner</a>'s grade over
-      the {scannerChecks} requirements it can read from public metadata, by a published rule. It
-      opens the server's report. Rows are alphabetical and nothing here ranks servers.
+      <a href="/mcp/scanner/">nightly scanner</a> reads {scannerChecks} of these requirements from
+      public metadata; "report" next to a server's name opens what it asked and what it found.
+      Rows are alphabetical. Nothing here is scored or ranked.
     </p>
     <dl class="legend__classes" aria-label="Access and auth classes">
       <div>
@@ -221,7 +221,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
           ))}
           : how the endpoint authenticates clients. A dashed chip is a class nobody has stated
           yet. Both come from the evidence on the server page. API-key and unauthenticated
-          servers get no grade.
+          servers are not scanned.
         </dd>
       </div>
     </dl>

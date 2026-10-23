@@ -9,7 +9,6 @@ import type {
 } from "../schema";
 import { runChecks } from "./checks";
 import type { Fetcher } from "./fetch";
-import { type Grade, grade } from "./grade";
 import type { Guard } from "./guard";
 import {
   type AsCacheEntry,
@@ -18,10 +17,11 @@ import {
   probe,
   type RequestRecord,
 } from "./probe";
+import { type Summary, summarize } from "./summary";
 import { OBSERVER, SCANNER_ID } from "./version";
 
 /** Bumps on a breaking change of the report shape (contracts/report.md). */
-export const REPORT_VERSION = 1;
+export const REPORT_VERSION = 2;
 
 export interface CheckResult {
   feature: string;
@@ -91,7 +91,7 @@ export interface Report {
   requests: RequestRecord[];
   discovered: Discovered | null;
   checks: CheckResult[];
-  grade: Grade;
+  summary: Summary;
   /** The checks as data-model observations; empty when the target is not a listed server. */
   observations: Observation[];
 }
@@ -188,7 +188,7 @@ function discoveredOf(p: Probe): Discovered {
   };
 }
 
-/** Probes the target, runs every passive check, grades, and shapes the report. */
+/** Probes the target, runs every passive check, summarizes, and shapes the report. */
 export async function scan(
   target: ScanTarget,
   data: Dataset,
@@ -247,7 +247,7 @@ export async function scan(
     requests: p.requests,
     discovered: discoveredOf(p),
     checks,
-    grade: grade(checks),
+    summary: summarize(checks),
     observations,
   };
 }

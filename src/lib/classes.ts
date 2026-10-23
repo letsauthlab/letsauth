@@ -60,7 +60,7 @@ export const AUTH_DESCRIPTION: Record<AuthClass, string> = {
 
 /**
  * True when the server's auth class says there is no OAuth authorization to judge: the scanner
- * does not scan it and the grade reads "No OAuth". An `unknown` class is scanned like OAuth, so
+ * does not scan it and the scan summary reads "No OAuth". An `unknown` class is scanned like OAuth, so
  * the scan can say what the endpoint's challenge suggests.
  */
 export function hasNoOAuth(server: Pick<Server, "auth">): boolean {

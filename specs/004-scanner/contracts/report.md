@@ -2,12 +2,12 @@
 
 One shape for the command's output and the per-server JSON on
 the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `latestScan()` in
-`src/lib/scanner.ts` (which fills `checks[]` and `grade` from observations and leaves
+`src/lib/scanner.ts` (which fills `checks[]` and `summary` from observations and leaves
 `requests` and `discovered` empty, since the site never contacts a server).
 
 ```jsonc
 {
-  "version": 1,
+  "version": 2,                           // 2 since spec 017: `summary` replaced `grade`
   "scanner": "letsauth-scanner/0.1.0",
   "generatedAt": "2026-10-15T03:17:04Z",
   "recorded": false,                       // true when built from the repository's observations
@@ -58,10 +58,17 @@ the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `
       "evidence": "https://mcp.example.com/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location",
       "observedAt": "2026-10-15T03:17:04Z" }
   ],
-  "grade": {
-    "letter": "C",                         // "A" | "B" | "C" | "F" | null
-    "label": "C",                          // or "Withheld" / "Not scanned" / "No OAuth"
-    "reasons": ["SHOULD-level check unsupported: Client ID Metadata Documents supported"]
+  "summary": {                             // spec 017: counts only, no grade or score
+    "state": "scanned",                    // or "not-scanned" / "no-oauth"
+    "label": "MUST 8 supported · SHOULD 3 supported, 1 unsupported",
+    "tallies": [                           // one per level present, MUST first
+      { "level": "MUST", "total": 8, "counts": [{ "status": "supported", "n": 8 }] }
+    ],
+    "open": [                              // checks not supported, in report order
+      { "feature": "mcp.as.cimd", "name": "Client ID Metadata Documents supported",
+        "level": "SHOULD", "status": "unsupported" }
+    ],
+    "notes": []                            // the either-or rule in words, or why there are no counts
   },
   "observations": [                        // the same checks as data-model observations;
     { "server": "example", "feature": "mcp.prm.well-known", "revision": { … },

@@ -206,7 +206,8 @@ append-only check passes.
   evidence link and the date of the newest scanner observation, and the report MUST show a grade
   with its reasons or say why the grade is withheld; a server without scanner observations MUST
   say so and show no grade.
-- **FR-008**: The grade MUST be derived only from the statuses the report shows, by this rule, and
+- **FR-008** *(superseded by 017-neutral-scan-summary, 2026-10-22: there is no grade; the report
+  counts statuses per level)*: The grade MUST be derived only from the statuses the report shows, by this rule, and
   the rule MUST be published next to every grade: a MUST-level check that is unsupported or partial
   gives F; otherwise a MUST-level check that is unknown withholds the grade; otherwise a
   SHOULD-level check that is unsupported or partial gives C; otherwise a SHOULD-level check that is
@@ -214,7 +215,8 @@ append-only check passes.
   MUST the server may meet in either of two ways (protected resource metadata at a well-known
   location or in a `WWW-Authenticate` challenge) counts as unknown while the other way is unknown.
   A server listed as open or API-key is not graded ("No OAuth").
-- **FR-009**: The atlas matrix MUST show each listed server's latest grade (or that it is not
+- **FR-009** *(the grade part superseded by 017-neutral-scan-summary: the matrix links the report
+  and shows no grade)*: The atlas matrix MUST show each listed server's latest grade (or that it is not
   scanned or not graded) next to its name, linked to its report, and the site MUST NOT order or
   rank servers by grade anywhere. The scanner page MUST NOT carry a second list of servers; it
   describes the method and points at the atlas.
