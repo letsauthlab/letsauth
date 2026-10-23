@@ -1,12 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
-import { passiveChecks, requestLadder, scannerIndex } from "../../src/lib/scanner";
+import { requestLadder, scannerIndex, unscannedFeatures } from "../../src/lib/scanner";
 import { SUMMARY_RULE } from "../../src/scanner/summary";
 import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
 const views = scannerIndex(data);
-const checks = passiveChecks(data);
 const scanned = views.find((v) => v.scanned);
 const unscanned = views.find((v) => !v.scanned);
 const first = views[0];
@@ -33,11 +32,9 @@ test.describe("scanner index (US2)", () => {
     await expect(page.locator("#scanner-index")).toHaveCount(0);
     await expect(page.locator("table tr[data-server]")).toHaveCount(0);
     const where = page.locator("[aria-labelledby='where-title']");
-    for (const name of ["MCP auth atlas", "server page"]) {
-      const link = where.getByRole("link", { name, exact: true });
-      await expect(link).toBeVisible();
-      await expect(link).toHaveAttribute("href", "/mcp/");
-    }
+    const link = where.getByRole("link", { name: "MCP auth atlas", exact: true });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", "/mcp/");
     await expect(page.locator("[data-nightly]")).toHaveCount(2);
   });
 
@@ -62,7 +59,7 @@ test.describe("scanner index (US2)", () => {
   });
 
   test("has no horizontal page scroll down to 320px (SC-007)", async ({ page }) => {
-    for (const path of ["/mcp/scanner/", `/mcp/servers/${(scanned ?? first).server.id}/scan/`]) {
+    for (const path of ["/mcp/scanner/", `/mcp/servers/${(scanned ?? first).server.id}/`]) {
       for (const width of [320, 412]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(path);
@@ -76,7 +73,7 @@ test.describe("scanner index (US2)", () => {
   });
 
   test("offers no way to start a scan from the site (no on-demand scanning)", async ({ page }) => {
-    for (const path of ["/mcp/scanner/", `/mcp/servers/${first.server.id}/scan/`]) {
+    for (const path of ["/mcp/scanner/", `/mcp/servers/${first.server.id}/`]) {
       await page.goto(path);
       await expect(page.locator("main form, main input, main button")).toHaveCount(0);
       await expect(page.getByRole("button", { name: /scan/i })).toHaveCount(0);
@@ -90,6 +87,11 @@ test.describe("scanner index (US2)", () => {
     await expect(lines.filter({ hasText: "POST" })).toHaveCount(1);
   });
 
+  test("lists every requirement the scanner does not check", async ({ page }) => {
+    await page.goto("/mcp/scanner/");
+    await expect(page.locator(".unscanned li")).toHaveCount(unscannedFeatures(data).length);
+  });
+
   test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto("/mcp/scanner/");
     await expectNoSeriousA11yViolations(page);
@@ -98,21 +100,24 @@ test.describe("scanner index (US2)", () => {
   });
 });
 
-test.describe("scan report page (US2)", () => {
-  test("shows one row per passive check with level, status and evidence (FR-009)", async ({
+test.describe("scan on the server page (US2)", () => {
+  test("the old report address forwards to the server page", async ({ page }) => {
+    await page.goto(`/mcp/servers/${first.server.id}/scan/`);
+    await expect(page).toHaveURL(new RegExp(`/mcp/servers/${first.server.id}/$`));
+  });
+
+  test("the status panel counts the checks per level and links the requests (017 FR-005)", async ({
     page,
   }) => {
     test.skip(!scanned, "no server with a scanner observation in the dataset yet");
-    await page.goto(`/mcp/servers/${scanned?.server.id}/scan/`);
-    const rows = page.locator("[data-report] [data-check]");
-    await expect(rows).toHaveCount(checks.length);
-    await expect(page.locator("[data-report] [data-summary='scanned'] .tally > div")).toHaveCount(
-      scanned?.summary.tallies.length ?? 0,
-    );
-    const row = rows.first();
-    await expect(row.locator(".level")).toHaveCount(1);
-    await expect(row.locator(".status-cell")).toHaveCount(1);
-    await expect(row.locator(".evidence")).toHaveCount(1);
+    await page.goto(`/mcp/servers/${scanned?.server.id}/`);
+    const line = page.locator("[data-scan='scanned']");
+    await expect(line.locator(".scan__tally li")).toHaveCount(scanned?.summary.tallies.length ?? 0);
+    for (const t of scanned?.summary.tallies ?? []) {
+      await expect(line.locator(`[data-level="${t.level}"]`)).toContainText(t.level);
+    }
+    await expect(line.locator("a[href='#scan']")).toBeVisible();
+    await expect(page.locator("#scan")).toBeVisible();
     await expect(page.locator("#not-scanned")).toHaveCount(0);
   });
 
@@ -120,31 +125,18 @@ test.describe("scan report page (US2)", () => {
     page,
   }) => {
     test.skip(!unscanned, "every server has a scanner observation");
-    await page.goto(`/mcp/servers/${unscanned?.server.id}/scan/`);
-    await expect(page.locator("#not-scanned")).toBeVisible();
-    await expect(page.locator("[data-report] .tally")).toHaveCount(0);
-    const rows = page.locator("[data-report] [data-check]");
-    await expect(rows).toHaveCount(checks.length);
-    await expect(page.locator("[data-report] [data-check][data-status='unsupported']")).toHaveCount(
-      0,
-    );
-    await expect(page.locator("[data-report] [data-check][data-status='unknown']")).toHaveCount(
-      checks.length,
-    );
+    await page.goto(`/mcp/servers/${unscanned?.server.id}/`);
+    await expect(page.locator("[data-scan='not-scanned']")).not.toContainText(/unsupported/i);
+    await expect(page.locator("#scan")).not.toContainText(/unsupported/i);
     await expect(page.locator("[data-transcript]")).toHaveCount(0);
   });
 
-  test("links the atlas, the server page, the JSON and how the summary is counted", async ({
-    page,
-  }) => {
-    await page.goto(`/mcp/servers/${first.server.id}/scan/`);
-    await expect(page.locator(".crumbs a[href='/mcp/']")).toBeVisible();
-    await expect(page.locator(`.crumbs a[href='/mcp/servers/${first.server.id}/']`)).toBeVisible();
-    await expect(page.locator(`a[href="/mcp/servers/${first.server.id}/"]`).first()).toBeVisible();
-    await expect(
-      page.locator(`a[href="/mcp/servers/${first.server.id}/scan.json"]`).first(),
-    ).toBeVisible();
-    await expect(page.locator("#rule-title")).toBeVisible();
+  test("links the scan JSON and how the scanner works", async ({ page }) => {
+    await page.goto(`/mcp/servers/${first.server.id}/`);
+    const scan = page.locator("#scan");
+    await expect(scan.locator(`a[href="/mcp/servers/${first.server.id}/scan.json"]`)).toBeVisible();
+    await expect(scan.locator("a[href='/mcp/scanner/']")).toBeVisible();
+    await expect(scan).toContainText(`pnpm scan ${first.server.id}`);
     const response = await page.request.get(`/mcp/servers/${first.server.id}/scan.json`);
     expect(response.ok()).toBe(true);
     const body = await response.json();
@@ -152,21 +144,18 @@ test.describe("scan report page (US2)", () => {
     expect(body.grade).toBeUndefined();
     expect(body.summary.state).toBe(first.summary.state);
     expect(body.recorded).toBe(true);
-    expect(body.checks).toHaveLength(checks.length);
+    expect(body.checks).toHaveLength(first.checks.length);
   });
 
-  test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto(`/mcp/servers/${first.server.id}/scan/`);
+  test("has no serious accessibility violations once the ladder has printed", async ({ page }) => {
+    test.skip(!scanned, "no server with a scanner observation in the dataset yet");
+    await page.goto(`/mcp/servers/${scanned?.server.id}/`);
+    await page.locator("[data-ladder]").scrollIntoViewIfNeeded();
     // contrast is judged on the end state, not on a ladder line still fading in (M12)
     await page.waitForFunction(() =>
       document.getAnimations().every((a) => a.playState !== "running"),
     );
     await expectNoSeriousA11yViolations(page);
-    await hideNightlyData(page);
-    await expect(page).toHaveScreenshot("report.png", {
-      fullPage: false,
-      mask: [page.locator("[data-report]")],
-    });
   });
 
   test("transcript lists every recorded request with method, URL, status and what was read (M12)", async ({
@@ -178,7 +167,7 @@ test.describe("scan report page (US2)", () => {
     // static HTML: the lines are there without JavaScript
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
-    await page.goto(`/mcp/servers/${scanned.server.id}/scan/`);
+    await page.goto(`/mcp/servers/${scanned.server.id}/`);
     const lines = page.locator("[data-transcript] [data-request]");
     await expect(lines).toHaveCount(ladder.length);
     for (const [i, line] of ladder.entries()) {
@@ -200,7 +189,7 @@ test.describe("scan report page (US2)", () => {
     page,
   }) => {
     test.skip(!scanned, "no server with a scanner observation in the dataset yet");
-    await page.goto(`/mcp/servers/${scanned?.server.id}/scan/`);
+    await page.goto(`/mcp/servers/${scanned?.server.id}/`);
     const ladder = page.locator("[data-ladder]");
     await ladder.scrollIntoViewIfNeeded();
     await expect(ladder).toHaveAttribute("data-play", "");
@@ -224,7 +213,7 @@ test.describe("scan report page (US2)", () => {
 
   test("under reduced motion the ladder shows in full at once (M12)", async ({ page }) => {
     test.skip(!scanned, "no server with a scanner observation in the dataset yet");
-    await page.goto(`/mcp/servers/${scanned?.server.id}/scan/`);
+    await page.goto(`/mcp/servers/${scanned?.server.id}/`);
     await expectEndStateUnderReducedMotion(page, "[data-ladder]");
     await expect(page.locator("[data-ladder]")).not.toHaveAttribute("data-armed", "");
     await expect(page.locator("[data-verdict]")).toHaveCSS("opacity", "1");

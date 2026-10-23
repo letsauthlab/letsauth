@@ -12,7 +12,7 @@ interface Props {
   diff?: RevisionDiff;
   /**
    * The nightly scanner's latest view per server id. A quiet link next to the server's name
-   * opens the report; the row's cells already show what the scan found, so nothing is added
+   * opens the requests behind it on the server page; the row's cells already show what the scan found, so nothing is added
    * here and nothing is a sort key.
    */
   scans?: Map<string, ScanView>;
@@ -210,11 +210,11 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                     {scan && (
                       <a
                         class="scan-link"
-                        href={`/mcp/servers/${server.id}/scan/`}
+                        href={`/mcp/servers/${server.id}/#scan`}
                         data-scan={scan.summary.state}
                         title={scan.summary.label}
                       >
-                        <span class="visually-hidden">{server.name} scan </span>report
+                        <span class="visually-hidden">{server.name} </span>scan
                       </a>
                     )}
                   </span>
@@ -513,7 +513,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       text-underline-offset: 0.2em;
     }
 
-    /* the row's own cells are the scan's result; this only opens the report behind them */
+    /* the row's own cells are the scan's result; this only opens the requests behind them */
     .matrix .scan-link {
       flex: none;
       font-size: var(--tiny);

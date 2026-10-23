@@ -46,6 +46,21 @@ row already shows every status the grade was derived from.
   `open`, `notes`) and bumps `version` to 2. The nightly pull request's table and the
   `pnpm scan` output use the same summary.
 
+## Amendment: the report folded into the server page
+
+The scan report page repeated the server page's scanner rows with the same status, date and
+evidence; only the request transcript and the counts were its own. The report has no page of its
+own any more:
+
+- **FR-007**: The server page MUST show the newest passive scan: the per-level counts and the
+  date in its status panel (FR-001, FR-005), and "What the scanner asked", the request transcript
+  (M12), after its feature tables, with the either-or notes of FR-002. The checks are its feature
+  rows; the ones not supported are the rows that say so, so the counts do not list them again.
+- **FR-008**: The summary rule (FR-003) and the full list of requirements the scanner does not
+  check MUST be published on the scanner page; the server page links it.
+- **FR-009**: `/mcp/servers/<id>/scan/` MUST forward to the server page. `scan.json` stays, and
+  the matrix link next to each server name (FR-004) opens the server page's scan section.
+
 ## Success criteria
 
 - **SC-001**: No page, JSON file or scanner output contains a grade letter or the word "grade"

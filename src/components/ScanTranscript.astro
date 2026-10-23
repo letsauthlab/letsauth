@@ -1,0 +1,179 @@
+---
+/**
+ * The passive scan of one server, on its server page (folded in from the old scan report): the
+ * request ladder as a transcript (M12), the counting notes the summary adds, and how to reproduce
+ * it. The checks themselves are the feature rows above it. Static HTML; the only script prints
+ * the ladder line by line once, and the page reads the same without it.
+ */
+import type { LadderLine, ScanView } from "@/lib/scanner";
+import { SCANNER_ID } from "@/scanner/version";
+
+interface Props {
+  view: ScanView;
+  /** The requests behind the evidence, in ladder order (`requestLadder`). */
+  ladder: LadderLine[];
+}
+
+const { view, ladder } = Astro.props;
+const { server, summary } = view;
+const repo = "https://github.com/letsauthlab/letsauth";
+---
+
+<section class="explainer ladder" id="scan" aria-labelledby="scan-title" data-ladder>
+  <h2 id="scan-title">What the scanner asked</h2>
+  {
+    summary.state === "no-oauth" ? (
+      summary.notes.map((note) => <p class="ladder__lede">{note}</p>)
+    ) : !view.scanned || ladder.length === 0 ? (
+      <p class="ladder__lede" id="not-scanned">
+        No passive scan recorded yet for this server. The nightly run adds one when it can read the
+        server's metadata; until then the rows above show what documentation says.
+      </p>
+    ) : (
+      <>
+        <p class="ladder__lede">
+          The requests behind the rows marked passive scan above, in the order the scanner makes
+          them, each with the newest answer recorded. None carries a credential or a message.
+        </p>
+        <ol class="transcript" data-transcript>
+          {ladder.map((line, i) => (
+            <li style={`--i: ${i}`} data-request>
+              <span class="transcript__method">{line.method}</span>
+              <span class="transcript__url">{line.url}</span>
+              <span class="transcript__status">{line.answer}</span>
+              <span class="transcript__note">read {line.read.join(", ")}</span>
+            </li>
+          ))}
+          <li class="verdict" style={`--i: ${ladder.length}`} data-verdict>
+            <span class="transcript__method" aria-hidden="true">=</span>
+            <span class="transcript__url">{view.checks.length} checks, read into the tables above</span>
+          </li>
+        </ol>
+        {summary.notes.map((note) => (
+          <p class="ladder__note">{note}</p>
+        ))}
+      </>
+    )
+  }
+  <p class="ladder__foot">
+    {
+      view.scannedAt && (
+        <>
+          Newest scanner observation <time datetime={view.scannedAt}>{view.scannedAt.slice(0, 10)}</time> ·{" "}
+        </>
+      )
+    }
+    {SCANNER_ID} · reproduce with <code>pnpm scan {server.id}</code> ·{" "}
+    <a href={`/mcp/servers/${server.id}/scan.json`}>scan JSON</a> ·{" "}
+    <a href={`${repo}/blob/main/data/observations/${server.id}.yaml`} rel="noopener">data file</a> ·{" "}
+    <a href="/mcp/scanner/">how the scanner works</a>
+  </p>
+</section>
+
+<script>
+  import { reducedMotion } from "@/lib/motion";
+
+  // M12: the ladder prints line by line, once, when it scrolls into view; the count comes last.
+  // The static list is the end state, so without JavaScript or with reduced motion it simply shows.
+  for (const ladder of document.querySelectorAll<HTMLElement>("[data-ladder]")) {
+    if (reducedMotion() || !("IntersectionObserver" in window)) continue;
+    if (!ladder.querySelector("[data-transcript]")) continue;
+    ladder.dataset.armed = "";
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        ladder.dataset.play = "";
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -10% 0px" },
+    );
+    observer.observe(ladder);
+  }
+</script>
+
+<style>
+  .ladder {
+    scroll-margin-top: var(--space-5);
+  }
+  .ladder h2 {
+    font-size: var(--h3);
+    margin: 0 0 var(--space-3);
+  }
+  .ladder__lede {
+    margin: 0 0 var(--space-4);
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .ladder .transcript {
+    margin: 0;
+  }
+  /* Method, address and answer on one line; what was read under the address. Long addresses
+     break rather than scroll, so the ladder never widens the page. */
+  .ladder .transcript > li {
+    display: grid;
+    grid-template-columns: 4.5ch minmax(0, 1fr) auto;
+    gap: 0 var(--space-3);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .transcript__url {
+    overflow-wrap: anywhere;
+  }
+  .transcript__status {
+    white-space: nowrap;
+  }
+  .ladder .transcript__note {
+    grid-column: 2 / -1;
+  }
+  .ladder .transcript > li.verdict {
+    margin-top: var(--space-2);
+    font-weight: 600;
+  }
+  .ladder__note {
+    margin: var(--space-3) 0 0;
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .ladder__foot {
+    margin: var(--space-4) 0 0;
+    max-width: none;
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+  .ladder__foot code {
+    font-size: inherit;
+  }
+
+  /* M12. The hidden start exists only once the script armed the ladder. */
+  @media (prefers-reduced-motion: no-preference) {
+    .ladder[data-armed]:not([data-play]) .transcript > li {
+      opacity: 0;
+    }
+    .ladder[data-play] .transcript > li {
+      animation: ladder-line var(--dur) var(--ease) both;
+      animation-delay: calc(var(--i) * 60ms);
+    }
+  }
+  @keyframes ladder-line {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+  }
+
+  /* On a phone the answer moves under the address, and the two frames give back their padding. */
+  @media (max-width: 40rem) {
+    .ladder {
+      padding: var(--space-3);
+    }
+    .ladder .transcript {
+      padding: var(--space-3);
+    }
+    .ladder .transcript > li {
+      grid-template-columns: 4.5ch minmax(0, 1fr);
+    }
+    .transcript__status {
+      grid-column: 2;
+    }
+  }
+</style>

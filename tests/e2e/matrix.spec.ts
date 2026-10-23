@@ -183,18 +183,16 @@ test.describe("matrix page (US1)", () => {
     await expect(page.locator("#matrix")).not.toContainText(/score|rank/i);
   });
 
-  test("each server links its latest scan report and shows no grade (017 FR-004)", async ({
-    page,
-  }) => {
+  test("each server links its latest scan and shows no grade (017 FR-004)", async ({ page }) => {
     await page.goto("/mcp/");
     const links = page.locator("#matrix tbody th[scope='row'] a.scan-link");
     await expect(links).toHaveCount(matrix.rows.length);
     for (const server of matrix.rows.slice(0, 5)) {
       const scan = latestScan(data, server, revision.id);
       const link = page.locator(`#matrix tbody tr[data-server="${server.id}"] a.scan-link`);
-      await expect(link).toHaveAttribute("href", `/mcp/servers/${server.id}/scan/`);
+      await expect(link).toHaveAttribute("href", `/mcp/servers/${server.id}/#scan`);
       await expect(link).toHaveAttribute("data-scan", scan.summary.state);
-      await expect(link).toHaveAccessibleName(`${server.name} scan report`);
+      await expect(link).toHaveAccessibleName(`${server.name} scan`);
     }
     await expect(page.locator("#matrix [data-grade]")).toHaveCount(0);
   });
