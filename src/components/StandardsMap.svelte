@@ -4,7 +4,7 @@
  * toggles and the outline in the DOM are the source of truth, and the toggles filter through
  * stylesheet rules on their own. This island only: keeps the count, mirrors the toggles in the
  * URL so a view can be shared, lets a lane label in the drawing toggle its body, shows the card
- * of the node under the pointer or in focus in the rail, highlights that node's neighbourhood,
+ * of the node under the pointer or in focus beside it, highlights that node's neighbourhood,
  * and hands the followed node or outline entry to the cross-document view transition so it
  * grows into the spec page's title (plan 016, M2). Without JS the page is complete.
  */
@@ -88,19 +88,35 @@ onMount(() => {
     });
   }
 
-  // the reading pane: the node's card moves into the rail while it is hovered or focused
-  const hint = card?.innerHTML ?? "";
+  // the reading pane: the node's card floats beside the node while it is hovered or focused
+  const figure = card?.parentElement;
   const cards = new Map(
     Array.from(document.querySelectorAll<HTMLElement>(".map-cards [data-card]")).map((c) => [
       c.dataset.card ?? "",
       c,
     ]),
   );
-  function show(id: string | null) {
-    if (!card) return;
-    const next = id ? cards.get(id) : undefined;
-    card.replaceChildren(...(next ? [next.cloneNode(true)] : []));
-    if (!next) card.innerHTML = hint;
+  function show(node: SVGElement | null) {
+    if (!card || !figure) return;
+    const next = node ? cards.get(node.dataset.spec ?? "") : undefined;
+    if (!node || !next) {
+      card.hidden = true;
+      card.replaceChildren();
+      return;
+    }
+    card.replaceChildren(next.cloneNode(true));
+    card.hidden = false;
+    // right of the node, or left of it where the frame ends; never below the frame
+    const box = node.getBoundingClientRect();
+    const fig = figure.getBoundingClientRect();
+    const gap = 8;
+    const right = box.right - fig.left + gap;
+    const left =
+      right + card.offsetWidth <= fig.width ? right : box.left - fig.left - gap - card.offsetWidth;
+    const frameBottom = (frame?.getBoundingClientRect().bottom ?? fig.bottom) - fig.top;
+    const top = Math.min(box.top - fig.top, frameBottom - card.offsetHeight);
+    card.style.left = `${Math.max(0, left)}px`;
+    card.style.top = `${Math.max(0, top)}px`;
   }
 
   // neighbourhood highlight
@@ -111,18 +127,22 @@ onMount(() => {
     (neighbours.get(a) ?? neighbours.set(a, new Set()).get(a))?.add(b);
     (neighbours.get(b) ?? neighbours.set(b, new Set()).get(b))?.add(a);
   }
-  function highlight(id: string | null) {
-    show(id);
+  let current: SVGElement | null = null;
+  function highlight(node: SVGElement | null) {
+    if (node === current) return;
+    current = node;
+    show(node);
+    const id = node?.dataset.spec;
     if (!id) {
       for (const el of [...nodes, ...edges]) el.classList.remove("is-near", "is-far");
       return;
     }
     const near = neighbours.get(id) ?? new Set<string>();
-    for (const node of nodes) {
-      const nid = node.dataset.spec ?? "";
+    for (const other of nodes) {
+      const nid = other.dataset.spec ?? "";
       const isNear = nid === id || near.has(nid);
-      node.classList.toggle("is-near", isNear);
-      node.classList.toggle("is-far", !isNear);
+      other.classList.toggle("is-near", isNear);
+      other.classList.toggle("is-far", !isNear);
     }
     for (const edge of edges) {
       const isNear = edge.dataset.from === id || edge.dataset.to === id;
@@ -130,12 +150,30 @@ onMount(() => {
       edge.classList.toggle("is-far", !isNear);
     }
   }
+  /*
+   * The pointer crosses gaps and edges on its way from one node to the next. Clearing at once
+   * would flash the whole map back to full strength for every gap, so leaving a node only
+   * clears after a short grace; entering another node in that time moves the highlight straight
+   * over.
+   */
+  const grace = 160;
+  let leaving: number | undefined;
+  const enter = (node: SVGElement) => {
+    clearTimeout(leaving);
+    highlight(node);
+  };
+  const leave = () => {
+    clearTimeout(leaving);
+    leaving = window.setTimeout(() => highlight(null), grace);
+  };
   for (const node of nodes) {
-    const id = node.dataset.spec ?? null;
-    node.addEventListener("mouseenter", () => highlight(id));
-    node.addEventListener("mouseleave", () => highlight(null));
-    node.addEventListener("focus", () => highlight(id));
-    node.addEventListener("blur", () => highlight(null));
+    node.addEventListener("pointerenter", () => enter(node));
+    node.addEventListener("pointerleave", leave);
+    node.addEventListener("focus", () => enter(node));
+    node.addEventListener("blur", () => {
+      clearTimeout(leaving);
+      highlight(null);
+    });
   }
 
   // M2: name the followed link for the view transition. A map node is SVG, which a view
