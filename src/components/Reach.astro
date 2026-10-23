@@ -1,0 +1,23 @@
+---
+// Plausible through the site's own address; src/lib/reach.ts has the rules.
+import { PLAUSIBLE_SCRIPT_PATH, plausibleInit } from "@/lib/reach";
+
+interface Props {
+  notFound?: boolean;
+}
+
+const { notFound = false } = Astro.props;
+const host = (Astro.site ?? new URL("https://letsauth.eu")).hostname;
+---
+
+<meta name="reach" data-host={host} data-not-found={notFound ? "" : undefined} />
+<script is:inline set:html={plausibleInit()} />
+<script is:inline async src={PLAUSIBLE_SCRIPT_PATH}></script>
+<script>
+  import { readConfig, startAnalytics, type Track } from "@/lib/reach";
+
+  const config = readConfig(document.querySelector<HTMLElement>('meta[name="reach"]'));
+  const track: Track = (name, options) =>
+    (window as unknown as { plausible: Track }).plausible(name, options);
+  if (config) startAnalytics(window, config, track);
+</script>
