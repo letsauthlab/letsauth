@@ -96,6 +96,7 @@ onMount(() => {
       c,
     ]),
   );
+  let shown: string | null = null;
   function show(id: string | null) {
     if (!card) return;
     const next = id ? cards.get(id) : undefined;
@@ -112,6 +113,8 @@ onMount(() => {
     (neighbours.get(b) ?? neighbours.set(b, new Set()).get(b))?.add(a);
   }
   function highlight(id: string | null) {
+    if (id === shown) return;
+    shown = id;
     show(id);
     if (!id) {
       for (const el of [...nodes, ...edges]) el.classList.remove("is-near", "is-far");
@@ -130,11 +133,38 @@ onMount(() => {
       edge.classList.toggle("is-far", !isNear);
     }
   }
+  /*
+   * The pointer crosses empty space between two nodes on its way from one to the next. Letting
+   * go at once would flash the whole map back to full strength in every gap, so the highlight
+   * stays through a short grace and only lifts when the pointer rests off the nodes or leaves.
+   */
+  const GRACE = 280;
+  let release = 0;
+  const hold = () => window.clearTimeout(release);
+  const letGo = (delay: number) => {
+    hold();
+    release = window.setTimeout(() => highlight(null), delay);
+  };
+  const nodeAt = (target: EventTarget | null) =>
+    target instanceof Element ? target.closest<SVGElement>("a[data-spec]") : null;
+  svg.addEventListener("pointerover", (event) => {
+    if ((event as PointerEvent).pointerType === "touch") return;
+    const node = nodeAt(event.target);
+    if (!node) return;
+    hold();
+    highlight(node.dataset.spec ?? null);
+  });
+  svg.addEventListener("pointerout", (event) => {
+    if ((event as PointerEvent).pointerType === "touch") return;
+    if (nodeAt(event.target) && !nodeAt((event as PointerEvent).relatedTarget)) letGo(GRACE);
+  });
+  svg.addEventListener("pointerleave", () => letGo(0));
   for (const node of nodes) {
     const id = node.dataset.spec ?? null;
-    node.addEventListener("mouseenter", () => highlight(id));
-    node.addEventListener("mouseleave", () => highlight(null));
-    node.addEventListener("focus", () => highlight(id));
+    node.addEventListener("focus", () => {
+      hold();
+      highlight(id);
+    });
     node.addEventListener("blur", () => highlight(null));
   }
 

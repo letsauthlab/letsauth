@@ -2,6 +2,7 @@
 import { type Layout, PAD, wrapLabel } from "@/lib/graph";
 import {
   BODY_LABEL,
+  BODY_SHORT,
   MATURITY_LABEL,
   MATURITY_ORDER,
   MATURITY_TAG,
@@ -32,11 +33,14 @@ const usedMaturities = MATURITY_ORDER.filter((m) => specs.some((s) => s.maturity
 // references are the most and the least telling lines, so the map opens without them
 const shownByDefault = (t: RelationType) => t !== "references";
 
-// M4: the longest builds-on chain draws in from the oldest document to the newest
+// the longest builds-on chain, drawn at full strength as the map's one emphasised path
 const spine = buildsOnSpine(specs, relations);
-const spineStep = new Map(spine.map((r, i) => [`${r.from}|${r.type}|${r.to}`, i]));
+const spineKeys = new Set(spine.map((r) => `${r.from}|${r.type}|${r.to}`));
 const spineFirst = spine[0] ? byId.get(spine[0].to) : undefined;
 const spineLast = spine.at(-1) ? byId.get(spine.at(-1)?.from ?? "") : undefined;
+
+// the body toggles sit two to a row; a long name takes its short form so each stays one line
+const railLabel = (b: SpecBody) => (BODY_LABEL[b].length > 12 ? BODY_SHORT[b] : BODY_LABEL[b]);
 
 const draft = new Set(["individual-draft", "working-group-draft", "candidate"]);
 // 13px Geist at weight 500 averages a little under 7px a character
@@ -61,10 +65,10 @@ const unchecked = (name: string, value: string) =>
 const filterCss = [
   ...usedTypes.map(
     (t) =>
-      `${unchecked("type", t)} :is(#map .edge-${t}, #map .spine-halo[data-type="${t}"]) { visibility: hidden }\n` +
+      `${unchecked("type", t)} #map .edge-${t} { visibility: hidden }\n` +
       `${unchecked("type", t)} #spec-list .xl[data-type="${t}"] { display: none }`,
   ),
-  `${scope}:has(input[name="view"][value="recent"]:checked) :is(#map .node:not([data-recent]), #map .band, #map .edge, #map .spine-halo) { opacity: 0.2 }`,
+  `${scope}:has(input[name="view"][value="recent"]:checked) :is(#map .node:not([data-recent]), #map .band, #map .edge) { opacity: 0.2 }`,
   `${scope}:has(input[name="view"][value="recent"]:checked) #spec-list li:not([data-recent]) > .row { opacity: 0.35 }`,
   ...bodies.map(
     (b) =>
@@ -98,7 +102,9 @@ const filterCss = [
         bodies.map((b) => (
           <label class="toggle">
             <input type="checkbox" name="body" value={b} checked />
-            <span class="toggle__label">{BODY_LABEL[b]}</span>
+            <span class="toggle__label" title={railLabel(b) === BODY_LABEL[b] ? undefined : BODY_LABEL[b]}>
+              {railLabel(b)}
+            </span>
           </label>
         ))
       }
@@ -182,9 +188,6 @@ const filterCss = [
                   class="band-box"
                   aria-hidden="true"
                 />
-                <text x={band.x + 10} y={band.y - 6} class="band-label" data-body={band.body}>
-                  {BODY_LABEL[band.body]}
-                </text>
               </g>
             ))
           }
@@ -192,24 +195,8 @@ const filterCss = [
 
         <g class="edges" aria-hidden="true">
           {
-            edges
-              .filter((e) => spineStep.has(key(e)))
-              .map((e) => (
-                <path
-                  class="spine-halo"
-                  d={e.d}
-                  pathLength="1"
-                  data-type={e.relation.type}
-                  data-from-body={e.from.spec.body}
-                  data-to-body={e.to.spec.body}
-                  style={`--i: ${spineStep.get(key(e))}; --n: ${spine.length}`}
-                />
-              ))
-          }
-          {
             edges.map((e) => {
-              const step = spineStep.get(key(e));
-              const onSpine = step !== undefined;
+              const onSpine = spineKeys.has(key(e));
               return (
                 <path
                   class:list={[
@@ -218,8 +205,6 @@ const filterCss = [
                     { symmetric: e.symmetric, spine: onSpine },
                   ]}
                   d={e.d}
-                  pathLength={onSpine ? "1" : undefined}
-                  style={onSpine ? `--i: ${step}; --n: ${spine.length}` : undefined}
                   data-relation={key(e)}
                   data-type={e.relation.type}
                   data-from={e.relation.from}
@@ -238,6 +223,17 @@ const filterCss = [
                 </path>
               );
             })
+          }
+        </g>
+
+        {/* the band names sit above the lines, so a line through the gap never runs over one */}
+        <g class="band-labels">
+          {
+            bands.map((band) => (
+              <text x={band.x + 10} y={band.y - 6} class="band band-label" data-body={band.body}>
+                {BODY_LABEL[band.body]}
+              </text>
+            ))
           }
         </g>
 
@@ -529,10 +525,15 @@ const filterCss = [
   .band-box {
     fill: color-mix(in oklch, var(--ink-2) 7%, transparent);
   }
+  /* a line that runs through the gap passes behind the label, which keeps a rim of the plate */
   .band-label {
     font-size: 11px;
     font-weight: 500;
     fill: var(--ink-2);
+    stroke: var(--ground-2);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    paint-order: stroke;
   }
   :global(#map-frame[data-enhanced] .band-label) {
     cursor: pointer;
@@ -561,7 +562,7 @@ const filterCss = [
     stroke: var(--edge);
     stroke-width: 1.5;
     transition:
-      opacity var(--dur-fast) var(--ease),
+      opacity var(--dur) var(--ease),
       stroke var(--dur-fast) var(--ease);
   }
   .edge-builds-on,
@@ -597,56 +598,16 @@ const filterCss = [
     fill: var(--c);
   }
 
-  /* the builds-on spine: full colour, drawn in once on load from the oldest end (M4) */
+  /* the builds-on spine: full colour and a little heavier, so the eye finds one path first */
   .edge.spine {
     --edge: var(--c);
     stroke-width: 2;
-    stroke-dasharray: 1;
-  }
-  .spine-halo {
-    fill: none;
-    stroke: var(--signal-soft);
-    stroke-width: 9;
-    stroke-linecap: round;
-    stroke-dasharray: 1;
-    opacity: 0;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .edge.spine {
-      animation: map-draw calc(var(--dur-draw) / var(--n)) linear
-        calc(var(--dur-draw) / var(--n) * var(--i)) both;
-    }
-    .spine-halo {
-      animation:
-        map-draw calc(var(--dur-draw) / var(--n)) linear
-          calc(var(--dur-draw) / var(--n) * var(--i)) both,
-        map-halo calc(var(--dur-draw) + var(--dur-slow)) linear both;
-    }
-  }
-  /* a negative offset reveals the path from its end, where the older document sits */
-  @keyframes map-draw {
-    from {
-      stroke-dashoffset: -1;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-  /* the halo shows while the spine draws (1200 of 1680ms), then fades out */
-  @keyframes map-halo {
-    0%,
-    100% {
-      opacity: 0;
-    }
-    2%,
-    71% {
-      opacity: 1;
-    }
   }
 
   .node {
     cursor: pointer;
     text-decoration: none;
+    transition: opacity var(--dur) var(--ease);
   }
   .node-box {
     fill: var(--ground);
@@ -712,9 +673,12 @@ const filterCss = [
     fill: var(--ink-2);
   }
 
-  /* the neighbourhood highlight, driven by the island */
+  /*
+   * the neighbourhood highlight, driven by the island (M19): the rest of the map steps back over
+   * 220ms rather than blinking, and the island holds it while the pointer crosses a gap
+   */
   :global(#map .is-far) {
-    opacity: 0.18;
+    opacity: 0.22;
   }
   :global(#map .edge.is-near) {
     --edge: var(--c);
