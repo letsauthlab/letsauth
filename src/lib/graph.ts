@@ -1,4 +1,4 @@
-import ELK, { type ElkExtendedEdge, type ElkNode } from "elkjs/lib/elk.bundled.js";
+import ELK, { type ElkNode } from "elkjs/lib/elk.bundled.js";
 import {
   isDependency,
   isSymmetric,
@@ -7,7 +7,7 @@ import {
   type Spec,
   type SpecBody,
 } from "../schema";
-import { BODY_ORDER, compareSpecs } from "./standards";
+import { compareSpecs } from "./standards";
 
 /**
  * Build-time layout for the standards map (research R2). Deterministic: the same nodes and
@@ -18,7 +18,8 @@ import { BODY_ORDER, compareSpecs } from "./standards";
  * algorithm puts a spec one layer right of what it builds on and routes those edges
  * orthogonally around the nodes. Within a layer the nodes keep model order, which is
  * `compareSpecs` order, so each column groups by publishing body in BODY_ORDER; a band behind
- * each group carries the body's name. The cross links (references, competes-with,
+ * each group carries the body's name. Each group of specs joined by dependencies is laid out
+ * on its own and the small ones are packed under the large one, see `layoutGraph`. The cross links (references, competes-with,
  * solves-same-problem-as) are not part of the shape and are drawn as curves over it.
  */
 
@@ -118,7 +119,7 @@ function sideAnchor(node: PlacedNode, towardsY: number): number {
   return Math.min(node.y + node.h - inset, Math.max(node.y + inset, towardsY));
 }
 
-function route(from: PlacedNode, to: PlacedNode): { d: string; mid: Point } {
+function route(from: PlacedNode, to: PlacedNode, right: number): { d: string; mid: Point } {
   let p0: Point;
   let p3: Point;
   let p1: Point;
@@ -140,11 +141,12 @@ function route(from: PlacedNode, to: PlacedNode): { d: string; mid: Point } {
     p1 = { x: p0.x + dx, y: p0.y };
     p2 = { x: p3.x - dx, y: p3.y };
   } else {
-    // same column: bow out to the right of both nodes
+    // same column: bow out to the right of both nodes, or to the left in the last column
     const down = to.y > from.y;
-    p0 = { x: from.x + from.w, y: from.y + from.h / 2 + (down ? 10 : -10) };
-    p3 = { x: to.x + to.w, y: to.y + to.h / 2 + (down ? -10 : 10) };
-    const bow = COL_GAP * 0.55;
+    const side = from.x + from.w >= right ? 0 : from.w;
+    const bow = COL_GAP * 0.55 * (side ? 1 : -1);
+    p0 = { x: from.x + side, y: from.y + from.h / 2 + (down ? 10 : -10) };
+    p3 = { x: to.x + side, y: to.y + to.h / 2 + (down ? -10 : 10) };
     p1 = { x: p0.x + bow, y: p0.y };
     p2 = { x: p3.x + bow, y: p3.y };
   }
@@ -153,6 +155,63 @@ function route(from: PlacedNode, to: PlacedNode): { d: string; mid: Point } {
   return { d, mid: { x: round(m.x), y: round(m.y) } };
 }
 
+/** The vertical gap above a packed component: room for its band label and a clear break. */
+const PACK_GAP = 2 * ROW_GAP;
+
+const ELK_OPTIONS: Record<string, string> = {
+  "elk.algorithm": "layered",
+  "elk.direction": "RIGHT",
+  "elk.edgeRouting": "ORTHOGONAL",
+  "elk.padding": `[top=${PAD + ROW_GAP},left=${PAD},bottom=${PAD},right=${PAD}]`,
+  "elk.layered.spacing.nodeNodeBetweenLayers": String(COL_GAP),
+  "elk.layered.spacing.edgeNodeBetweenLayers": "20",
+  "elk.spacing.nodeNode": String(ROW_GAP),
+  "elk.spacing.edgeNode": "12",
+  "elk.spacing.edgeEdge": "8",
+  "elk.separateConnectedComponents": "false",
+  "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
+  "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
+  "elk.layered.mergeEdges": "true",
+};
+
+/**
+ * The parts of the drawing: specs joined by dependency relations, the largest first and the rest
+ * in `compareSpecs` order of their first spec. Specs with no dependency either way stack in one
+ * part per publishing body, so each body keeps one band.
+ */
+function components(sorted: Spec[], dependencies: Relation[]): Spec[][] {
+  const parent = new Map(sorted.map((s) => [s.id, s.id]));
+  const find = (id: string): string => {
+    const p = parent.get(id) ?? id;
+    if (p === id) return id;
+    const root = find(p);
+    parent.set(id, root);
+    return root;
+  };
+  const linked = new Set<string>();
+  for (const r of dependencies) {
+    linked.add(r.from);
+    linked.add(r.to);
+    parent.set(find(r.from), find(r.to));
+  }
+  const groups = new Map<string, Spec[]>();
+  for (const s of sorted) {
+    const key = linked.has(s.id) ? find(s.id) : `body:${s.body}`;
+    const list = groups.get(key) ?? [];
+    list.push(s);
+    groups.set(key, list);
+  }
+  const parts = [...groups.values()];
+  const largest = parts.reduce((a, b) => (b.length > a.length ? b : a), parts[0] ?? []);
+  return [largest, ...parts.filter((p) => p !== largest)];
+}
+
+/**
+ * Build-time layout. The largest part is laid out first and sets the columns; every other part
+ * is laid out on its own and dropped into the columns where it sits highest, under what is
+ * already there, so the small trees and the standalone specs fill the space the long first
+ * column leaves free instead of hanging below it.
+ */
 export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise<Layout> {
   const sorted = [...specs].sort(compareSpecs);
   const ids = new Set(sorted.map((s) => s.id));
@@ -160,41 +219,86 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
   const dependencies = relations.filter(
     (r) => isDependency(r.type) && ids.has(r.from) && ids.has(r.to),
   );
-  const graph: ElkNode = {
-    id: "root",
-    layoutOptions: {
-      "elk.algorithm": "layered",
-      "elk.direction": "RIGHT",
-      "elk.edgeRouting": "ORTHOGONAL",
-      "elk.padding": `[top=${PAD + ROW_GAP},left=${PAD},bottom=${PAD},right=${PAD}]`,
-      "elk.layered.spacing.nodeNodeBetweenLayers": String(COL_GAP),
-      "elk.layered.spacing.edgeNodeBetweenLayers": "20",
-      "elk.spacing.nodeNode": String(ROW_GAP),
-      "elk.spacing.edgeNode": "12",
-      "elk.spacing.edgeEdge": "8",
-      "elk.separateConnectedComponents": "false",
-      "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
-      "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
-      "elk.layered.mergeEdges": "true",
-    },
-    children: sorted.map((s) => ({ id: s.id, width: NODE_W, height: NODE_H })),
-    // the older document is the source, so the drawing reads left to right in time
-    edges: dependencies.map((r, i) => ({ id: `d${i}`, sources: [r.to], targets: [r.from] })),
-  };
-  const out = await new ELK().layout(graph);
+  const elk = new ELK();
 
   const placed = new Map<string, PlacedNode>();
-  for (const child of out.children ?? []) {
-    const spec = sorted.find((s) => s.id === child.id);
-    if (!spec) continue;
-    placed.set(spec.id, {
-      spec,
-      x: round(child.x ?? 0),
-      y: round(child.y ?? 0),
-      w: NODE_W,
-      h: NODE_H,
-      depth: depth.get(spec.id) ?? 0,
-    });
+  const routed = new Map<string, Point[]>();
+  /** the x of each column, from the first part */
+  let columnX: number[] = [];
+  /** the lowest point drawn so far in each column, and in the gap right of each column */
+  const bottom: number[] = [];
+  const gapBottom: number[] = [];
+  const mark = (x: number, y: number) => {
+    const i = columnX.findIndex((cx) => x <= cx + NODE_W);
+    const c = i === -1 ? columnX.length - 1 : i;
+    const inGap = i === -1 || x < (columnX[c] ?? 0);
+    const list = inGap ? gapBottom : bottom;
+    const at = inGap && i !== -1 ? c - 1 : c;
+    list[at] = Math.max(list[at] ?? 0, y);
+  };
+
+  for (const [index, part] of components(sorted, dependencies).entries()) {
+    const own = new Set(part.map((s) => s.id));
+    const deps = dependencies.filter((r) => own.has(r.from));
+    const graph: ElkNode = {
+      id: "root",
+      layoutOptions: ELK_OPTIONS,
+      children: part.map((s) => ({ id: s.id, width: NODE_W, height: NODE_H })),
+      // the older document is the source, so the drawing reads left to right in time
+      edges: deps.map((r, i) => ({ id: `d${i}`, sources: [r.to], targets: [r.from] })),
+    };
+    const out = await elk.layout(graph);
+    const children = out.children ?? [];
+    const localX = [...new Set(children.map((c) => round(c.x ?? 0)))].sort((a, b) => a - b);
+    const top = Math.min(...children.map((c) => c.y ?? 0));
+    let dx = 0;
+    let dy = 0;
+    if (index === 0) {
+      columnX = localX;
+    } else {
+      // the leftmost run of columns where the part's top can sit highest
+      const span = localX.length;
+      let best = { start: 0, y: Number.POSITIVE_INFINITY };
+      for (let start = 0; start + span <= Math.max(columnX.length, span); start++) {
+        let y = 0;
+        for (let j = 0; j < span; j++) {
+          y = Math.max(y, (bottom[start + j] ?? 0) + PACK_GAP);
+          if (j < span - 1) y = Math.max(y, (gapBottom[start + j] ?? 0) + PACK_GAP);
+        }
+        if (y < best.y) best = { start, y };
+      }
+      dx = (columnX[best.start] ?? PAD) - (localX[0] ?? 0);
+      dy = best.y - top;
+    }
+    for (const child of children) {
+      const spec = part.find((s) => s.id === child.id);
+      if (!spec) continue;
+      const node: PlacedNode = {
+        spec,
+        x: round((child.x ?? 0) + dx),
+        y: round((child.y ?? 0) + dy),
+        w: NODE_W,
+        h: NODE_H,
+        depth: depth.get(spec.id) ?? 0,
+      };
+      placed.set(spec.id, node);
+    }
+    for (const [i, r] of deps.entries()) {
+      const section = out.edges?.find((x) => x.id === `d${i}`)?.sections?.[0];
+      if (!section) continue;
+      // ELK ran the edge from the older document; the arrow points at it, so reverse the points
+      const points = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint]
+        .map((p) => ({ x: round(p.x + dx), y: round(p.y + dy) }))
+        .reverse();
+      routed.set(`${r.from}|${r.type}|${r.to}`, points);
+    }
+    for (const spec of part) {
+      const n = placed.get(spec.id);
+      if (n) mark(n.x, n.y + n.h);
+    }
+    for (const r of deps) {
+      for (const p of routed.get(`${r.from}|${r.type}|${r.to}`) ?? []) mark(p.x, p.y);
+    }
   }
   const nodes = sorted.map((s) => placed.get(s.id)).filter((n): n is PlacedNode => !!n);
 
@@ -226,38 +330,30 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
     }
   }
 
+  const right = Math.max(...nodes.map((n) => n.x + n.w), 0);
   const edges: PlacedEdge[] = [];
-  const routed = new Map<string, ElkExtendedEdge>();
-  for (const [i, r] of dependencies.entries()) {
-    const e = out.edges?.find((x) => x.id === `d${i}`);
-    if (e) routed.set(`${r.from}|${r.type}|${r.to}`, e);
-  }
   for (const relation of relations) {
     const from = placed.get(relation.from);
     const to = placed.get(relation.to);
     if (!from || !to) continue;
     const symmetric = isSymmetric(relation.type);
-    const e = routed.get(`${relation.from}|${relation.type}|${relation.to}`);
-    const section = e?.sections?.[0];
-    if (section) {
-      // ELK ran the edge from the older document; the arrow points at it, so reverse the points
-      const points = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint]
-        .map((p) => ({ x: round(p.x), y: round(p.y) }))
-        .reverse();
+    const points = routed.get(`${relation.from}|${relation.type}|${relation.to}`);
+    if (points) {
       const d = points.map((p, j) => `${j === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
       const m = points[Math.floor(points.length / 2)] ?? points[0] ?? { x: 0, y: 0 };
       edges.push({ relation, from, to, symmetric, d, mid: m });
     } else {
-      edges.push({ relation, from, to, symmetric, ...route(from, to) });
+      edges.push({ relation, from, to, symmetric, ...route(from, to, right) });
     }
   }
+  const low = Math.max(...nodes.map((n) => n.y + n.h), ...bottom, ...gapBottom, 0);
   return {
     nodes,
     edges,
     bands,
     columns: columnsX.length,
-    width: Math.ceil(out.width ?? 0),
-    height: Math.ceil(out.height ?? 0),
+    width: Math.ceil(right + PAD),
+    height: Math.ceil(low + PAD),
   };
 }
 
