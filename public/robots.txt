@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://letsauth.eu/sitemap-index.xml
+Sitemap: https://www.letsauth.eu/sitemap-index.xml

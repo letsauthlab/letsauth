@@ -20,11 +20,11 @@ it("checks relative and absolute local links while allowing fragments, assets an
       <link href="/favicon.svg"><a href="#here">here</a>
       <a href="https://example.org/missing">external</a><a href="mailto:test@example.org">mail</a>
       <a href="/mcp/2025-11-25/">broken revision</a>
-      <a href="https://letsauth.eu/mcp/servers/">broken index</a>`,
+      <a href="https://www.letsauth.eu/mcp/servers/">broken index</a>`,
     );
     expect(brokenLinks(root)).toEqual([
       "/index.html: /mcp/2025-11-25/",
-      "/index.html: https://letsauth.eu/mcp/servers/",
+      "/index.html: https://www.letsauth.eu/mcp/servers/",
     ]);
   } finally {
     rmSync(root, { recursive: true, force: true });

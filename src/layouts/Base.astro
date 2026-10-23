@@ -20,7 +20,7 @@ interface Props {
 }
 
 const { title, description, path, noindex = false, image = "/og.png" } = Astro.props;
-const site = Astro.site ?? new URL("https://letsauth.eu");
+const site = Astro.site ?? new URL("https://www.letsauth.eu");
 const canonical = new URL(path ?? Astro.url.pathname, site);
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | undefined;
 const fullTitle =

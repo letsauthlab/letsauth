@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { notFound = false } = Astro.props;
-const host = (Astro.site ?? new URL("https://letsauth.eu")).hostname;
+const host = (Astro.site ?? new URL("https://www.letsauth.eu")).hostname;
 ---
 
 <meta name="reach" data-host={host} data-not-found={notFound ? "" : undefined} />
