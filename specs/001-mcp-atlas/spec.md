@@ -32,7 +32,9 @@ and date match the underlying observation and link to its evidence.
    it is judged against named at the top.
 2. **Given** a cell has an observation, **When** the visitor opens the cell, **Then** they see the
    status, the method (manual, vendor claim, passive scan, active scan), the date, who observed it
-   and the evidence link or note.
+   and the evidence link or note. *(Amended 2026-10-23: the cell is a link to that feature's row on
+   the server's page, which shows all of these; the matrix no longer carries an inline copy of
+   each record, which made up most of its weight.)*
 3. **Given** a server has no observation for a feature, **When** the matrix renders, **Then** the
    cell reads "unknown" and is visually distinct from "unsupported".
 4. **Given** the visitor filters by feature level or category, or searches by server name,

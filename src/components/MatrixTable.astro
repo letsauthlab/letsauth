@@ -4,7 +4,6 @@ import { ACCESS_LABEL, AUTH_LABEL, accessOf, authOf } from "@/lib/classes";
 import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
 import type { ScanView } from "@/lib/scanner";
 import ClassIcon from "./ClassIcon.astro";
-import ObservationDetail from "./ObservationDetail.astro";
 import StatusCell from "./StatusCell.astro";
 
 interface Props {
@@ -249,12 +248,13 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                       data-status={cell.status}
                       data-derived={cell.derived ? "true" : "false"}
                     >
-                      <details class="cell">
-                        <summary aria-label={`${server.name}, ${feature.name}: ${cell.status}`}>
-                          <StatusCell status={cell.status} derived={cell.derived} />
-                        </summary>
-                        <ObservationDetail cell={cell} server={server} feature={feature} />
-                      </details>
+                      <a
+                        class="cell"
+                        href={`/mcp/servers/${server.id}/#${feature.id}`}
+                        aria-label={`${server.name}, ${feature.name}: ${cell.status}`}
+                      >
+                        <StatusCell status={cell.status} derived={cell.derived} />
+                      </a>
                     </td>
                   );
                 })}
@@ -629,56 +629,21 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       background-color: var(--signal-soft);
     }
 
-    /* cells */
-    .matrix .cell summary {
-      list-style: none;
-      cursor: pointer;
+    /*
+     * Cells: each glyph links to its feature's row on the server page, where the observation
+     * behind it (method, date, observer, evidence, earlier records) is set out. The matrix keeps
+     * no copy of the record: about 900 inline copies were most of the page's weight.
+     */
+    .matrix .cell {
       display: inline-grid;
       place-items: center;
       padding: 0.2rem;
       border-radius: var(--radius-focus);
     }
 
-    .matrix .cell summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .matrix .cell summary:focus-visible {
+    .matrix .cell:focus-visible {
       outline: 2px solid var(--signal);
       outline-offset: 1px;
-    }
-
-    /* without JavaScript the observation opens under its cell, above it in the last rows and
-       leaning left in the last columns, so the table's clip never cuts it */
-    .matrix .cell[open] {
-      position: relative;
-    }
-
-    .matrix .cell[open] > .obs {
-      position: absolute;
-      top: calc(100% + 0.4rem);
-      left: 50%;
-      translate: -50% 0;
-      z-index: 4;
-      width: 22rem;
-      max-width: 80vw;
-      padding: var(--space-4);
-      text-align: left;
-      font-weight: 400;
-      background: var(--ground-2);
-      border: 1px solid var(--rule-strong);
-      border-radius: var(--radius);
-    }
-
-    .matrix tbody tr:nth-last-child(-n + 6) .cell[open] > .obs {
-      top: auto;
-      bottom: calc(100% + 0.4rem);
-    }
-
-    .matrix tbody td:nth-last-child(-n + 4) .cell[open] > .obs {
-      left: auto;
-      right: 0;
-      translate: none;
     }
 
     /*
@@ -839,7 +804,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       }
 
       /* the glyphs are a picture of the row here; a group's view opens them */
-      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .cell summary {
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .cell {
         /* no box, so no 10px tap target: the glyph alone stays */
         display: contents;
         pointer-events: none;

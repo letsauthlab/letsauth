@@ -1,15 +1,10 @@
 <script lang="ts">
 /**
  * Progressive enhancement over the server-rendered matrix table. The table in the DOM is the
- * source of truth: this island only hides rows and columns, syncs the query string and shows a
- * cell's <details> content in a dialog with focus return. Without JS, the page is complete.
+ * source of truth: this island only hides rows and columns and syncs the query string. A cell is a
+ * link to its row on the server page. Without JS, the page is complete.
  */
 import { onMount } from "svelte";
-
-let dialog: HTMLDialogElement;
-let heading: HTMLHeadingElement;
-let detailHost: HTMLDivElement;
-let opener: HTMLElement | null = null;
 
 const PARAMS = ["level", "category", "party", "q", "access", "auth", "group"] as const;
 type Param = (typeof PARAMS)[number];
@@ -236,110 +231,5 @@ onMount(() => {
     // let the browser clear the fields first
     setTimeout(() => apply(), 0);
   });
-
-  // cell detail in a dialog, with focus return
-  table.addEventListener("click", (e) => {
-    const summary = (e.target as HTMLElement).closest<HTMLElement>("details.cell > summary");
-    if (!summary) return;
-    e.preventDefault();
-    const details = summary.parentElement as HTMLDetailsElement;
-    const content = details.querySelector("[data-detail]");
-    if (!content) return;
-    opener = summary;
-    detailHost.replaceChildren(content.cloneNode(true));
-    dialog.showModal();
-    heading.focus();
-  });
-  dialog.addEventListener("close", () => {
-    opener?.focus();
-    opener = null;
-  });
-  dialog.addEventListener("click", (e) => {
-    if (e.target === dialog) dialog.close();
-  });
 });
 </script>
-
-<dialog bind:this={dialog} class="cell-dialog" aria-labelledby="cell-dialog-title">
-  <div class="cell-dialog__inner">
-    <div class="cell-dialog__bar">
-      <h2 id="cell-dialog-title" tabindex="-1" bind:this={heading}>Observation</h2>
-      <form method="dialog">
-        <button type="submit" class="button small quiet" aria-label="Close">Close</button>
-      </form>
-    </div>
-    <div bind:this={detailHost}></div>
-  </div>
-</dialog>
-
-<style>
-  /*
-   * M10: the backdrop fades in and the panel rises 8px over --dur, from @starting-style. Flat:
-   * the backdrop veils the page in its own ground instead of a shadow lifting the panel.
-   */
-  .cell-dialog {
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--radius);
-    background: var(--ground-2);
-    color: var(--ink);
-    padding: 0;
-    width: min(34rem, calc(100vw - 2rem));
-    opacity: 1;
-    translate: 0 0;
-    transition:
-      opacity var(--dur) var(--ease),
-      translate var(--dur) var(--ease),
-      overlay var(--dur) allow-discrete,
-      display var(--dur) allow-discrete;
-  }
-  .cell-dialog:not([open]) {
-    opacity: 0;
-    translate: 0 8px;
-  }
-  .cell-dialog::backdrop {
-    background: color-mix(in oklch, var(--ground) 78%, transparent);
-    opacity: 1;
-    transition:
-      opacity var(--dur) var(--ease),
-      overlay var(--dur) allow-discrete,
-      display var(--dur) allow-discrete;
-  }
-  .cell-dialog:not([open])::backdrop {
-    opacity: 0;
-  }
-  @starting-style {
-    .cell-dialog[open] {
-      opacity: 0;
-      translate: 0 8px;
-    }
-    .cell-dialog[open]::backdrop {
-      opacity: 0;
-    }
-  }
-  .cell-dialog__inner {
-    padding: var(--space-4) var(--space-5) var(--space-5);
-  }
-  .cell-dialog__bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-  }
-  .cell-dialog__bar h2 {
-    font-size: var(--small);
-    font-weight: 500;
-    color: var(--ink-2);
-    margin: 0;
-  }
-  .cell-dialog__bar h2:focus {
-    outline: none;
-  }
-  .cell-dialog__bar h2:focus-visible {
-    outline: 2px solid var(--signal);
-    outline-offset: 3px;
-  }
-  .cell-dialog__bar form {
-    margin: 0;
-  }
-</style>

@@ -214,10 +214,10 @@ boundary dash, hairlines for the rest. It never goes on a page with a data view 
 
 The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
 
-Product surfaces go in `product`. The matrix (`MatrixTable`, `StatusCell`, `ObservationDetail`)
+Product surfaces go in `product`. The matrix (`MatrixTable`, `StatusCell`, `ClassIcon`)
 keeps its styles there through `<style is:global>` instead of scoped styles, because a scoped
 style puts an attribute on each of the table's thousands of elements. Their class names are
-prefixed (`.matrix`, `.status-cell`, `.status-label`, `.obs`) so they cannot meet another
+prefixed (`.matrix`, `.status-cell`, `.status-label`, `.class-icon`) so they cannot meet another
 component's.
 
 ## 5. Motion
@@ -256,7 +256,7 @@ package of the redesign that builds it. Anything not in this table does not anim
 | M7 | Explorer token view | On step change, claims that differ from the previous hop get a 2px `--signal` rail that fades to `--rule` over 480ms, starting when the message has drawn (300ms) and 40ms apart | "this is what changed in the token" | rail shown without fade | WP6, R-08 |
 | M8 | Explorer toggle pages | Changed and removed steps get their rail in the toggle's ink on page load, from transparent over 480ms (one pass, staggered 40ms per step, max 400ms total) | "the toggle touched these" | shown at once | WP6 |
 | M9 | Matrix | Row and column crosshair on hover/focus of a cell (`--signal-soft` background, 120ms) | orientation in a large grid | instant | WP4 |
-| M10 | Matrix | Cell dialog: backdrop fades, panel moves up 8px, 220ms, using `@starting-style` | "a detail opened" | appears | WP4 |
+| M10 | Matrix | Removed: a cell links to its row on the server page instead of opening a dialog (the inline records were most of the page's weight) | n/a | n/a | WP4 |
 | M11 | Matrix filters | Count text changes with no animation; hidden rows collapse instantly (today's behaviour) | n/a | n/a | WP4 |
 | M12 | Scanner report | The request ladder prints line by line, 60ms apart, when the section scrolls into view, once; the count of checks appears last | "this is what the scanner did, in order" | all lines shown | WP7 |
 | M13 | Breach page, spec page revisions | Timeline rail draws in top to bottom, 480ms; on the breach page the dates fade in behind it | "events in sequence" | shown | WP6 |
