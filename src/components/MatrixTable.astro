@@ -3,6 +3,7 @@ import { cellKey, featureInRevision, type Matrix, type RevisionDiff } from "@/li
 import { ACCESS_LABEL, AUTH_LABEL, accessOf, authOf } from "@/lib/classes";
 import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
 import type { ScanView } from "@/lib/scanner";
+import ClassIcon from "./ClassIcon.astro";
 import ObservationDetail from "./ObservationDetail.astro";
 import StatusCell from "./StatusCell.astro";
 
@@ -207,6 +208,22 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                 <th scope="row" class="server-cell">
                   <span class="server-cell__row">
                     <a class="server-link" href={`/mcp/servers/${server.id}/`}>{server.name}</a>
+                    <span class="classes">
+                      <span
+                        class:list={["class", { derived: access.derived }]}
+                        title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
+                      >
+                        <ClassIcon kind="access" value={access.value} />
+                        <span class="visually-hidden">Access: {ACCESS_LABEL[access.value]}</span>
+                      </span>
+                      <span
+                        class:list={["class", { derived: auth.derived }]}
+                        title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
+                      >
+                        <ClassIcon kind="auth" value={auth.value} />
+                        <span class="visually-hidden">Auth: {AUTH_LABEL[auth.value]}</span>
+                      </span>
+                    </span>
                     {scan && (
                       <a
                         class="scan-link"
@@ -220,22 +237,6 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                         <span class="visually-hidden">{server.name} scan</span>
                       </a>
                     )}
-                  </span>
-                  <span class="classes">
-                    <span
-                      class:list={["class", { derived: access.derived }]}
-                      title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
-                    >
-                      <span class="visually-hidden">Access: </span>
-                      {ACCESS_LABEL[access.value].toLowerCase()}
-                    </span>
-                    <span
-                      class:list={["class", { derived: auth.derived }]}
-                      title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
-                    >
-                      <span class="visually-hidden">Auth: </span>
-                      {AUTH_LABEL[auth.value].toLowerCase()}
-                    </span>
                   </span>
                 </th>
                 {columns.map((feature) => {
@@ -554,27 +555,25 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       color: var(--signal);
     }
 
-    /* the row's classes, one quiet line under the name: "public · oauth" */
+    /*
+     * The row's classes, two line glyphs after the name in its ink-2 (ClassIcon); the words are
+     * the tooltip and the hidden text. A class nobody has stated yet is fainter, like the faint
+     * dot of a derived cell.
+     */
     .matrix .classes {
-      display: flex;
-      flex-wrap: wrap;
-      margin-top: 0.1rem;
-      font-size: var(--tiny);
+      display: inline-flex;
+      gap: 0.3rem;
+      margin-left: auto;
       color: var(--ink-2);
+      font-size: 0.9rem;
     }
 
-    .matrix .classes .class + .class::before {
-      content: "\00b7";
-      /* an inline block takes no part in a derived class's underline */
-      display: inline-block;
-      padding-inline: 0.4em;
+    .matrix .classes .class {
+      display: inline-flex;
     }
 
-    /* a class nobody has stated yet: dashed underline, like the dashed ring of a recorded unknown */
     .matrix .classes .class.derived {
-      text-decoration: underline dashed;
-      text-decoration-color: var(--rule-strong);
-      text-underline-offset: 0.25em;
+      opacity: 0.55;
     }
 
     /* group header rows the island inserts when the reader groups by a class */

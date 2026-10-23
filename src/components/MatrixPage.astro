@@ -20,6 +20,7 @@ import {
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, PARTY_LABEL, STATUS_ORDER } from "@/lib/labels";
 import { latestScan, passiveChecks } from "@/lib/scanner";
+import ClassIcon from "./ClassIcon.astro";
 import Matrix from "./Matrix.svelte";
 import MatrixTable from "./MatrixTable.astro";
 import StatusCell from "./StatusCell.astro";
@@ -206,7 +207,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
           {ACCESS_ORDER.map((v, i) => (
             <>
               {i > 0 && " · "}
-              <dfn title={ACCESS_DESCRIPTION[v]}>{ACCESS_LABEL[v].toLowerCase()}</dfn>
+              <dfn title={ACCESS_DESCRIPTION[v]}>
+                <ClassIcon kind="access" value={v} class="legend__icon" />
+                {ACCESS_LABEL[v].toLowerCase()}
+              </dfn>
             </>
           ))}
           : who can connect, as the server page's evidence says.
@@ -218,11 +222,14 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
           {AUTH_ORDER.map((v, i) => (
             <>
               {i > 0 && " · "}
-              <dfn title={AUTH_DESCRIPTION[v]}>{AUTH_LABEL[v].toLowerCase()}</dfn>
+              <dfn title={AUTH_DESCRIPTION[v]}>
+                <ClassIcon kind="auth" value={v} class="legend__icon" />
+                {AUTH_LABEL[v].toLowerCase()}
+              </dfn>
             </>
           ))}
-          : how the endpoint authenticates clients. A dashed chip is a class nobody has stated
-          yet. Both come from the evidence on the server page. API-key and unauthenticated
+          : how the endpoint authenticates clients. A faint mark after a server's name is a class
+          nobody has stated yet. Both come from the evidence on the server page. API-key and unauthenticated
           servers are not scanned.
         </dd>
       </div>
@@ -386,6 +393,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   }
   /* the levels as the column heads show them: plain text, not in their level colours */
   .legend__note .level {
+    color: var(--ink);
+  }
+  .legend__classes :global(.legend__icon) {
+    margin-right: 0.2em;
     color: var(--ink);
   }
   .legend__scan {
