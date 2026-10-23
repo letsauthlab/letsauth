@@ -146,6 +146,34 @@ describe("layoutGraph", () => {
     expect(ref?.d).toContain(" C");
   });
 
+  it("packs a small tree into the free columns instead of hanging it under the drawing", async () => {
+    const more = [
+      ...specs,
+      spec("par", "ietf-oauth"),
+      spec("jar", "ietf-oauth"),
+      spec("ext", "mcp"),
+      spec("wa", "ietf-wimse"),
+      spec("wb", "ietf-wimse"),
+    ];
+    const packed = await layoutGraph(more, [
+      ...relations,
+      { from: "par", to: "oauth", type: "builds-on" },
+      { from: "jar", to: "oauth", type: "builds-on" },
+      { from: "ext", to: "mcp", type: "builds-on" },
+      { from: "wb", to: "wa", type: "builds-on" },
+    ]);
+    const at = (id: string) => packed.nodes.find((n) => n.spec.id === id);
+    const wa = at("wa");
+    const wb = at("wb");
+    // the bottom of the first part's longest column
+    const first = new Set(["oauth", "pkce", "oidc", "mcp", "par", "jar", "ext"]);
+    const tallest = Math.max(
+      ...packed.nodes.filter((n) => first.has(n.spec.id)).map((n) => n.y + n.h),
+    );
+    expect(wa && wb && wb.x > wa.x).toBe(true);
+    expect(Math.max(wa?.y ?? 0, wb?.y ?? 0)).toBeLessThan(tallest);
+  });
+
   it("is deterministic", async () => {
     const again = await layoutGraph([...specs].reverse(), [...relations].reverse());
     expect(JSON.stringify(again.nodes.map((n) => [n.spec.id, n.x, n.y]))).toBe(

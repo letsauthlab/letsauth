@@ -178,40 +178,71 @@ test.describe("standards map (US1)", () => {
     await expect(page).not.toHaveURL(/view=/);
   });
 
-  test("the builds-on spine draws in once, from the oldest document (M4)", async ({ page }) => {
+  test("the map does not animate on load: the spine is drawn complete at full strength", async ({
+    page,
+  }) => {
     test.skip(spine.length === 0, "no builds-on chain in the seed data");
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
     const edges = page.locator("#map path.edge.spine");
     await expect(edges).toHaveCount(spine.length);
-    const runs = await edges.evaluateAll((els) =>
-      els.flatMap((el) =>
-        el.getAnimations().map((a) => ({
-          name: (a as CSSAnimation).animationName,
-          iterations: a.effect?.getTiming().iterations,
-        })),
-      ),
+    const runs = await page
+      .locator("#map")
+      .evaluate((svg) => svg.getAnimations({ subtree: true }).length);
+    expect(runs).toBe(0);
+    const dashes = await edges.evaluateAll((els) =>
+      els.map((el) => getComputedStyle(el).strokeDasharray),
     );
-    expect(runs.length).toBe(spine.length);
-    for (const run of runs) expect(run).toEqual({ name: "map-draw", iterations: 1 });
+    for (const dash of dashes) expect(dash).toBe("none");
     const first = spine[0];
     await expect(
       page.locator(`#map path[data-relation="${first?.from}|builds-on|${first?.to}"]`),
     ).toHaveClass(/spine/);
   });
 
-  test("under reduced motion the spine is drawn complete with no halo (M4)", async ({ page }) => {
+  test("the highlight holds while the pointer crosses the gap to the next node", async ({
+    page,
+  }) => {
+    await page.goto("/standards/");
+    test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
+    await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
+    const map = page.locator("#map");
+    const [a, b] = await map.locator("a[data-spec]").evaluateAll((els) => {
+      const boxes = els.map((el) => ({
+        id: el.getAttribute("data-spec"),
+        box: el.getBoundingClientRect(),
+      }));
+      // two nodes stacked in one column, so the pointer has a gap to cross between them
+      for (const one of boxes)
+        for (const two of boxes)
+          if (
+            one.box.x === two.box.x &&
+            two.box.y > one.box.bottom &&
+            two.box.y - one.box.bottom < 40
+          )
+            return [one, two];
+      return [];
+    });
+    test.skip(!a || !b, "no two stacked nodes");
+    const x = (a?.box.x ?? 0) + 40;
+    await page.mouse.move(x, (a?.box.y ?? 0) + 20);
+    await expect(map.locator("a.is-far").first()).toBeAttached();
+    // in the gap the map keeps the first node's neighbourhood instead of flashing back
+    await page.mouse.move(x, ((a?.box.bottom ?? 0) + (b?.box.y ?? 0)) / 2);
+    expect(await map.locator("a[data-spec].is-far").count()).toBeGreaterThan(0);
+    await page.mouse.move(x, (b?.box.y ?? 0) + 20);
+    await expect(page.locator("#map-card")).toContainText(
+      nodes.find((s) => s.id === b?.id)?.name ?? "",
+    );
+    // resting off the nodes lets go
+    await page.mouse.move(x, ((a?.box.bottom ?? 0) + (b?.box.y ?? 0)) / 2);
+    await expect(map.locator(".is-far")).toHaveCount(0);
+  });
+
+  test("under reduced motion the map shows its end state", async ({ page }) => {
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
     await expectEndStateUnderReducedMotion(page, "#map-frame");
-    const offsets = await page
-      .locator("#map path.edge.spine")
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).strokeDashoffset));
-    for (const offset of offsets) expect(offset).toBe("0px");
-    const halos = await page
-      .locator("#map .spine-halo")
-      .evaluateAll((els) => els.map((el) => getComputedStyle(el).opacity));
-    for (const opacity of halos) expect(opacity).toBe("0");
   });
 
   test("filter state in the URL restores the filtered view (FR-007)", async ({ page }) => {
