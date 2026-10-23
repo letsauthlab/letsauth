@@ -24,7 +24,9 @@ export default defineConfig({
     "/atlas/standards": "/standards",
     "/atlas/standards/[id]": "/standards/[id]",
     "/scanner": "/mcp/scanner",
-    "/scanner/[id]": "/mcp/servers/[id]/scan",
+    "/scanner/[id]": "/mcp/servers/[id]",
+    // the scan report was folded into the server page
+    "/mcp/servers/[id]/scan": "/mcp/servers/[id]",
   },
   integrations: [svelte(), sitemap(), pagefind()],
 });

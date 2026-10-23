@@ -144,7 +144,8 @@ const ladder = [
             {SUMMARY_RULE.map((line) => <li>{line}</li>)}
           </ol>
           <p>
-            The summary belongs to one report at one time and is counted from the statuses shown.
+            The summary belongs to one server's newest scan and is counted from the statuses its
+            rows show.
             The atlas never sorts or ranks servers by it.
           </p>
         </section>
@@ -156,9 +157,10 @@ const ladder = [
       <p>
         The scanner has no list of its own. Its results live in the{" "}
         <a href="/mcp/">MCP auth atlas</a>: the matrix cells are the latest observations, and
-        "report" next to each server name, like every <a href="/mcp/">server page</a>, links to
-        the full report at <code>/mcp/servers/&lt;server&gt;/scan/</code>, which lists
-        each of the {checks.length} checks with the metadata it read. A server without a scanner
+        "scan" next to each server name opens that server's page. There the {checks.length} checks
+        are rows of the feature tables, marked passive scan with the metadata each one read; the
+        status panel counts them per requirement level, and "What the scanner asked" lists the
+        requests behind them with the answer each got. A server without a scanner
         observation reads "not scanned": the nightly run has not yet been able to read its metadata, or
         has not run since it was listed. Servers whose <a href="/mcp/#f-auth">auth class</a> is API
         key or no authentication read "no OAuth" and are not scanned; a server whose class is not yet
@@ -186,15 +188,16 @@ pnpm scan notion --write                # append what the nightly rule would</co
         <h2 id="not-title">What it does not check</h2>
         <p>
           {unscanned.length} server-side requirements need a token, a scope or a reading of the
-          implementation and stay out of a passive scan: for example{" "}
-          {unscanned.slice(0, 3).map((f, i) => (
-            <>
-              {i > 0 && ", "}
-              <a href={`/mcp/features/${f.id}/`}>{f.name}</a>
-            </>
-          ))}. Their cells come from documentation and manual checks until active probes exist for
-          verified owners.
+          implementation and stay out of a passive scan. Their cells come from documentation and
+          manual checks until active probes exist for verified owners.
         </p>
+        <ul class="unscanned">
+          {unscanned.map((f) => (
+            <li>
+              <a href={`/mcp/features/${f.id}/`}>{f.name}</a> <span class="chip">{f.observable}</span>
+            </li>
+          ))}
+        </ul>
         <h3 id="opt-out">Opting out</h3>
         <p>
           If you run a listed server and do not want it scanned,{" "}
@@ -294,6 +297,13 @@ pnpm scan notion --write                # append what the nightly rule would</co
   }
   .split h2 {
     margin-top: 0;
+  }
+  .unscanned {
+    padding-left: 1.2em;
+    font-size: var(--small);
+  }
+  .unscanned li {
+    margin-bottom: var(--space-1);
   }
   .split pre {
     max-width: 100%;

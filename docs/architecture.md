@@ -52,12 +52,11 @@ that has no page of its own.
 ```
 /                               home
 /mcp/                           MCP auth atlas: the matrix for the current revision
-/mcp/servers/<id>/              one server; <id>.json is its export
-/mcp/servers/<id>/scan/         the scanner's report for that server; scan.json is its export
+/mcp/servers/<id>/              one server, with its newest passive scan; <id>.json and scan.json are its exports
 /mcp/features/<id>/             one requirement
 /mcp/revisions/<id>/            the matrix as of an older revision (the current one redirects to /mcp/)
 /mcp/changes/<from>/<to>/       what changed between two revisions
-/mcp/scanner/                   what the scanner reads, how it reports, and every report
+/mcp/scanner/                   what the scanner reads, how it counts, and what it does not check
 /mcp/data.json                  the atlas export
 /standards/                     Agent auth atlas: the standards map
 /standards/<id>/                one specification
@@ -91,7 +90,7 @@ scripts/         command-line entry points: validate-data, scan, scan-nightly, a
                  and the generators for brand and README assets
 specs/           Spec Kit artifacts per feature: spec, plan, tasks, contracts
 src/
-  components/    Astro components and the Svelte islands (matrix, standards map, explorer, scan report)
+  components/    Astro components and the Svelte islands (matrix, standards map, explorer, scan transcript)
   layouts/       Base (header, footer, theme) and Document (long-form pages); the shared
                  page head and foot every page uses are in styles/global.css
   lib/           pure functions over the dataset: atlas matrix, standards graph, chains, exports, citations
@@ -111,7 +110,7 @@ tests/
 - **Astro 7** with strict TypeScript. Content is data-driven: the pages under `src/pages/atlas/`,
   `src/pages/explorer/` and `src/pages/scanner/` are generated from the dataset at build time.
 - **Svelte 5** islands only where interaction needs them: the matrix filters, the standards map
-  and the scan report. Every page reads fully without JavaScript, and no page ships more than
+  and the scan transcript. Every page reads fully without JavaScript, and no page ships more than
   150 kB of compressed JavaScript.
 - **One design token system** in `src/styles/tokens.css`. Colours are OKLCH pairs resolved with
   `light-dark()`; `data-theme` only flips `color-scheme`. Type is Geist for headlines and

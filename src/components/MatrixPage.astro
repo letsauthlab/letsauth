@@ -44,7 +44,7 @@ const usedLevels = new Set(
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
 const hrefFor = (id: string) => (id === current.id ? "/mcp/" : `/mcp/revisions/${id}/`);
 
-// the nightly scanner's view per server: its report is linked next to the name, never sorted on
+// the nightly scanner's view per server: its requests are linked next to the name, never sorted on
 const scans = new Map(matrix.rows.map((s) => [s.id, latestScan(data, s, revisionId)]));
 const scannerChecks = passiveChecks(data, revisionId).length;
 
@@ -194,7 +194,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       {" and "}
       <abbr title="Authorization server">AS</abbr> name the party the feature is observed on. The
       <a href="/mcp/scanner/">nightly scanner</a> reads {scannerChecks} of these requirements from
-      public metadata; "report" next to a server's name opens what it asked and what it found.
+      public metadata; "scan" next to a server's name opens what it asked.
       Rows are alphabetical. Nothing here is scored or ranked.
     </p>
     <dl class="legend__classes" aria-label="Access and auth classes">

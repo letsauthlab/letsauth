@@ -1,6 +1,7 @@
 ---
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
+import ScanTranscript from "@/components/ScanTranscript.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
 import {
@@ -21,7 +22,8 @@ import {
 } from "@/lib/classes";
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, METHOD_LABEL, PARTY_LABEL } from "@/lib/labels";
-import { latestScan } from "@/lib/scanner";
+import { latestScan, requestLadder } from "@/lib/scanner";
+import { tallyLine } from "@/scanner/summary";
 import type { Server } from "@/schema";
 
 export function getStaticPaths() {
@@ -54,6 +56,7 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
 const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applicable"] as const;
 const pct = (n: number) => Math.round((n / columns.length) * 1000) / 10;
 const scanView = latestScan(data, server);
+const ladder = requestLadder(scanView);
 const access = accessOf(server);
 const auth = authOf(server);
 const classes = [
@@ -194,28 +197,34 @@ const classes = [
                   </li>
                 ))}
               </ul>
-              <p class="scan" data-scan={scanView.scanned ? "scanned" : "not-scanned"}>
-                <span class="scan__label">Passive scan</span>
-                {scanView.scanned ? (
-                  <>
-                    <span>
-                      {scanView.summary.state === "scanned"
-                        ? `${scanView.checks.length} checks`
-                        : scanView.summary.label}
-                    </span>
-                    {" · "}
-                    <time datetime={scanView.scannedAt}>{scanView.scannedAt?.slice(0, 10)}</time>
-                    {" · "}
-                    <a href={`/mcp/servers/${server.id}/scan/`}>Report</a>
-                  </>
-                ) : (
-                  <>
-                    <span class="muted">not scanned yet</span>
-                    {" · "}
-                    <a href={`/mcp/servers/${server.id}/scan/`}>Report</a>
-                  </>
+              <div class="scan" data-scan={scanView.scanned ? "scanned" : "not-scanned"}>
+                <p class="scan__head">
+                  <span class="scan__label">Passive scan</span>
+                  {scanView.scanned ? (
+                    <>
+                      <time datetime={scanView.scannedAt}>{scanView.scannedAt?.slice(0, 10)}</time>
+                      {" · "}
+                      <a href="#scan">Requests</a>
+                    </>
+                  ) : (
+                    <>
+                      <span class="muted">{scanView.summary.state === "no-oauth" ? "no OAuth to check" : "not scanned yet"}</span>
+                      {" · "}
+                      <a href="#scan">Why</a>
+                    </>
+                  )}
+                </p>
+                {scanView.summary.tallies.length > 0 && (
+                  <ul class="scan__tally" aria-label={`Passive scan: ${scanView.summary.label}`}>
+                    {scanView.summary.tallies.map((t) => (
+                      <li data-level={t.level}>
+                        <span class:list={["level", `level-${t.level}`]}>{t.level}</span>
+                        <span>{tallyLine(t).slice(t.level.length + 1)}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </p>
+              </div>
               <p class="actions">
                 <a class="button small quiet" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
                   Contribute a correction
@@ -341,6 +350,8 @@ const classes = [
               </section>
             );
           })}
+
+          <ScanTranscript view={scanView} ladder={ladder} />
         </>
       )
     }
@@ -433,19 +444,37 @@ const classes = [
     vertical-align: baseline;
   }
   .scan {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
     font-size: var(--small);
     margin: 0 0 var(--space-4);
     padding-top: var(--space-3);
     border-top: 1px solid var(--rule);
   }
+  .scan__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0;
+  }
   .scan__label {
     font-size: var(--tiny);
     font-weight: 500;
     color: var(--ink-2);
+  }
+  .scan__tally {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-2) 0 0;
+    display: grid;
+    gap: var(--space-1);
+  }
+  .scan__tally li {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    align-items: baseline;
+  }
+  .scan__tally .level {
+    justify-self: start;
   }
   .actions {
     margin: 0;
