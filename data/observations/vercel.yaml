@@ -438,3 +438,13 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; all 8 endpoints use https
+- server: vercel
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-24T01:18:28Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: true"
