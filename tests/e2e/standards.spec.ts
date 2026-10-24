@@ -212,12 +212,12 @@ test.describe("standards map (US1)", () => {
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
     const map = page.locator("#map");
-    const [a, b] = await map.locator("a[data-spec]").evaluateAll((els) => {
+    // two nodes stacked in one column, so the pointer has a gap to cross between them
+    const pair = (els: Element[]) => {
       const boxes = els.map((el) => ({
         id: el.getAttribute("data-spec"),
         box: el.getBoundingClientRect(),
       }));
-      // two nodes stacked in one column, so the pointer has a gap to cross between them
       for (const one of boxes)
         for (const two of boxes)
           if (
@@ -227,8 +227,12 @@ test.describe("standards map (US1)", () => {
           )
             return [one, two];
       return [];
-    });
-    test.skip(!a || !b, "no two stacked nodes");
+    };
+    const [first] = await map.locator("a[data-spec]").evaluateAll(pair);
+    test.skip(!first, "no two stacked nodes");
+    // the drawing is taller than the window, so bring the pair into view before measuring it
+    await map.locator(`a[data-spec="${first?.id}"]`).scrollIntoViewIfNeeded();
+    const [a, b] = await map.locator("a[data-spec]").evaluateAll(pair);
     const x = (a?.box.x ?? 0) + 40;
     await page.mouse.move(x, (a?.box.y ?? 0) + 20);
     await expect(map.locator("a.is-far").first()).toBeAttached();
@@ -302,10 +306,17 @@ test.describe("standards map (US1)", () => {
     const node = map.locator(`a[data-spec="${rel?.from}"]`);
     await node.scrollIntoViewIfNeeded();
     await node.hover();
-    // the rail reads the node's relations in words (follow-up 4)
+    // the card beside the node reads its relations in words, and never takes the pointer
     const from = nodes.find((s) => s.id === rel?.from);
-    await expect(page.locator("#map-card")).toContainText(from?.name ?? "");
+    const card = page.locator("#map-card");
+    await expect(card).toContainText(from?.name ?? "");
     await expect(page.locator("#map-card dd").first()).toBeVisible();
+    expect(await card.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+    const [nodeBox, cardBox] = await Promise.all([node.boundingBox(), card.boundingBox()]);
+    const beside =
+      (cardBox?.x ?? 0) >= (nodeBox?.x ?? 0) + (nodeBox?.width ?? 0) ||
+      (cardBox?.x ?? 0) + (cardBox?.width ?? 0) <= (nodeBox?.x ?? 0);
+    expect(beside).toBe(true);
     await expect(map.locator(`a[data-spec="${rel?.to}"]`)).toHaveClass(/is-near/);
     await expect(
       map.locator(`path[data-relation="${rel?.from}|${rel?.type}|${rel?.to}"]`),
