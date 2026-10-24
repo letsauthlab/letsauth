@@ -20,6 +20,7 @@ import {
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, PARTY_LABEL, STATUS_ORDER } from "@/lib/labels";
 import { latestScan, passiveChecks } from "@/lib/scanner";
+import ClassIcon from "./ClassIcon.astro";
 import Matrix from "./Matrix.svelte";
 import MatrixTable from "./MatrixTable.astro";
 import StatusCell from "./StatusCell.astro";
@@ -69,7 +70,8 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     <h1>Who supports what</h1>
     <p class="lede">
       The public MCP servers we list, against what the MCP Authorization specification requires
-      of servers and their authorization servers. Each cell opens the observation behind it.
+      of servers and their authorization servers. Each cell links to the observation behind it on
+      the server's page.
     </p>
     <div class="page-head__meta revision-line">
       <span>
@@ -194,7 +196,9 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       {" and "}
       <abbr title="Authorization server">AS</abbr> name the party the feature is observed on. The
       <a href="/mcp/scanner/">nightly scanner</a> reads {scannerChecks} of these requirements from
-      public metadata; "scan" next to a server's name opens what it asked.
+      public metadata; the trace mark
+      <svg class="legend__scan" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h2l1.5-4 3 8 1.5-4h3" /></svg>
+      next to a server's name opens what it asked.
       Rows are alphabetical. Nothing here is scored or ranked.
     </p>
     <dl class="legend__classes" aria-label="Access and auth classes">
@@ -204,7 +208,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
           {ACCESS_ORDER.map((v, i) => (
             <>
               {i > 0 && " · "}
-              <dfn title={ACCESS_DESCRIPTION[v]}>{ACCESS_LABEL[v].toLowerCase()}</dfn>
+              <dfn title={ACCESS_DESCRIPTION[v]}>
+                <ClassIcon kind="access" value={v} class="legend__icon" />
+                {ACCESS_LABEL[v].toLowerCase()}
+              </dfn>
             </>
           ))}
           : who can connect, as the server page's evidence says.
@@ -216,11 +223,14 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
           {AUTH_ORDER.map((v, i) => (
             <>
               {i > 0 && " · "}
-              <dfn title={AUTH_DESCRIPTION[v]}>{AUTH_LABEL[v].toLowerCase()}</dfn>
+              <dfn title={AUTH_DESCRIPTION[v]}>
+                <ClassIcon kind="auth" value={v} class="legend__icon" />
+                {AUTH_LABEL[v].toLowerCase()}
+              </dfn>
             </>
           ))}
-          : how the endpoint authenticates clients. A dashed chip is a class nobody has stated
-          yet. Both come from the evidence on the server page. API-key and unauthenticated
+          : how the endpoint authenticates clients. A faint mark after a server's name is a class
+          nobody has stated yet. Both come from the evidence on the server page. API-key and unauthenticated
           servers are not scanned.
         </dd>
       </div>
@@ -381,6 +391,24 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     max-width: 62ch;
     font-size: var(--tiny);
     line-height: 1.55;
+  }
+  /* the levels as the column heads show them: plain text, not in their level colours */
+  .legend__note .level {
+    color: var(--ink);
+  }
+  .legend__classes :global(.legend__icon) {
+    margin-right: 0.2em;
+    color: var(--ink);
+  }
+  .legend__scan {
+    width: 0.9rem;
+    height: 0.9rem;
+    vertical-align: -0.15em;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .legend__classes {
     flex-basis: 100%;

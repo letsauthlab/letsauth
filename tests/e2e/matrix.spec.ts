@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { currentCell, currentRevision, matrixFor } from "../../src/lib/atlas";
 import { ACCESS_ORDER, AUTH_ORDER, accessOf, authOf, countBy } from "../../src/lib/classes";
 import { getDataset } from "../../src/lib/data";
+import { METHOD_LABEL } from "../../src/lib/labels";
 import { latestScan } from "../../src/lib/scanner";
 import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
@@ -46,29 +47,26 @@ test.describe("matrix page (US1)", () => {
     expect(statuses.every((s) => s && STATUSES.includes(s))).toBe(true);
   });
 
-  test("cell detail shows the observation and returns focus on close (FR-002)", async ({
-    page,
-  }) => {
+  test("a cell links to its observation on the server page (FR-002)", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
     await page.goto(`/mcp/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
-    const summary = page.locator(
-      `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
+    const cell = page.locator(
+      `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] a.cell`,
     );
-    await summary.click();
-    const dialog = page.locator("dialog.cell-dialog");
-    await expect(dialog).toBeVisible();
-    // focus lands on the dialog's heading (016 WP4) and goes back to the cell on close
-    await expect(dialog.locator("#cell-dialog-title")).toBeFocused();
-    await expect(dialog).toContainText("Unsupported");
+    await expect(cell).toHaveAttribute("href", `/mcp/servers/${withUnsupported?.id}/#mcp.as.dcr`);
+    await cell.click();
+    await expect(page).toHaveURL(
+      new RegExp(`/mcp/servers/${withUnsupported?.id}/#mcp\\.as\\.dcr$`),
+    );
+    const row = page.locator("tr:target");
+    await expect(row).toHaveAttribute("data-feature", "mcp.as.dcr");
+    await expect(row).toBeInViewport();
+    await expect(row).toContainText("Unsupported");
     const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
-    await expect(dialog).toContainText(winning?.method ?? "vendor-claim");
-    await expect(dialog).toContainText(winning?.observedAt.slice(0, 10) ?? "");
-    await expect(dialog).toContainText(winning?.observedBy ?? "");
-    await expect(dialog.locator("dd a[href^='https://']")).toHaveCount(1);
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeHidden();
-    await expect(summary).toBeFocused();
+    await expect(row).toContainText(METHOD_LABEL[winning?.method ?? "vendor-claim"]);
+    await expect(row).toContainText(winning?.observedAt.slice(0, 10) ?? "");
+    await expect(row).toContainText(winning?.observedBy ?? "");
   });
 
   test("a server without observations reads unknown everywhere, never unsupported (SC-006)", async ({
@@ -79,7 +77,7 @@ test.describe("matrix page (US1)", () => {
     const row = page.locator(`#matrix tbody tr[data-server="${allUnknown?.id}"]`);
     await expect(row.locator("td[data-status='unknown']")).toHaveCount(matrix.columns.length);
     await expect(row.locator("td[data-status='unsupported']")).toHaveCount(0);
-    await expect(row.locator("td").first().locator("summary .status-unknown")).toBeVisible();
+    await expect(row.locator("td").first().locator("a.cell .status-unknown")).toBeVisible();
   });
 
   test("filter state in the URL restores the filtered view (FR-008)", async ({ page }) => {
@@ -197,21 +195,17 @@ test.describe("matrix page (US1)", () => {
     await expect(page.locator("#matrix [data-grade]")).toHaveCount(0);
   });
 
-  test("keyboard-only walkthrough opens and closes a cell", async ({ page }) => {
+  test("keyboard-only walkthrough follows a cell", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
     await page.goto(`/mcp/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
-    const summary = page.locator(
-      `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
+    const cell = page.locator(
+      `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] a.cell`,
     );
-    await summary.focus();
+    await cell.focus();
+    await expect(cell).toBeFocused();
     await page.keyboard.press("Enter");
-    const dialog = page.locator("dialog.cell-dialog");
-    await expect(dialog).toBeVisible();
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Escape");
-    await expect(dialog).toBeHidden();
-    await expect(summary).toBeFocused();
+    await expect(page.locator("tr:target")).toHaveAttribute("data-feature", "mcp.as.dcr");
   });
 
   test("has no horizontal page scroll at phone width (constitution V)", async ({ page }) => {
@@ -304,23 +298,6 @@ test.describe("matrix page (US1)", () => {
     await expect(legend).toHaveScreenshot("status-shapes.png");
   });
 
-  test("cell detail opens without motion under reduced motion (M10)", async ({ page }) => {
-    test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(`/mcp/${dcrGroup}`);
-    await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
-    await page
-      .locator(`td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`)
-      .click();
-    const dialog = page.locator("dialog.cell-dialog");
-    await expect(dialog).toBeVisible();
-    const running = await dialog.evaluate(
-      (el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === "running").length,
-    );
-    expect(running).toBe(0);
-    expect(await dialog.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
-  });
-
   test("the crosshair shows at once under reduced motion (M9)", async ({ page }) => {
     await page.goto("/mcp/");
     await expectEndStateUnderReducedMotion(page, "#matrix tbody tr[data-server]");
@@ -355,20 +332,20 @@ test.describe("matrix page (US1)", () => {
 test.describe("matrix page without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("renders the full matrix and native cell details", async ({ page }) => {
+  test("renders the full matrix and cells that link to their observation", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
     await page.goto(`/mcp/?level=MUST${dcrGroup}`);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(
       matrix.rows.length,
     );
-    const details = page.locator(
-      `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] details`,
-    );
-    await details.locator("summary").click();
-    await expect(details).toHaveAttribute("open", "");
+    await page
+      .locator(`td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] a.cell`)
+      .click();
+    const row = page.locator("tr:target");
+    await expect(row).toHaveAttribute("data-feature", "mcp.as.dcr");
     const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
-    await expect(details.locator("[data-detail]")).toContainText(winning?.method ?? "vendor-claim");
+    await expect(row).toContainText(METHOD_LABEL[winning?.method ?? "vendor-claim"]);
   });
 
   test("on a phone, the group picker works through plain anchors (follow-up 5)", async ({

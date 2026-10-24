@@ -273,7 +273,7 @@ const classes = [
                         const entry = featureInRevision(feature, revision.id);
                         const obs = cell.observation;
                         return (
-                          <tr data-feature={feature.id} data-status={cell.status}>
+                          <tr id={feature.id} data-feature={feature.id} data-status={cell.status}>
                             <th scope="row">
                               <a href={`/mcp/features/${feature.id}/`}>{feature.name}</a>
                               <span class="meta">
@@ -520,6 +520,13 @@ const classes = [
   }
   .features tbody tr:hover > * {
     background: var(--signal-soft);
+  }
+  /* a matrix cell links here: its row takes the tint and keeps clear of the top edge */
+  .features tbody tr:target > * {
+    background: var(--signal-soft);
+  }
+  .features tbody tr {
+    scroll-margin-top: var(--space-6);
   }
   .features th[scope="row"] {
     font-size: var(--small);

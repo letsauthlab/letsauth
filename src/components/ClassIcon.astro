@@ -1,0 +1,64 @@
+---
+import type { AccessClass, AuthClass } from "@/schema";
+
+/**
+ * The glyph for a server's access or auth class (009): one stroked path on a 16-unit grid, in
+ * the ink of its context. Plain line drawings with no colour, so a class reads as a fact about
+ * the server and never as a verdict. Unknown is the dashed ring of a recorded unknown status.
+ */
+type Props =
+  | { kind: "access"; value: AccessClass; class?: string }
+  | { kind: "auth"; value: AuthClass; class?: string };
+
+const { kind, value, class: className } = Astro.props;
+
+const RING = "M8 3.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9Z";
+const ACCESS: Record<AccessClass, string> = {
+  // a globe: anyone can connect
+  public:
+    "M8 2.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0-11ZM2.5 8h11M8 2.5c-2.2 2.4-2.2 8.6 0 11M8 2.5c2.2 2.4 2.2 8.6 0 11",
+  // a padlock: connecting needs an account or an invitation
+  closed: "M4.5 7.5h7v5.5h-7ZM6 7.5V5.5a2 2 0 0 1 4 0v2",
+  unknown: RING,
+};
+const AUTH: Record<AuthClass, string> = {
+  // two arrows: the redirect and token exchange of an OAuth flow
+  oauth: "M3 6h9.5M10 3.5 12.5 6 10 8.5M13 10H3.5M6 7.5 3.5 10 6 12.5",
+  "api-key": "M3 8a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0ZM8 8h5.5M11.5 8v2.2M13.5 8v1.6",
+  // a dash, like not applicable: there is nothing to authenticate with
+  none: "M4.5 8h7",
+  unknown: RING,
+};
+const d = kind === "access" ? ACCESS[value as AccessClass] : AUTH[value as AuthClass];
+---
+
+<svg
+  class:list={["class-icon", { "class-icon--unknown": value === "unknown" }, className]}
+  viewBox="0 0 16 16"
+  aria-hidden="true"
+>
+  <path d={d} />
+</svg>
+
+<style is:global>
+  @layer reset, tokens, base, layout, components, product, utilities, print;
+
+  @layer product {
+    .class-icon {
+      width: 1em;
+      height: 1em;
+      flex: none;
+      vertical-align: -0.15em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .class-icon--unknown {
+      stroke-dasharray: 2 1.55;
+      stroke-linecap: butt;
+    }
+  }
+</style>

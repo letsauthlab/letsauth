@@ -234,8 +234,8 @@ The levels are never added up into one number, and nothing on the site sorts ser
 There is no report page of its own: the server page is where a scan shows. Its status panel
 prints the counts and the date, the checks are rows of its feature tables (marked passive scan,
 with the metadata each read), and "What the scanner asked" lists the requests behind them. The
-atlas matrix shows the cells themselves and a quiet "scan" link next to each server name that
-opens that section. `/mcp/servers/<id>/scan/` forwards to the server page; `scan.json` stays.
+atlas matrix shows the cells themselves and a faint trace mark (a link named "scan") next to
+each server name that opens that section. `/mcp/servers/<id>/scan/` forwards to the server page; `scan.json` stays.
 
 `unknown` is counted as unknown, never as unsupported. A MUST the server may meet in either of
 two ways counts as supported when either way is supported, and as unknown while the other way is

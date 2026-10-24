@@ -3,7 +3,7 @@ import { cellKey, featureInRevision, type Matrix, type RevisionDiff } from "@/li
 import { ACCESS_LABEL, AUTH_LABEL, accessOf, authOf } from "@/lib/classes";
 import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
 import type { ScanView } from "@/lib/scanner";
-import ObservationDetail from "./ObservationDetail.astro";
+import ClassIcon from "./ClassIcon.astro";
 import StatusCell from "./StatusCell.astro";
 
 interface Props {
@@ -207,6 +207,22 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                 <th scope="row" class="server-cell">
                   <span class="server-cell__row">
                     <a class="server-link" href={`/mcp/servers/${server.id}/`}>{server.name}</a>
+                    <span class="classes">
+                      <span
+                        class:list={["class", { derived: access.derived }]}
+                        title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
+                      >
+                        <ClassIcon kind="access" value={access.value} />
+                        <span class="visually-hidden">Access: {ACCESS_LABEL[access.value]}</span>
+                      </span>
+                      <span
+                        class:list={["class", { derived: auth.derived }]}
+                        title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
+                      >
+                        <ClassIcon kind="auth" value={auth.value} />
+                        <span class="visually-hidden">Auth: {AUTH_LABEL[auth.value]}</span>
+                      </span>
+                    </span>
                     {scan && (
                       <a
                         class="scan-link"
@@ -214,25 +230,12 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                         data-scan={scan.summary.state}
                         title={scan.summary.label}
                       >
-                        <span class="visually-hidden">{server.name} </span>scan
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M2.5 8h2l1.5-4 3 8 1.5-4h3" />
+                        </svg>
+                        <span class="visually-hidden">{server.name} scan</span>
                       </a>
                     )}
-                  </span>
-                  <span class="classes">
-                    <span
-                      class:list={["class", "chip", { derived: access.derived }]}
-                      title={`Access: ${ACCESS_LABEL[access.value]}${access.derived ? " (not yet stated)" : ""}`}
-                    >
-                      <span class="visually-hidden">Access: </span>
-                      {ACCESS_LABEL[access.value].toLowerCase()}
-                    </span>
-                    <span
-                      class:list={["class", "chip", { derived: auth.derived }]}
-                      title={`Auth: ${AUTH_LABEL[auth.value]}${auth.derived ? " (not yet stated)" : ""}`}
-                    >
-                      <span class="visually-hidden">Auth: </span>
-                      {AUTH_LABEL[auth.value].toLowerCase()}
-                    </span>
                   </span>
                 </th>
                 {columns.map((feature) => {
@@ -245,12 +248,13 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                       data-status={cell.status}
                       data-derived={cell.derived ? "true" : "false"}
                     >
-                      <details class="cell">
-                        <summary aria-label={`${server.name}, ${feature.name}: ${cell.status}`}>
-                          <StatusCell status={cell.status} derived={cell.derived} />
-                        </summary>
-                        <ObservationDetail cell={cell} server={server} feature={feature} />
-                      </details>
+                      <a
+                        class="cell"
+                        href={`/mcp/servers/${server.id}/#${feature.id}`}
+                        aria-label={`${server.name}, ${feature.name}: ${cell.status}`}
+                      >
+                        <StatusCell status={cell.status} derived={cell.derived} />
+                      </a>
                     </td>
                   );
                 })}
@@ -418,8 +422,15 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       text-underline-offset: 0.2em;
     }
 
+    /*
+     * The level is quiet text beside the party, not an outlined pill in its level colour: it
+     * repeats on every column, and the status glyphs below are what the matrix is for.
+     */
     .matrix .feature-head .level {
-      padding: 0.4em 0.25em;
+      padding: 0;
+      border: 0;
+      color: var(--ink-2);
+      font-weight: 500;
       letter-spacing: 0.04em;
     }
 
@@ -514,35 +525,55 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     }
 
     /* the row's own cells are the scan's result; this only opens the requests behind them */
+    /*
+     * A small trace glyph rather than the word on every row: faint until its row is under the
+     * pointer or the focus. Its name is the hidden text, its tooltip the scan's summary.
+     */
     .matrix .scan-link {
       flex: none;
-      font-size: var(--tiny);
-      color: var(--ink-2);
-      text-decoration: none;
+      display: inline-grid;
+      place-items: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: color-mix(in oklch, var(--ink-2) 55%, transparent);
+      border-radius: var(--radius-focus);
+      transition: color var(--dur-fast) var(--ease);
     }
-    .matrix .scan-link:hover {
-      color: var(--ink);
-      text-decoration: underline;
-      text-underline-offset: 0.2em;
+    .matrix .scan-link svg {
+      width: 0.9rem;
+      height: 0.9rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .matrix tr:is(:hover, :focus-within) .scan-link {
+      color: var(--ink-2);
+    }
+    .matrix .scan-link:is(:hover, :focus-visible) {
+      color: var(--signal);
     }
 
+    /*
+     * The row's classes, two line glyphs after the name in its ink-2 (ClassIcon); the words are
+     * the tooltip and the hidden text. A class nobody has stated yet is fainter, like the faint
+     * dot of a derived cell.
+     */
     .matrix .classes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-1);
-      margin-top: var(--space-1);
-    }
-
-    .matrix .classes .chip {
-      color: var(--ink);
-      border-color: var(--rule-strong);
-    }
-
-    /* a class nobody has stated yet: dashed, like a recorded unknown */
-    .matrix .classes .chip.derived {
+      display: inline-flex;
+      gap: 0.3rem;
+      margin-left: auto;
       color: var(--ink-2);
-      border-color: var(--rule-strong);
-      border-style: dashed;
+      font-size: 0.9rem;
+    }
+
+    .matrix .classes .class {
+      display: inline-flex;
+    }
+
+    .matrix .classes .class.derived {
+      opacity: 0.55;
     }
 
     /* group header rows the island inserts when the reader groups by a class */
@@ -598,56 +629,21 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       background-color: var(--signal-soft);
     }
 
-    /* cells */
-    .matrix .cell summary {
-      list-style: none;
-      cursor: pointer;
+    /*
+     * Cells: each glyph links to its feature's row on the server page, where the observation
+     * behind it (method, date, observer, evidence, earlier records) is set out. The matrix keeps
+     * no copy of the record: about 900 inline copies were most of the page's weight.
+     */
+    .matrix .cell {
       display: inline-grid;
       place-items: center;
       padding: 0.2rem;
       border-radius: var(--radius-focus);
     }
 
-    .matrix .cell summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .matrix .cell summary:focus-visible {
+    .matrix .cell:focus-visible {
       outline: 2px solid var(--signal);
       outline-offset: 1px;
-    }
-
-    /* without JavaScript the observation opens under its cell, above it in the last rows and
-       leaning left in the last columns, so the table's clip never cuts it */
-    .matrix .cell[open] {
-      position: relative;
-    }
-
-    .matrix .cell[open] > .obs {
-      position: absolute;
-      top: calc(100% + 0.4rem);
-      left: 50%;
-      translate: -50% 0;
-      z-index: 4;
-      width: 22rem;
-      max-width: 80vw;
-      padding: var(--space-4);
-      text-align: left;
-      font-weight: 400;
-      background: var(--ground-2);
-      border: 1px solid var(--rule-strong);
-      border-radius: var(--radius);
-    }
-
-    .matrix tbody tr:nth-last-child(-n + 6) .cell[open] > .obs {
-      top: auto;
-      bottom: calc(100% + 0.4rem);
-    }
-
-    .matrix tbody td:nth-last-child(-n + 4) .cell[open] > .obs {
-      left: auto;
-      right: 0;
-      translate: none;
     }
 
     /*
@@ -808,7 +804,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       }
 
       /* the glyphs are a picture of the row here; a group's view opens them */
-      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .cell summary {
+      .matrix-view:is([data-view="all"], :not([data-view]):not(:has(.matrix-tabs a:not(#mx-all):target))) .matrix .cell {
         /* no box, so no 10px tap target: the glyph alone stays */
         display: contents;
         pointer-events: none;
