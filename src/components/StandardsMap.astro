@@ -82,7 +82,7 @@ const filterCss = [
 
 <div class="map-plate" id="map-plate">
   <form id="map-filters" class="map-rail" method="get" action="/standards/" aria-label="Filter the map">
-    <fieldset>
+    <fieldset class="types">
       <legend>Relations</legend>
       {
         usedTypes.map((t) => (
@@ -109,7 +109,7 @@ const filterCss = [
         ))
       }
     </fieldset>
-    <fieldset>
+    <fieldset class="view">
       <legend>View</legend>
       <label class="toggle">
         <input type="checkbox" name="view" value="recent" />
@@ -132,12 +132,10 @@ const filterCss = [
         A filter in the link needs JavaScript. The toggles still work.
       </p>
     </noscript>
-    <div class="map-card" id="map-card">
-      <p class="note">Hover or focus a node to read its relations here.</p>
-    </div>
   </form>
 
   <figure class="map" aria-labelledby="map-caption">
+    <div class="map-card" id="map-card" hidden></div>
     <div class="plate map-frame" id="map-frame" tabindex="0" role="region" aria-label="Standards map">
       <svg
         id="map"
@@ -300,7 +298,7 @@ const filterCss = [
     </figcaption>
   </figure>
 
-  {/* one card per node, shown in the rail for the node under the pointer or in focus */}
+  {/* one card per node, shown beside the node under the pointer or in focus */}
   <div class="map-cards" hidden>
     {
       nodes.map((n) => {
@@ -339,24 +337,41 @@ const filterCss = [
 
 <style>
   /*
-   * The plate: a rail of toggles on the left that is legend, filter and reading pane in one, and
-   * the drawing on the right at its full height, so the page scrolls and the frame does not.
-   * Below 60rem the rail folds above the drawing; below 40rem the drawing goes and the outline
-   * under the plate is the map.
+   * The plate: a bar of toggles above the drawing that is legend and filter in one, and the
+   * drawing below it at the full width of the page, so its labels keep their size. The card of
+   * the node in hover or focus floats beside that node. Below 60rem the bar's groups wrap;
+   * below 40rem the drawing goes and the outline under the plate is the map.
    */
   .map-plate {
     display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr);
     gap: var(--space-5);
-    align-items: start;
     margin: 0 0 var(--space-7);
   }
   .map-rail {
-    position: sticky;
-    top: var(--space-4);
     display: grid;
-    gap: var(--space-4);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr);
+    grid-template-areas:
+      "types bodies view"
+      "types bodies maturities"
+      "count count count";
+    gap: var(--space-4) var(--space-6);
+    align-items: start;
     font-size: var(--small);
+  }
+  .types {
+    grid-area: types;
+  }
+  .bodies {
+    grid-area: bodies;
+  }
+  .view {
+    grid-area: view;
+  }
+  .maturities {
+    grid-area: maturities;
+  }
+  .map-rail__count {
+    grid-area: count;
   }
   fieldset {
     border: 0;
@@ -381,7 +396,7 @@ const filterCss = [
   }
   .bodies {
     grid-template-columns: 1fr 1fr;
-    column-gap: var(--space-2);
+    column-gap: var(--space-4);
   }
   .bodies legend {
     grid-column: 1 / -1;
@@ -421,9 +436,11 @@ const filterCss = [
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
+    gap: var(--space-3);
+    max-width: none;
     margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--rule);
     color: var(--ink-2);
     font-size: var(--tiny);
     font-variant-numeric: tabular-nums;
@@ -431,10 +448,21 @@ const filterCss = [
   .note {
     margin: 0;
   }
+
+  /* the card floats beside its node; it never takes pointer events, so it cannot steal a hover */
   .map-card {
-    border-top: 1px solid var(--rule);
-    padding-top: var(--space-4);
-    min-height: 6rem;
+    position: absolute;
+    z-index: 1;
+    width: 18rem;
+    padding: var(--space-3) var(--space-4);
+    background: var(--ground);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius);
+    font-size: var(--small);
+    pointer-events: none;
+  }
+  .map-card[hidden] {
+    display: none;
   }
   .map-card :global(.map-card__name) {
     margin: 0 0 var(--space-1);
@@ -461,6 +489,7 @@ const filterCss = [
   }
 
   .map {
+    position: relative;
     margin: 0;
     min-width: 0;
   }
@@ -487,22 +516,23 @@ const filterCss = [
   }
 
   @media (max-width: 60rem) {
-    .map-plate {
-      grid-template-columns: 1fr;
-    }
     .map-rail {
-      position: static;
       grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-      align-items: start;
+      grid-template-areas: none;
     }
-    .map-rail__count,
-    .map-card {
+    .types,
+    .bodies,
+    .view,
+    .maturities {
+      grid-area: auto;
+    }
+    .map-rail__count {
+      grid-area: auto;
       grid-column: 1 / -1;
     }
   }
   @media (max-width: 40rem) {
-    .map,
-    .map-card {
+    .map {
       display: none;
     }
     .map-plate {

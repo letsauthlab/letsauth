@@ -4,7 +4,7 @@
  * toggles and the outline in the DOM are the source of truth, and the toggles filter through
  * stylesheet rules on their own. This island only: keeps the count, mirrors the toggles in the
  * URL so a view can be shared, lets a lane label in the drawing toggle its body, shows the card
- * of the node under the pointer or in focus in the rail, highlights that node's neighbourhood,
+ * of the node under the pointer or in focus beside it, highlights that node's neighbourhood,
  * and hands the followed node or outline entry to the cross-document view transition so it
  * grows into the spec page's title (plan 016, M2). Without JS the page is complete.
  */
@@ -88,8 +88,8 @@ onMount(() => {
     });
   }
 
-  // the reading pane: the node's card moves into the rail while it is hovered or focused
-  const hint = card?.innerHTML ?? "";
+  // the reading pane: the node's card floats beside the node while it is hovered or focused
+  const figure = card?.parentElement;
   const cards = new Map(
     Array.from(document.querySelectorAll<HTMLElement>(".map-cards [data-card]")).map((c) => [
       c.dataset.card ?? "",
@@ -98,10 +98,27 @@ onMount(() => {
   );
   let shown: string | null = null;
   function show(id: string | null) {
-    if (!card) return;
+    if (!card || !figure) return;
+    const node = id ? nodes.find((n) => n.dataset.spec === id) : undefined;
     const next = id ? cards.get(id) : undefined;
-    card.replaceChildren(...(next ? [next.cloneNode(true)] : []));
-    if (!next) card.innerHTML = hint;
+    if (!node || !next) {
+      card.hidden = true;
+      card.replaceChildren();
+      return;
+    }
+    card.replaceChildren(next.cloneNode(true));
+    card.hidden = false;
+    // right of the node, or left of it where the frame ends; never below the frame
+    const box = node.getBoundingClientRect();
+    const fig = figure.getBoundingClientRect();
+    const gap = 8;
+    const right = box.right - fig.left + gap;
+    const left =
+      right + card.offsetWidth <= fig.width ? right : box.left - fig.left - gap - card.offsetWidth;
+    const frameBottom = (frame?.getBoundingClientRect().bottom ?? fig.bottom) - fig.top;
+    const top = Math.min(box.top - fig.top, frameBottom - card.offsetHeight);
+    card.style.left = `${Math.max(0, left)}px`;
+    card.style.top = `${Math.max(0, top)}px`;
   }
 
   // neighbourhood highlight
