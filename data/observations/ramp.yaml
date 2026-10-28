@@ -438,3 +438,23 @@
   observedAt: 2026-10-24T01:18:28Z
   observedBy: scanner@0.4.0
   evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [accounting:write, cards:write, trips:write, funds:write, transactions:read, bills:write, reimbursements:write, approvals:write, transactions:write, sourcing:write, trips:r…"
+- server: ramp
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-28T02:19:19Z
+  observedBy: scanner@0.4.0
+  evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [accounting:write, cards:write, funds:write, transactions:read, bills:write, reimbursements:write, approvals:write, transactions:write, sourcing:write, trips:read, departments:write, vendors:writ…"
+- server: ramp
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-28T02:19:19Z
+  observedBy: scanner@0.4.0
+  evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [accounting:write, cards:write, funds:write, transactions:read, bills:write, reimbursements:write, approvals:write, transactions:write, sourcing:write, trips:read, departme…"
