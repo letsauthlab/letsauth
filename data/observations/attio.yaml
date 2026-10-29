@@ -418,3 +418,73 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://app.attio.com/.well-known/oauth-authorization-server — HTTP 200; all 5 endpoints use https
+- server: attio
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: "https://app.attio.com/.well-known/openid-configuration — HTTP 200; issuer: https://app.attio.com equals the issuer the PRM named"
+- server: attio
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: "https://app.attio.com/.well-known/openid-configuration — HTTP 200; issuer: https://app.attio.com"
+- server: attio
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: "https://app.attio.com/.well-known/openid-configuration — HTTP 200; client_id_metadata_document_supported: absent"
+- server: attio
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: "https://app.attio.com/.well-known/openid-configuration — HTTP 200; registration_endpoint: https://app.attio.com/oauth/register"
+- server: attio
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: "https://app.attio.com/.well-known/openid-configuration — HTTP 200; authorization_response_iss_parameter_supported: absent"
+- server: attio
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: "https://app.attio.com/.well-known/openid-configuration — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: attio
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-29T02:19:24Z
+  observedBy: scanner@0.4.0
+  evidence: https://app.attio.com/.well-known/openid-configuration — HTTP 200; all 5 endpoints use https
