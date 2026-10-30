@@ -48,8 +48,10 @@ set.
 - **End-to-end tests** live in `tests/e2e/` and run against the built site. They check that pages
   read without JavaScript, that the islands work with it, accessibility with axe, and
   screenshots per page in both themes and at phone width.
-- **Lighthouse budgets** (`lighthouserc.json`) run in CI only: performance and accessibility at or
-  above 95 on the listed pages, and no more than 150 kB of script per page. Run them locally with
+- **Lighthouse budgets** (`lighthouserc.json`) run in CI only, in a job of their own beside the
+  checks: performance and accessibility at or above 95 on the listed pages, and no more than
+  150 kB of script per page. Pull requests audit each page once, main three times (the scores
+  posted as a commit status). Run them locally with
   `pnpm build && pnpm exec lhci autorun --config=lighthouserc.json`.
 - **Byte budgets** (`pnpm check:budgets`) print one row per page and the size of each island,
   then a summary. Two limits fail the run today: the constitution's 150 kB of compressed

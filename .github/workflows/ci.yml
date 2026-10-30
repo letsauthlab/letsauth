@@ -52,7 +52,18 @@ jobs:
         run: pnpm build
       - name: Byte budgets
         run: pnpm check:budgets
+      # Playwright's pinned Chromium, keyed on the lockfile (which pins the Playwright version).
+      # Screenshot baselines are only valid for this exact build, so the cache can never hand a
+      # test a different browser than a fresh install would. A hit also skips the apt run of
+      # --with-deps; the shared libraries are already on the runner image.
+      - name: Restore Playwright browsers
+        id: playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright browsers
+        if: steps.playwright.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests
         run: pnpm test:e2e
@@ -63,8 +74,28 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  # Lighthouse was more than half of a CI run (12 URLs x 3 runs, about 6 minutes), waiting
+  # behind the end-to-end tests. It builds the site itself (a few seconds) and runs beside the
+  # check job instead. Pull requests audit each URL once; main keeps the three runs of
+  # lighthouserc.json, since its scores are the ones posted as a commit status and a flaky
+  # failure there would hold back a deploy.
+  lighthouse:
+    name: Lighthouse budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
       - name: Lighthouse budgets
-        run: pnpm exec lhci autorun --config=lighthouserc.json
+        run: pnpm exec lhci autorun --config=lighthouserc.json --collect.numberOfRuns=${{ github.ref == 'refs/heads/main' && 3 || 1 }}
         env:
           LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Lighthouse reports
