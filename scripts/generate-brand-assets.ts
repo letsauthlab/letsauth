@@ -116,7 +116,6 @@ try {
       .pl{stroke:var(--rule)}
       .pa{fill:var(--ground-2);stroke:var(--rule-strong)}
       .pm{stroke:var(--rule-strong)}
-      .ph{display:none}
       .pp{stroke:var(--signal);stroke-width:2}
       .po{fill:var(--signal)}
       </style>
