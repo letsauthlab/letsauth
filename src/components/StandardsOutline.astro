@@ -97,10 +97,13 @@ const count = (nodes: TreeNode[]): number =>
     max-width: var(--measure);
     margin: 0 0 var(--space-5);
   }
+  /*
+   * No content-visibility here: with a 20rem placeholder for an unrendered family, a long tree
+   * reported its chips under the next family, and axe read them as obscured targets. The list
+   * is 41 rows, small enough to render whole.
+   */
   .outline .family {
     margin-bottom: var(--space-6);
-    content-visibility: auto;
-    contain-intrinsic-size: auto 20rem;
   }
   .outline .family__head {
     font-size: var(--small);
