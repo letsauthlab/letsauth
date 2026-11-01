@@ -30,7 +30,9 @@ const themeStyle = `<style>@media(prefers-color-scheme:dark){${colors
   .join("")}}</style>`;
 writeFileSync("public/favicon.svg", icon.replace(/(<svg[^>]*>)/, `$1${themeStyle}`));
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
+);
 try {
   const page = await browser.newPage({ deviceScaleFactor: 1, colorScheme: "light" });
   // Opaque square with safe inset; iOS supplies its own rounded mask.
@@ -66,7 +68,7 @@ try {
       gap:48px;align-items:center}
     .logo{position:absolute;top:56px;left:64px;width:220px;height:auto}
     .eyebrow{margin:0 0 18px;font-size:22px;color:var(--ink-2)}
-    h1{margin:0;font-weight:600;font-size:58px;line-height:1.08;letter-spacing:-0.03em;
+    h1{margin:0;font-weight:500;font-size:58px;line-height:1.08;letter-spacing:-0.03em;
       white-space:nowrap}
     .site{position:absolute;bottom:56px;left:64px;font:22px Mono;color:var(--ink-2)}
     .plate{background:var(--ground-2);border:1px solid var(--rule);border-radius:14px;
@@ -109,7 +111,7 @@ try {
         gap:64px;align-items:center}
       .logo{position:absolute;top:56px;left:64px;width:220px;height:auto}
       .eyebrow{margin:0 0 18px;font-size:22px;color:var(--ink-2)}
-      h1{margin:0;font-weight:600;font-size:58px;line-height:1.08;letter-spacing:-0.03em}
+      h1{margin:0;font-weight:500;font-size:58px;line-height:1.08;letter-spacing:-0.03em}
       .site{position:absolute;bottom:56px;left:64px;font:22px Mono;color:var(--ink-2)}
       svg{display:block;width:100%;height:auto;fill:none;stroke-linecap:round;stroke-linejoin:round}
       .pb{stroke:var(--boundary);stroke-dasharray:4 4;opacity:.7}
