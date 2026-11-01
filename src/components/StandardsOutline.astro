@@ -25,7 +25,8 @@ const count = (nodes: TreeNode[]): number =>
   <h2 id="list-title">Every specification, under what it builds on</h2>
   <p class="note">
     A specification sits under the document it builds on, profiles or replaces. The other
-    relations are the chips on its row. Open one to see the documents it names.
+    relations are the chips on its row. Open one to see the documents it names. A document
+    without a maturity tag is published.
   </p>
   {
     forest.trees.map((tree) => (
@@ -103,7 +104,7 @@ const count = (nodes: TreeNode[]): number =>
   }
   .outline .family__head {
     font-size: var(--small);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink-2);
     margin: 0 0 var(--space-2);
   }
@@ -148,7 +149,7 @@ const count = (nodes: TreeNode[]): number =>
     min-width: 0;
   }
   .outline .who a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     text-decoration: none;
   }

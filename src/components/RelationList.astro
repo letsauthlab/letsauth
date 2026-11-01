@@ -58,6 +58,7 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
     <p class="note">No relations recorded yet. Add one in <code>data/relations.yaml</code>.</p>
   ) : (
     <div class="relations">
+      <p class="note relations__note">A document without a maturity tag is published.</p>
       {sections.map((s) => (
         <section class="group" aria-labelledby={s.id} data-relation-group={s.id}>
           <h3 id={s.id}>
@@ -68,7 +69,7 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
               <li data-other={other.id} data-type={typeOf(s.id)}>
                 <span class="who">
                   <a href={`/standards/${other.id}/`}>{other.name}</a>
-                  <MaturityTag maturity={other.maturity} note={other.maturityNote} />
+                  <MaturityTag maturity={other.maturity} note={other.maturityNote} quietPublished />
                 </span>
                 {(relation.note || relation.source) && (
                   <span class="why">
@@ -102,6 +103,10 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
     columns: 19rem;
     column-gap: var(--space-6);
   }
+  .relations__note {
+    column-span: all;
+    margin-bottom: var(--space-4);
+  }
   .group {
     break-inside: avoid;
     margin-bottom: var(--space-6);
@@ -110,7 +115,7 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
   }
   .group h3 {
     font-size: var(--small);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0;
     color: var(--ink-2);
     margin: 0 0 var(--space-3);
@@ -135,7 +140,7 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
     gap: var(--space-1) var(--space-2);
   }
   .who a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     text-decoration: none;
   }

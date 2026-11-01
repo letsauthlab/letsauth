@@ -95,6 +95,18 @@ test.describe("standards map (US1)", () => {
     await context.close();
   });
 
+  test("on a phone the filters fold behind one button, open when the link carries a filter", async ({
+    page,
+  }) => {
+    test.skip((page.viewportSize()?.width ?? 1280) >= 640, "phones only");
+    await page.goto("/standards/");
+    await expect(page.locator("#map-filters")).toBeHidden();
+    await page.getByText("Filter the list").click();
+    await expect(page.locator("#map-filters")).toBeVisible();
+    await page.goto("/standards/?view=recent");
+    await expect(page.locator("#map-filters")).toBeVisible();
+  });
+
   test("the map opens with references hidden and the legend as the filter (follow-up 4)", async ({
     page,
   }) => {
@@ -102,6 +114,7 @@ test.describe("standards map (US1)", () => {
     test.skip(refs.length === 0, "no references relation in the seed data");
     await page.goto("/standards/");
     const narrow = (page.viewportSize()?.width ?? 1280) < 640;
+    if (narrow) await page.getByText("Filter the list").click();
     await expect(page.locator("#map-filters input[value='references']")).not.toBeChecked();
     await expect(page.locator("#map-filters input[value='builds-on']")).toBeChecked();
     if (!narrow) {
@@ -280,6 +293,7 @@ test.describe("standards map (US1)", () => {
     await page.goto("/standards/");
     await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
     const narrow = (page.viewportSize()?.width ?? 1280) < 640;
+    if (narrow) await page.getByText("Filter the list").click();
     for (const other of bodies.filter((g) => g.body !== body)) {
       await page.locator(`#map-filters input[name='body'][value='${other.body}']`).uncheck();
     }

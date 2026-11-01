@@ -81,6 +81,8 @@ const filterCss = [
 <style set:html={filterCss}></style>
 
 <div class="map-plate" id="map-plate">
+  <details class="map-filters" id="map-filters-box" open>
+  <summary class="button quiet small">Filter the list</summary>
   <form id="map-filters" class="map-rail" method="get" action="/standards/" aria-label="Filter the map">
     <fieldset class="types">
       <legend>Relations</legend>
@@ -133,6 +135,12 @@ const filterCss = [
       </p>
     </noscript>
   </form>
+  </details>
+  <script is:inline>
+    // On a phone the drawing is hidden and the list is the map, so the filters start folded
+    // behind one button, unless the link carries a filter; without JavaScript they stay open.
+    (()=>{const d=document.currentScript.previousElementSibling,m=matchMedia("(max-width: 40rem)"),f=()=>{d.open=!m.matches||location.search.length>1};f();m.addEventListener("change",f)})()
+  </script>
 
   <figure class="map" aria-labelledby="map-caption">
     <div class="map-card" id="map-card" hidden></div>
@@ -466,7 +474,7 @@ const filterCss = [
   }
   .map-card :global(.map-card__name) {
     margin: 0 0 var(--space-1);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
   }
   .map-card :global(.map-card__body) {
@@ -531,9 +539,23 @@ const filterCss = [
       grid-column: 1 / -1;
     }
   }
+  /* wide screens: the filters are always open and the summary that folds them is not shown */
+  .map-filters > summary {
+    display: none;
+  }
   @media (max-width: 40rem) {
     .map {
       display: none;
+    }
+    .map-filters > summary {
+      display: inline-flex;
+      list-style: none;
+    }
+    .map-filters > summary::-webkit-details-marker {
+      display: none;
+    }
+    .map-filters[open] > summary {
+      margin-bottom: var(--space-4);
     }
     .map-plate {
       margin-bottom: var(--space-6);
@@ -657,7 +679,7 @@ const filterCss = [
   }
   .node-name {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     fill: var(--ink);
   }
   /*

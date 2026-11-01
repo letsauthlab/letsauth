@@ -88,7 +88,7 @@ updated in the same package (WP1), so the repository never contradicts itself.
 2. **One accent per view.** Teal (`--signal`) is links, focus, the current step, the highlighted
    path. Rust (`--threat`) is warnings, attacks, unsupported. Nothing else is coloured except the
    four status inks, which carry meaning and are always paired with a glyph or a word.
-3. **Type carries hierarchy.** Size, weight 600 and tracking do the work. Eyebrows and labels are
+3. **Type carries hierarchy.** Size and ink do the work, at weight 500 (600 only for the MUST, SHOULD and MAY marks; changed in the unslop pass). Eyebrows and labels are
    sentence case in Geist at the small size, not uppercase mono. Mono is for identifiers, dates
    that align, code and the terminal transcript.
 4. **Motion is a state change, shown once.** Things draw in, become current, or settle. Nothing
@@ -160,7 +160,7 @@ aliases of the new names in WP1 so unmigrated components keep rendering, and are
 - Scale: body `clamp(1.0625rem, 1.02rem + 0.15vw, 1.125rem)`, line height 1.7, measure 66ch.
   `--small` 0.875rem, `--tiny` 0.8125rem (13px floor, nothing smaller). H1 on the home statement
   `clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem)`, on data pages `clamp(2rem, 1.5rem + 2vw, 3.1rem)`,
-  H2 `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)`, H3 1.2rem. Headings weight 600, tracking −0.015em
+  H2 `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)`, H3 1.2rem. Headings weight 500, tracking −0.015em
   to −0.03em, `text-wrap: balance`.
 - Labels, eyebrows, table heads: Geist at `--small` or `--tiny`, sentence case, `--ink-2`,
   tabular figures where numbers align. The uppercase mono eyebrow with the leading dash goes.

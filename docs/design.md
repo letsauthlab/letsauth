@@ -160,7 +160,7 @@ in `--font-body`, so the swap does not move text.
 | `--lede` | `clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem)` | the lede under a page heading |
 | `--tracking-tight`, `--tracking-snug` | -0.03em, -0.015em | headings |
 
-Headings are weight 600 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
+Headings are weight 500 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
 or `--tiny` in `--ink-2`, with tabular figures where numbers align. Links in prose are `--signal`
 with a 1px underline at 45% that turns solid on hover.
 
