@@ -117,19 +117,27 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 03:17 UTC from the image `Dockerfile` builds. One run:
 
 1. shallow-clones `main` with the job's GitHub token and installs dependencies;
-2. runs `pnpm scan --all --write --summary scan-summary.md` over every listed server that is not
+2. reads every open scanner pull request (a `scanner/` branch of this repository against `main`)
+   and lays the observations it adds over the clone, oldest first, so the append rule compares
+   with pending evidence as well as with `main` (spec 018);
+3. runs `pnpm scan --all --write --summary scan-summary.md` over every listed server that is not
    withdrawn, has an HTTP transport and whose `auth` class is not `api-key` or `none` (a server
    that fails is recorded as `unknown`; one whose class is not yet stated is scanned, and the
    summary says what its endpoint's answer suggests);
-3. runs `pnpm validate:data` and `pnpm check:append-only`; a failure aborts the run and nothing
+4. takes the pending overlay back out, so each file is `main`'s text followed only by what this
+   scan appended;
+5. runs `pnpm validate:data` and `pnpm check:append-only`; a failure aborts the run and nothing
    is pushed;
-4. when nothing under `data/observations/` changed, logs "nothing to append" and stops;
-5. otherwise commits to a new branch `scanner/<date>-<hhmm>` (UTC), pushes it, and opens one pull
+6. when nothing under `data/observations/` changed, logs "nothing to append" (or "nothing new
+   beyond main and N pending scanner pull requests") and stops: a night that saw nothing new
+   opens no pull request;
+7. otherwise commits to a new branch `scanner/<date>-<hhmm>` (UTC), pushes it, and opens one pull
    request `Scanner: <date> <hh:mm> UTC` whose description is the run summary (per server the
-   scan summary, the cells appended and the checks that could not be judged);
-6. keeps earlier scanner pull requests and branches open: each run compares against `main`,
-   and later results do not include every earlier unmerged observation. Review and merge pending
-   evidence in chronological order, resolving append-only list conflicts by retaining both runs.
+   scan summary, the cells appended and the checks that could not be judged) and names the
+   pending pull requests it was compared with;
+8. keeps earlier scanner pull requests and branches open (spec 014). A new pull request carries
+   only what none of them does, so each needs its own review. Merge them in chronological order,
+   resolving append-only list conflicts by retaining both runs.
 
 The token never appears in a command line, a remote URL or a log: git reads the auth header from
 `GIT_CONFIG_*` environment variables, pnpm and the scanner run without it, every child process's
@@ -172,6 +180,24 @@ Set up once, by the owner:
 
 To rotate, generate a new private key on the App's page, replace the secret, delete the old key.
 
+**The agentic review.** `.github/workflows/scanner-review.md` is a GitHub Agentic Workflow
+(gh-aw, spec 018), compiled by `gh aw compile` to `scanner-review.lock.yml`; edit the Markdown,
+recompile, commit both. It runs on every scanner pull request (opened by
+`letsauth-scanner[bot]` from a `scanner/` branch, touching `data/observations/`). A shell step
+first fails the run when the pull request changes anything else or removes a line. The agent
+then checks each appended entry against the decision table and the evidence format and submits
+one review: *Approve* when every entry holds, *Comment* with line comments when one does not. It
+names cells that moved from supported to unsupported or unknown in either case. It never requests
+changes and never merges, and it has no web access: it does not open the evidence URLs, because
+the scan never runs on GitHub. Its approval is a review like a person's; whether that is enough
+to merge is up to the branch rules on `main`.
+
+Set up once, by the owner: the repository secret `ANTHROPIC_API_KEY` (the agent's engine), and
+Settings → Actions → General → *Allow GitHub Actions to create and approve pull requests*, without
+which the approving review is refused. The approval comes from `github-actions[bot]`, not from
+the scanner's App, so GitHub's rule that an author cannot approve their own pull request does not
+apply.
+
 **Reviewing a scanner pull request.** Open each evidence URL in the diff; it is the metadata
 document that decided the status. `unknown` means the scanner could not tell (the evidence names
 the failure), not that the feature is missing. A wrong status is never fixed by editing the
@@ -180,7 +206,10 @@ re-observes every cell.
 
 **When to bump `SCANNER_VERSION`** (`src/scanner/version.ts`): whenever a check's logic or its
 evidence text changes (0.3.0: the endpoint ladder, the scope challenge and the scope fallbacks). The append rule treats cells written by an older version as not yet
-measured, so the next run rewrites them all.
+measured, so the next run rewrites them all. A change that only alters the text for some cells
+may skip the bump when the evidence comparison already re-observes exactly those cells: spec 018
+sorted the values of `scopes_supported` and `code_challenge_methods_supported` in the evidence
+(a server may return the same set in any order) without one.
 
 ## Deploying to Scaleway
 

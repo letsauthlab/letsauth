@@ -576,3 +576,25 @@ describe("metadata binding regressions", () => {
     ).toBe("unsupported");
   });
 });
+
+describe("evidence for a set (spec 018)", () => {
+  async function evidenceWith(scopes: string[], methods: string[]) {
+    const f = fixture("complete");
+    const prm = f.responses[PRM_PATH] as { body: Record<string, unknown> };
+    prm.body.scopes_supported = scopes;
+    const as = f.responses[AS_RFC] as { body: Record<string, unknown> };
+    as.body.code_challenge_methods_supported = methods;
+    const p = await probe(f.target, { fetcher: recordingFetcher(f) });
+    const out: Record<string, string | undefined> = {};
+    for (const run of runChecks(p, features)) out[run.feature.id] = run.outcome.evidence;
+    return out;
+  }
+
+  it("is the same whatever order the server lists its scopes and methods in", async () => {
+    const one = await evidenceWith(["write", "read", "admin"], ["S256", "plain"]);
+    const two = await evidenceWith(["admin", "write", "read"], ["plain", "S256"]);
+    expect(one["mcp.prm.scopes-supported"]).toContain("[admin, read, write]");
+    expect(one["mcp.as.pkce-s256"]).toContain("[S256, plain]");
+    expect(two).toEqual(one);
+  });
+});

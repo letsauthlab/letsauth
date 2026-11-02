@@ -30,9 +30,13 @@ What one run does, in order:
 5. Otherwise commits the appended entries to a new branch `scanner/<date>-<hhmm>` (UTC, unique per
    run) with the summary as the commit body, pushes it without force, and opens one pull request
    `Scanner: <date> <hh:mm> UTC` against the base branch with the summary as its description and
-   the label `data`. It then closes every other open pull request from a `scanner/` branch with a
-   "superseded by" comment and deletes that branch, since the newest run carries all unmerged
-   observations. Exit 0.
+   the label `data`. Earlier scanner pull requests stay open (014). Exit 0.
+
+Since 018, between steps 1 and 2 the run lays the observations of every open scanner pull
+request over the clone, so the append rule compares with pending evidence too, and before step 3
+it takes that overlay back out: step 4 then finds nothing when the scan saw nothing beyond `main`
+and the pending pull requests, and step 5 carries only what is new. The pull request's
+description names the pending pull requests it was compared with.
 6. The token is never part of an argument list, a remote URL, the clone's config or any printed
    message: git reads the `Authorization` header from `GIT_CONFIG_*` environment variables, other
    commands run without the token in their environment, child output is captured rather than

@@ -104,7 +104,7 @@ tests/
   unit/          Vitest over src/lib and src/scanner, with fixtures
   e2e/           Playwright against the built site, with screenshot baselines
 .specify/        the constitution and the Spec Kit templates and scripts
-.github/         CI, deploy, scanner deploy and screenshot workflows; issue and PR templates
+.github/         CI, deploy, scanner deploy, scanner review (gh-aw) and screenshot workflows; issue and PR templates
 ```
 
 ## The site
