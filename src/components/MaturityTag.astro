@@ -8,14 +8,23 @@ interface Props {
   note?: string;
   /** "tag" is the short form used in lists; "label" spells the maturity out. */
   variant?: "tag" | "label";
+  /**
+   * In a list where most documents are published, the published ones carry no chip: the word
+   * stays for screen readers and the data attribute stays, but only the exceptions show.
+   * The list says so in its note.
+   */
+  quietPublished?: boolean;
 }
 
-const { maturity, note, variant = "tag" } = Astro.props;
+const { maturity, note, variant = "tag", quietPublished = false } = Astro.props;
 const label = MATURITY_LABEL[maturity];
 const draft =
   maturity === "individual-draft" || maturity === "working-group-draft" || maturity === "candidate";
 ---
 
+{quietPublished && maturity === "published" ? (
+  <span class="visually-hidden" data-maturity={maturity}>{MATURITY_LABEL[maturity]}</span>
+) : (
 <span
   class:list={["chip", "maturity", `maturity-${maturity}`, variant, { signal: maturity === "published", draft }]}
   data-maturity={maturity}
@@ -23,6 +32,7 @@ const draft =
 >
   {variant === "label" ? label : MATURITY_TAG[maturity]}
 </span>
+)}
 
 <style>
   /*

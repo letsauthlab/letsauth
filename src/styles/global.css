@@ -65,13 +65,13 @@
     flex-direction: column;
   }
 
-  /* type carries hierarchy: size, weight 600 and tracking (plan 3.3) */
+  /* type carries hierarchy by size and ink; headings at 500, 600 kept for the MUST/SHOULD marks */
   h1,
   h2,
   h3,
   h4 {
     font-family: var(--font-body);
-    font-weight: 600;
+    font-weight: 500;
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-snug);
     margin: 0 0 var(--space-3);
@@ -91,6 +91,7 @@
 
   h3 {
     font-size: var(--h3);
+    letter-spacing: 0;
   }
 
   h4 {
@@ -224,11 +225,27 @@
     margin-top: var(--space-5);
   }
 
-  /* Breadcrumb (src/components/Crumbs.astro): ancestors as links, the page itself last. */
+  /*
+   * Breadcrumb (src/components/Crumbs.astro): the one line above a sub-page's title, in the
+   * eyebrow's place and spacing. Ancestors as links, then an optional note; the page itself is
+   * named by the h1 and kept in the list for screen readers.
+   */
   .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--small);
+    font-weight: 500;
+    line-height: var(--leading-snug);
     color: var(--ink-2);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+
+  .crumbs__note::before {
+    content: "/";
+    margin-right: var(--space-2);
+    color: var(--rule-strong);
   }
 
   .crumbs ol {
@@ -301,7 +318,7 @@
 
   .facts dd {
     margin: 0;
-    font-weight: 600;
+    font-weight: 500;
     font-size: clamp(1.6rem, 1.35rem + 1vw, 2.25rem);
     letter-spacing: var(--tracking-tight);
     line-height: 1.1;
@@ -666,7 +683,7 @@
 
   .callout__title {
     margin: 0 0 var(--space-1);
-    font-weight: 600;
+    font-weight: 500;
   }
 
   .callout > :last-child {
@@ -917,8 +934,8 @@
   .rows__title {
     margin: 0;
     font-size: var(--h3);
-    font-weight: 600;
-    letter-spacing: var(--tracking-snug);
+    font-weight: 500;
+    letter-spacing: 0;
   }
 
   .rows__title a,

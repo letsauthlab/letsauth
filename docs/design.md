@@ -160,7 +160,7 @@ in `--font-body`, so the swap does not move text.
 | `--lede` | `clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem)` | the lede under a page heading |
 | `--tracking-tight`, `--tracking-snug` | -0.03em, -0.015em | headings |
 
-Headings are weight 600 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
+Headings are weight 500 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
 or `--tiny` in `--ink-2`, with tabular figures where numbers align. Links in prose are `--signal`
 with a 1px underline at 45% that turns solid on hover.
 
@@ -190,7 +190,7 @@ layer without extra specificity; a layout that styles slotted content puts those
 
 | Class | What it is |
 | --- | --- |
-| `.eyebrow`, `.lede`, `.facts`, `.page-head`, `.page-foot`, `.crumbs` (`layout`) | the page skeleton |
+| `.eyebrow`, `.lede`, `.facts`, `.page-head`, `.page-foot`, `.crumbs` (`layout`) | the page skeleton; on a sub-page `.crumbs` is the one line above the h1, in the eyebrow's place |
 | `.panel` | `--ground-2`, 10px radius, no border: a block of a different kind (an aside, an address) |
 | `.rows` (`.rows__head`, `.rows__title`, `.rows__meta`, `.rows.numbered`) | a list as hairline rows, title left, meta right |
 | `.plate` | the frame of a data view: 1px `--rule`, 14px radius, `--ground-2` |
@@ -249,8 +249,8 @@ package of the redesign that builds it. Anything not in this table does not anim
 | --- | --- | --- | --- | --- | --- |
 | M1 | Every page | Cross-document view transition, root crossfade 220ms | continuity | none (as today) | WP2 |
 | M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate from `MatrixThumb.astro` as `matrix`, map; on the explorer, the scenario title into the page h1) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
-| M3 | Home facts, server page facts, spec page facts (`Facts.astro`) | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
-| M4 | Decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, halo fades after, once on load. The standards map dropped it in R-12: its spine is two or three short edges, so the draw read as a glitch, not a path; the spine is drawn complete at full strength | "follow this path" | path shown complete | WP8 |
+| M3 | Home facts, server page facts, spec page facts (`Facts.astro`) | Removed in the unslop pass (October 2026): a figure counting up from zero is decoration, and until it has counted it shows the wrong number. The figures stand, tabular, from the first paint | n/a | n/a | WP3 |
+| M4 | Decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, once on load, with no halo under it (the halo was a glow and went in the unslop pass). The standards map dropped it in R-12: its spine is two or three short edges, so the draw read as a glitch, not a path; the spine is drawn complete at full strength | "follow this path" | path shown complete | WP8 |
 | M5 | Explorer chain | Per step: the sender and receiver light up in the actor head, the current arrow draws in (300ms, ease-out), the body fades up 8px (220ms); earlier steps keep a quieter arrow and later ones a hairline, in colour, not opacity, so text keeps its contrast | "you are here" | arrow and body shown, highlight and dimming applied without transition | WP6, R-08 |
 | M6 | Explorer chain | One scene clock (a Web Animations API timeline) holds the playhead; Play, Pause, Previous, Next, the scrub bar, a click on a step or a log line and the arrow keys all move it. Steps advance every 2.5 s. Auto-advance (amended by review follow-up 8): armed once per page, it starts when the chain has sat in view for 1 s with no input, and stops for good on hover, touch, focus, scroll or any key; it never restarts by itself and never starts with a step in the URL. Play, once pressed, pauses on any click, key or scroll | guided reading | Play button hidden, no auto-advance; the scrub bar and the step buttons still seek | WP6, R-08 |
 | M7 | Explorer token view | On step change, claims that differ from the previous hop get a 2px `--signal` rail that fades to `--rule` over 480ms, starting when the message has drawn (300ms) and 40ms apart | "this is what changed in the token" | rail shown without fade | WP6, R-08 |

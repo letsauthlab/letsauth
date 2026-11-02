@@ -88,7 +88,7 @@ updated in the same package (WP1), so the repository never contradicts itself.
 2. **One accent per view.** Teal (`--signal`) is links, focus, the current step, the highlighted
    path. Rust (`--threat`) is warnings, attacks, unsupported. Nothing else is coloured except the
    four status inks, which carry meaning and are always paired with a glyph or a word.
-3. **Type carries hierarchy.** Size, weight 600 and tracking do the work. Eyebrows and labels are
+3. **Type carries hierarchy.** Size and ink do the work, at weight 500 (600 only for the MUST, SHOULD and MAY marks; changed in the unslop pass). Eyebrows and labels are
    sentence case in Geist at the small size, not uppercase mono. Mono is for identifiers, dates
    that align, code and the terminal transcript.
 4. **Motion is a state change, shown once.** Things draw in, become current, or settle. Nothing
@@ -160,7 +160,7 @@ aliases of the new names in WP1 so unmigrated components keep rendering, and are
 - Scale: body `clamp(1.0625rem, 1.02rem + 0.15vw, 1.125rem)`, line height 1.7, measure 66ch.
   `--small` 0.875rem, `--tiny` 0.8125rem (13px floor, nothing smaller). H1 on the home statement
   `clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem)`, on data pages `clamp(2rem, 1.5rem + 2vw, 3.1rem)`,
-  H2 `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)`, H3 1.2rem. Headings weight 600, tracking −0.015em
+  H2 `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)`, H3 1.2rem. Headings weight 500, tracking −0.015em
   to −0.03em, `text-wrap: balance`.
 - Labels, eyebrows, table heads: Geist at `--small` or `--tiny`, sentence case, `--ink-2`,
   tabular figures where numbers align. The uppercase mono eyebrow with the leading dash goes.
@@ -201,8 +201,8 @@ package that builds it. Anything not in this table does not animate.
 | --- | --- | --- | --- | --- | --- |
 | M1 | Every page | Cross-document view transition, root crossfade 220ms | continuity | none (as today) | WP2 |
 | M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate, map, chain head) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
-| M3 | Home facts, server page facts | Count-up from 0 to the value, 600ms, once, when 50% in view, tabular figures | "these are live numbers" | value rendered at once | WP3 |
-| M4 | Standards map, decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, halo fades after, once on load | "follow this path" | path shown complete | WP5, WP8 |
+| M3 | Home facts, server page facts | Removed (unslop pass, October 2026): the figures stand from the first paint; a count-up read as decoration and showed 0 until it ran | n/a | n/a | WP3 |
+| M4 | Standards map, decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, once on load; no halo (removed in the unslop pass) | "follow this path" | path shown complete | WP5, WP8 |
 | M5 | Explorer chain | Per step: the sender and receiver light up in the actor head, the current arrow draws in (300ms, ease-out), the body fades up 8px (220ms); earlier steps keep a quieter arrow and later ones a hairline, in colour, not opacity, so text keeps its contrast | "you are here" | arrow and body shown, highlight and dimming applied without transition | WP6, R-08 |
 | M6 | Explorer chain | One scene clock (a Web Animations API timeline) holds the playhead; Play, Pause, Previous, Next, the scrub bar, a click on a step or a log line and the arrow keys all move it. Steps advance every 2.5 s. Auto-advance (amended by review follow-up 8): armed once per page, it starts when the chain has sat in view for 1 s with no input, and stops for good on hover, touch, focus, scroll or any key; it never restarts by itself and never starts with a step in the URL. Play, once pressed, pauses on any click, key or scroll | guided reading | Play button hidden, no auto-advance; the scrub bar and the step buttons still seek | WP6, R-08 |
 | M7 | Explorer token view | On step change, claims that differ from the previous hop get a 2px `--signal` rail that fades to `--rule` over 480ms, starting when the message has drawn (300ms) and 40ms apart | "this is what changed in the token" | rail shown without fade | WP6, R-08 |
@@ -243,7 +243,10 @@ becomes; WP2 builds the shared ones, later packages the product-specific ones.
 - Footer: `--ground-2` band with a statement, three link columns, and the legal line under a
   rule. Content as today.
 - Page head: eyebrow (sentence case, `--small`, `--ink-2`), h1 (max 24ch), lede (`--ink-2`,
-  48ch), optional meta line, optional facts row over a rule. Same structure, new type.
+  48ch), optional meta line, optional facts row over a rule. Same structure, new type. On a
+  page with a breadcrumb, the breadcrumb takes the eyebrow's place: one line above the h1,
+  ancestors as links and the eyebrow's facts as a closing note, never both lines (amended in
+  the unslop pass, November 2026).
 - `Document.astro`: article grid 15rem + measure on wide screens, sticky section list with
   `aria-current` tracking (CSS `:has(:target)` today; keep it, no observer), reading progress
   bar (M14), section numbers as `--tiny` labels in Geist, not mono.
@@ -498,8 +501,8 @@ Scope: the home page as statement, flagship data view, facts, index and latest o
 the home copy; M2 (matrix plate → `/mcp/`), M3.
 
 Files: `src/pages/index.astro` (rewrite of markup, styles and copy), `src/components/Facts.astro`
-(new: the facts row with the count-up as a tiny inline script under 400 B, gated by reduced
-motion, `IntersectionObserver` once), `src/components/MatrixThumb.astro` (new: the SVG thumbnail
+(new: the facts row; the count-up script it first shipped with was removed in the unslop pass
+of October 2026, so the figures stand), `src/components/MatrixThumb.astro` (new: the SVG thumbnail
 extracted from `index.astro` with `view-transition-name: matrix`, also used by `MatrixPage.astro`
 for the morph target in WP4), `tests/e2e/home.spec.ts` (new: screenshot, reduced motion,
 no-JS numbers present in HTML), baselines.
@@ -513,7 +516,7 @@ button.
 
 Dependencies: WP2.
 
-Acceptance: zero JavaScript on `/` except the inline theme script and the count-up (measured by
+Acceptance: zero JavaScript on `/` except the inline theme script (measured by
 `check:budgets`); numbers present in the HTML without JavaScript; the h1 fits in two lines at
 1440px and four at 360px; Lighthouse 100/100; the prose lint reports no hit on `index.astro`.
 

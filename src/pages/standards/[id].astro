@@ -57,10 +57,13 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   noindex={spec.maturity === "withdrawn"}
 >
   <div class="wrap">
-    <Crumbs trail={[{ href: "/standards/", label: "Standards" }]} current={spec.name} />
+    <Crumbs
+      trail={[{ href: "/standards/", label: "Standards" }]}
+      current={spec.name}
+      note={`${BODY_LABEL[spec.body]} / ${FAMILY_LABEL[spec.family]}`}
+    />
     <header class="page-head">
       <Plate id={spec.id} title={spec.name} />
-      <p class="eyebrow">{BODY_LABEL[spec.body]} / {FAMILY_LABEL[spec.family]}</p>
       <h1>{spec.name}</h1>
       <p class="lede">{spec.summary}</p>
       <p class="page-head__meta">
@@ -246,7 +249,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   }
   .entry__side h2 {
     font-size: var(--small);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0;
     margin-bottom: var(--space-3);
   }
@@ -270,7 +273,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   }
   .rev-id {
     font-family: var(--font-mono);
-    font-weight: 600;
+    font-weight: 500;
     overflow-wrap: anywhere;
   }
   .changes {
@@ -340,7 +343,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   }
   .topic h3 {
     font-size: var(--small);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0;
     color: var(--ink-2);
     margin: 0 0 var(--space-3);
@@ -365,7 +368,7 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
     gap: var(--space-3);
   }
   .features__head a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     text-decoration: none;
   }

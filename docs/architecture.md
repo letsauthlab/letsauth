@@ -72,7 +72,9 @@ that has no page of its own.
 
 Pages at the top of the tree are named by the header or the footer and carry no breadcrumb. Every
 page below them renders one with `Crumbs` (`src/components/Crumbs.astro`): the ancestors as links,
-from the product root down, then the page itself. A product's subtree lights up its entry in the
+from the product root down, and an optional note such as a body and family. It is the one line
+above the title and takes the eyebrow's place; the page itself is named by the h1 and is in the
+list for screen readers only. A product's subtree lights up its entry in the
 header on every page under it. The header holds the brand, one text entry per product, and two
 icons: the repository on GitHub (labelled "Source on GitHub") and the theme toggle.
 

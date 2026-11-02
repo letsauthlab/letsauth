@@ -46,7 +46,7 @@ front page and advertises the lab; keep working notes out of it.
 - One page skeleton: every page is a left-aligned `.wrap` column that opens with
   `header.page-head` (eyebrow, h1, `.lede`, optional `.page-head__meta` line, optional
   `dl.facts` row) and closes a data page with `footer.page-foot`. Pages below `/mcp/` and
-  `/standards/` put `<Crumbs>` above the head; long-form text pages use
+  `/standards/` put `<Crumbs>` above the h1 in the eyebrow's place (one line, never both); long-form text pages use
   `src/layouts/Document.astro` (numbered sections, a rail of them on wide screens, no
   breadcrumb). New pages take these before inventing a head of their own.
 - Status glyphs come from `StatusCell`: observed statuses are filled chips, a recorded `unknown`

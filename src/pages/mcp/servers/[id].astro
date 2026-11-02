@@ -88,7 +88,6 @@ const classes = [
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={server.name} />
     <header class="page-head">
-      <p class="eyebrow">Server</p>
       <h1>{server.name}</h1>
       {server.vendor && server.vendor !== server.name && <p class="lede">by {server.vendor}</p>}
     </header>
@@ -386,7 +385,7 @@ const classes = [
   }
   .profile__status-title strong {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 500;
   }
   .class-statement {
     display: block;
@@ -439,7 +438,7 @@ const classes = [
   .summary .n {
     margin-left: 0.3em;
     font: inherit;
-    font-weight: 600;
+    font-weight: 500;
     color: inherit;
     vertical-align: baseline;
   }

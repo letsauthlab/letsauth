@@ -68,7 +68,7 @@ if (node.alsoParents.length > 0) {
     )}
     <span class="who">
       <a href={`/standards/${spec.id}/`}>{spec.name}</a>
-      <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
+      <MaturityTag maturity={spec.maturity} note={spec.maturityNote} quietPublished />
     </span>
     <span class="meta">
       {BODY_LABEL[spec.body]} / {FAMILY_LABEL[spec.family]} / <code>{current.id}</code>{" "}

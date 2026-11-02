@@ -155,7 +155,7 @@ const products = [
                   <h3 class="rows__title">
                     <a href={p.href}>{p.name}</a>
                   </h3>
-                  <span class="chip">{p.count}</span>
+                  <span class="rows__meta">{p.count}</span>
                 </div>
                 <p>{p.text}</p>
               </li>
@@ -372,7 +372,7 @@ const products = [
   }
   .latest__what > a {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
   }
   .latest__what > a:hover {

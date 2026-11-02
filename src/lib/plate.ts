@@ -100,7 +100,7 @@ export function plate(id: string, title: string): Plate {
 
 /**
  * The drawing as SVG markup. Classes, not colours: `.pb` boundary, `.pa` actor heads, `.pl`
- * lifelines, `.pm` quiet messages, `.ph` the halo under the path, `.pp` the highlighted path
+ * lifelines, `.pm` quiet messages, `.pp` the highlighted path
  * (`pathLength` 1, for the draw-in), `.po` its ends. The page or the social card generator styles them with tokens.
  */
 export function plateSvg(p: Plate): string {
@@ -136,7 +136,6 @@ export function plateSvg(p: Plate): string {
     `<path class="pl" d="${lifelines}"/>` +
     `<g class="pa">${heads}</g>` +
     `<path class="pm" d="${quiet}"/>` +
-    `<path class="ph" pathLength="1" d="${route}"/>` +
     `<path class="pp" pathLength="1" d="${route}"/>` +
     `<g class="po">${ends}</g></svg>`
   );

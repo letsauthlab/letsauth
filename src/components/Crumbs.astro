@@ -1,15 +1,19 @@
 ---
 /**
- * The one breadcrumb. `trail` is the chain of ancestors from the product root down to the parent,
- * `current` the page itself (shown, not linked). Pages at the top level of the tree, which the
- * header and footer already name, render no breadcrumb at all; see docs/architecture.md, "Pages".
+ * The one line above a sub-page's title. `trail` is the chain of ancestors from the product root
+ * down to the parent, as links. `current` is the page itself: the h1 below already shows it, so it
+ * is in the list for screen readers only. `note` is what the eyebrow used to say (a body and
+ * family, a party and category) and closes the same line, unlinked. Pages at the top level of the
+ * tree, which the header and footer already name, render no breadcrumb; their eyebrow stays.
+ * See docs/architecture.md, "Pages".
  */
 interface Props {
   trail: { href: string; label: string }[];
   current: string;
+  note?: string;
 }
 
-const { trail, current } = Astro.props;
+const { trail, current, note } = Astro.props;
 ---
 
 <nav class="crumbs" aria-label="Breadcrumb">
@@ -21,6 +25,7 @@ const { trail, current } = Astro.props;
         </li>
       ))
     }
-    <li aria-current="page">{current}</li>
+    <li class="visually-hidden" aria-current="page">{current}</li>
   </ol>
+  {note && <span class="crumbs__note">{note}</span>}
 </nav>

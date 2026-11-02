@@ -141,7 +141,7 @@ test.describe("foundation pages", () => {
     );
     expect(running).toEqual([]);
     const button = page.getByRole("button", { name: "Toggle colour theme" });
-    expect(await button.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s, 0s");
+    expect(await button.evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s");
   });
 
   for (const { path, heading } of pages) {

@@ -396,17 +396,14 @@ const nav = [
     width: 2.25rem;
     height: 2.25rem;
     border-radius: var(--radius);
-    border: 1px solid var(--rule);
+    border: 0;
     background: transparent;
     color: var(--ink-2);
     cursor: pointer;
-    transition:
-      color var(--dur-fast) var(--ease),
-      border-color var(--dur-fast) var(--ease);
+    transition: color var(--dur-fast) var(--ease);
   }
   .theme-toggle:hover {
     color: var(--ink);
-    border-color: var(--rule-strong);
   }
   .theme-toggle .icon-moon {
     display: none;
@@ -467,21 +464,14 @@ const nav = [
     text-decoration-color: currentColor;
   }
   .site-footer__eu {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.15em 0.75em;
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--radius-pill);
-    color: var(--ink-2);
-    font-size: var(--tiny);
-    text-decoration: none;
-    transition:
-      color var(--dur-fast) var(--ease),
-      border-color var(--dur-fast) var(--ease);
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-fast) var(--ease);
   }
   .site-footer__eu:hover {
-    color: var(--ink);
-    border-color: var(--ink-2);
+    text-decoration-color: currentColor;
   }
   .site-footer__nav {
     display: grid;

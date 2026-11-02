@@ -95,7 +95,7 @@ const principles = [
         <li>
           <div class="rows__head">
             <h3 class="rows__title">{p.href ? <a href={p.href}>{p.name}</a> : p.name}</h3>
-            <span class:list={["chip", { signal: p.status === "Live" }]}>{p.status}</span>
+            <span class="rows__meta">{p.status}</span>
           </div>
           <p>{p.text}</p>
         </li>

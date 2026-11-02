@@ -66,7 +66,6 @@ function arrow(from: string, to: string) {
       current={toggle ? toggle.name : scenario.title}
     />
     <header class="page-head">
-      <p class="eyebrow">Delegation chain explorer</p>
       <h1 style={`view-transition-name: scenario-${scenario.id}`}>{scenario.title}</h1>
       <p class="lede">{scenario.summary}</p>
     </header>
@@ -290,7 +289,7 @@ function arrow(from: string, to: string) {
   .notice__kind {
     margin: 0 0 var(--space-1);
     font-size: var(--tiny);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--kind);
   }
   .notice h2 {
@@ -498,7 +497,7 @@ function arrow(from: string, to: string) {
     background: var(--ground-2);
     color: var(--ink-2);
     font-size: var(--tiny);
-    font-weight: 600;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
     line-height: 1;
     transition:
@@ -658,7 +657,7 @@ function arrow(from: string, to: string) {
   :global(.chain-log__title) {
     margin: 0 0 var(--space-2);
     font-size: var(--tiny);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink-2);
   }
   :global(.chain-log__list) {

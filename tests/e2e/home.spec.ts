@@ -25,7 +25,9 @@ test.describe("home page (016 WP3)", () => {
     await expect(products).toHaveCount(5);
     for (const href of ["/mcp/", "/standards/", "/explorer/", "/breaches/", "/mcp/scanner/"])
       await expect(products.locator(`a[href="${href}"]`)).toHaveCount(1);
-    await expect(products.first().locator(".chip")).toHaveText(`${matrix.rows.length} servers`);
+    await expect(products.first().locator(".rows__meta")).toHaveText(
+      `${matrix.rows.length} servers`,
+    );
     await expect(page.locator(".latest__list > li")).toHaveCount(6);
     await expect(page.locator(".latest__list > li .status-cell")).toHaveCount(6);
     // one row per requirement and per server, so a scan run of one feature fills one row only
@@ -57,21 +59,14 @@ test.describe("home page (016 WP3)", () => {
     await expect(page.locator(".home-plate a.home-plate__grid")).toHaveAttribute("href", "/mcp/");
   });
 
-  test("counts the facts up to the dataset's numbers once in view (M3)", async ({ page }) => {
-    // a short viewport keeps the row out of view, so it waits at 0 until scrolled to
+  test("shows the figures at once, with no count-up (M3 removed)", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 400 });
     await page.goto("/");
-    const figures = page.locator(".home-facts dd [data-count]");
-    await expect(figures.first()).toHaveText("0");
-    await figures.first().scrollIntoViewIfNeeded();
-    await expect(figures).toHaveText(facts);
-  });
-
-  test("shows the final figures at once under reduced motion (M3)", async ({ page }) => {
+    // no wait and no scroll: the figures are the dataset's numbers from the first paint
+    expect(await page.locator(".home-facts dd .facts__n").allTextContents()).toEqual(facts);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    // no wait: the figures must already be final, not on their way up from 0
-    expect(await page.locator(".home-facts dd [data-count]").allTextContents()).toEqual(facts);
+    expect(await page.locator(".home-facts dd .facts__n").allTextContents()).toEqual(facts);
     await expectEndStateUnderReducedMotion(page, ".home-plate");
   });
 
@@ -125,9 +120,9 @@ test.describe("home page (016 WP3)", () => {
 test.describe("home page without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("has the figures in the HTML (M3)", async ({ page }) => {
+  test("has the figures in the HTML", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator(".home-facts dd [data-count]")).toHaveText(facts);
+    await expect(page.locator(".home-facts dd .facts__n")).toHaveText(facts);
     await expect(page.locator(".home-plate svg.matrix-thumb")).toBeVisible();
   });
 });

@@ -52,9 +52,12 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
   path={`/mcp/features/${feature.id}/`}
 >
   <div class="wrap">
-    <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={feature.name} />
+    <Crumbs
+      trail={[{ href: "/mcp/", label: "Servers" }]}
+      current={feature.name}
+      note={`${PARTY_LABEL[feature.party]} / ${CATEGORY_LABEL[feature.category]}`}
+    />
     <header class="page-head">
-      <p class="eyebrow">{PARTY_LABEL[feature.party]} / {CATEGORY_LABEL[feature.category]}</p>
       <h1>{feature.name}</h1>
       <p class="lede">{feature.description}</p>
       <p class="page-head__meta">
@@ -259,7 +262,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
   }
   .share-line strong {
     font-size: var(--h1);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: var(--tracking-tight);
     line-height: 1;
     margin-right: var(--space-2);
