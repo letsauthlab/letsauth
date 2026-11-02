@@ -39,6 +39,19 @@ function show(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+/**
+ * `show` for a field the specifications define as a set (`scopes_supported`,
+ * `code_challenge_methods_supported`): sorted, so a server that returns the same set in a different
+ * order each time writes the same evidence and the append rule sees nothing new. Lists whose order
+ * carries meaning (`authorization_servers`: the first is the one the scanner follows) use `show`.
+ */
+function showSet(value: unknown): string {
+  if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
+    return show([...value].sort());
+  }
+  return show(value);
+}
+
 const recordOf = (probe: Probe, url: string | undefined) =>
   probe.requests.find((r) => r.url === url);
 
@@ -357,8 +370,8 @@ export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
         prm.url,
         rec,
         (prm.scopesSupported?.length ?? 0) > 0,
-        `scopes_supported: ${show(prm.scopesSupported)}`,
-        `scopes_supported: ${show(prm.doc.scopes_supported)}`,
+        `scopes_supported: ${showSet(prm.scopesSupported)}`,
+        `scopes_supported: ${showSet(prm.doc.scopes_supported)}`,
       ),
     ),
     PRM_UNKNOWN,
@@ -376,8 +389,8 @@ export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
               prm.url,
               rec,
               !prm.scopesSupported.includes("offline_access"),
-              `scopes_supported without offline_access: ${show(prm.scopesSupported)}`,
-              `scopes_supported includes offline_access: ${show(prm.scopesSupported)}`,
+              `scopes_supported without offline_access: ${showSet(prm.scopesSupported)}`,
+              `scopes_supported includes offline_access: ${showSet(prm.scopesSupported)}`,
             )
           : undefined, // the document is silent on scopes: the next source may speak
     ),
@@ -491,8 +504,8 @@ export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
         as.url,
         rec,
         as.codeChallengeMethodsSupported?.includes("S256") ?? false,
-        `code_challenge_methods_supported: ${show(as.codeChallengeMethodsSupported)}`,
-        `code_challenge_methods_supported: ${show(as.doc.code_challenge_methods_supported)}`,
+        `code_challenge_methods_supported: ${showSet(as.codeChallengeMethodsSupported)}`,
+        `code_challenge_methods_supported: ${showSet(as.doc.code_challenge_methods_supported)}`,
       ),
     ),
     AS_UNKNOWN,

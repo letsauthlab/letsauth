@@ -12,11 +12,13 @@
  *   SCANNER_BASE      base branch (default main)
  *   SCANNER_WORKDIR   where to clone (default a fresh directory under the system temp dir)
  *
- * Steps: shallow-clone the base branch, install, `pnpm scan --all --write --summary`, validate
- * the data and the append-only rule, and when anything under data/observations changed commit
- * to a new branch scanner/<date>-<hhmm>, push it, open one pull request whose description is the
- * run summary. Earlier pull requests retain their evidence for review. Nothing is merged
- * without review. Exit 0 when nothing changed or the pull request is up; exit 1 when a step fails.
+ * Steps: shallow-clone the base branch, install, lay the observations of the open scanner pull
+ * requests over the clone (spec 018), `pnpm scan --all --write --summary`, take the overlay back
+ * out, validate the data and the append-only rule, and when the scan appended anything that
+ * neither main nor a pending pull request carries, commit it to a new branch
+ * scanner/<date>-<hhmm>, push it, open one pull request whose description is the run summary.
+ * Earlier pull requests stay open with their evidence (spec 014). Nothing is merged without
+ * review. Exit 0 when nothing changed or the pull request is up; exit 1 when a step fails.
  *
  * The token never appears in a command line, a remote URL, the clone's config or a log line:
  * git reads the auth header from GIT_CONFIG_* environment variables, child processes never write
@@ -24,7 +26,7 @@
  * this process writes to stdout and stderr passes through `redact`.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { installationToken } from "../src/scanner/github-app";
@@ -32,11 +34,15 @@ import {
   branchFor,
   commitMessage,
   describeError,
+  listPendingScannerPulls,
+  type PendingPull,
+  pendingNote,
   redact,
   retryingFetch,
   runStamp,
   upsertPullRequest,
 } from "../src/scanner/nightly";
+import { appendedText, onto, pendingEntries, withEntries } from "../src/scanner/pending";
 
 const SECRET_VARS = ["SCANNER_TOKEN", "SCANNER_APP_PRIVATE_KEY"] as const;
 
@@ -123,6 +129,8 @@ function authenticateGit(token: string): void {
 
 interface RunOptions {
   cwd?: string;
+  /** keep stdout out of the log (it is returned): a file read from a pending branch */
+  quiet?: boolean;
 }
 
 /**
@@ -140,7 +148,7 @@ function run(cmd: string, args: string[], options: RunOptions = {}): string {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
-  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stdout && !options.quiet) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
   if (result.error) throw new Error(safe(`${cmd}: ${result.error.message}`));
   if (result.status !== 0) {
@@ -150,6 +158,66 @@ function run(cmd: string, args: string[], options: RunOptions = {}): string {
 }
 
 const inRepo: RunOptions = { cwd: workdir };
+const OBSERVATIONS = "data/observations";
+
+/** Every observations file in the clone, by its path relative to the clone. */
+function observationFiles(): Map<string, string> {
+  const dir = join(workdir, OBSERVATIONS);
+  const out = new Map<string, string>();
+  if (!existsSync(dir)) return out;
+  for (const name of readdirSync(dir).sort()) {
+    if (name.endsWith(".yaml"))
+      out.set(`${OBSERVATIONS}/${name}`, readFileSync(join(dir, name), "utf8"));
+  }
+  return out;
+}
+
+/**
+ * Lays the observations of every pending scanner pull request over the clone's files (spec 018),
+ * oldest pull request first, so the append rule compares with them as well as with main.
+ * Returns the files as they read after the overlay.
+ */
+function overlayPending(pending: readonly PendingPull[]): Map<string, string> {
+  const files = observationFiles();
+  for (const pull of pending) {
+    run("git", ["fetch", "--quiet", "--depth", "1", "origin", `refs/heads/${pull.head}`], inRepo);
+    const listed = run("git", ["ls-tree", "--name-only", "FETCH_HEAD", `${OBSERVATIONS}/`], {
+      ...inRepo,
+      quiet: true,
+    });
+    let carried = 0;
+    for (const path of listed.split("\n").filter((p) => p.endsWith(".yaml"))) {
+      const branchText = run("git", ["show", `FETCH_HEAD:${path}`], { ...inRepo, quiet: true });
+      const current = files.get(path) ?? "";
+      const entries = pendingEntries(current, branchText);
+      if (entries.length === 0) continue;
+      const next = withEntries(current, entries);
+      files.set(path, next);
+      writeFileSync(join(workdir, path), next);
+      carried += entries.length;
+    }
+    console.log(`#${pull.number} (${pull.head}): ${carried} pending observations compared`);
+  }
+  return files;
+}
+
+/**
+ * Takes the pending overlay back out (spec 018): every file is `main`'s text followed by what the
+ * scan appended after the overlay, so the pull request carries only what is new.
+ */
+function keepOnlyNew(onMain: Map<string, string>, overlaid: Map<string, string>): void {
+  for (const [path, after] of observationFiles()) {
+    const before = overlaid.get(path) ?? "";
+    const appended = appendedText(before, after);
+    const base = onMain.get(path);
+    if (base === undefined && appended === "") {
+      // a file only a pending pull request created, with nothing new in it
+      rmSync(join(workdir, path));
+      continue;
+    }
+    writeFileSync(join(workdir, path), onto(base ?? "", appended));
+  }
+}
 
 async function main(): Promise<void> {
   try {
@@ -169,6 +237,11 @@ async function main(): Promise<void> {
     // --prod=false: the image sets NODE_ENV=production and tsx is a dev dependency
     run("pnpm", ["install", "--frozen-lockfile", "--prod=false", "--prefer-offline"], inRepo);
 
+    // the observations open scanner pull requests already carry: the scan compares with them too
+    const pending = await listPendingScannerPulls({ repo, token, base, fetch: github });
+    const onMain = observationFiles();
+    const overlaid = overlayPending(pending);
+
     // a refused or failing server exits 1 but the others are still written; the summary says which
     try {
       run("pnpm", ["scan", "--all", "--write", "--summary", "scan-summary.md"], inRepo);
@@ -176,16 +249,24 @@ async function main(): Promise<void> {
       console.warn("some servers could not be scanned; see the summary");
     }
 
+    keepOnlyNew(onMain, overlaid);
+
     run("pnpm", ["validate:data"], inRepo);
     run("pnpm", ["check:append-only", "HEAD"], inRepo);
 
-    const changed = run("git", ["status", "--porcelain", "--", "data/observations"], inRepo).trim();
+    const changed = run("git", ["status", "--porcelain", "--", OBSERVATIONS], inRepo).trim();
     if (!changed) {
-      console.log("nothing to append");
+      console.log(
+        pending.length
+          ? `nothing new beyond main and ${pending.length} pending scanner pull request${pending.length === 1 ? "" : "s"}`
+          : "nothing to append",
+      );
       process.exit(0);
     }
 
-    const summary = readFileSync(join(workdir, "scan-summary.md"), "utf8");
+    const note = pendingNote(pending);
+    const scanned = readFileSync(join(workdir, "scan-summary.md"), "utf8");
+    const summary = note ? `${scanned.trimEnd()}\n\n${note}` : scanned;
     run("git", ["config", "user.name", auth.name], inRepo);
     run("git", ["config", "user.email", auth.email], inRepo);
     run("git", ["checkout", "-B", branch], inRepo);

@@ -107,6 +107,58 @@ export async function upsertPullRequest(options: PullRequestOptions): Promise<Pu
   return { action: "created", number: created.number, url: created.html_url };
 }
 
+export interface PendingPull {
+  number: number;
+  /** the branch, e.g. `scanner/2026-10-31-0217` */
+  head: string;
+  url: string;
+}
+
+interface PullListJson {
+  number: number;
+  html_url: string;
+  head: { ref: string; repo: { full_name: string } | null };
+}
+
+/**
+ * The open scanner pull requests against `base`, oldest first (spec 018): those from a
+ * `scanner/` branch of the repository itself. A pull request from a fork never counts, whatever
+ * its branch is called. Their observations are pending evidence the next run compares with.
+ */
+export async function listPendingScannerPulls(options: {
+  repo: string;
+  token: string;
+  base: string;
+  fetch?: FetchLike;
+  apiBase?: string;
+}): Promise<PendingPull[]> {
+  const fetchImpl = options.fetch ?? fetch;
+  const api = (options.apiBase ?? "https://api.github.com").replace(/\/+$/, "");
+  const out: PendingPull[] = [];
+  for (let page = 1; page <= 10; page++) {
+    const url = `${api}/repos/${options.repo}/pulls?state=open&base=${encodeURIComponent(options.base)}&sort=created&direction=asc&per_page=100&page=${page}`;
+    const pulls = (await expectOk(
+      await fetchImpl(url, { headers: headers(options.token) }),
+      "listing open pull requests",
+    )) as PullListJson[];
+    for (const pull of pulls) {
+      if (!pull.head.ref.startsWith("scanner/")) continue;
+      if (pull.head.repo?.full_name !== options.repo) continue;
+      out.push({ number: pull.number, head: pull.head.ref, url: pull.html_url });
+    }
+    if (pulls.length < 100) break;
+  }
+  return out.sort((a, b) => a.number - b.number);
+}
+
+/** The paragraph a run adds to its pull request when it compared with pending ones. */
+export function pendingNote(pending: readonly PendingPull[]): string {
+  if (pending.length === 0) return "";
+  const refs = pending.map((p) => `#${p.number}`);
+  const list = refs.length === 1 ? refs[0] : `${refs.slice(0, -1).join(", ")} and ${refs.at(-1)}`;
+  return `Compared with \`main\` and the observations still pending in ${list}: this pull request carries only what none of them does, and does not replace them. Review and merge them in order; an append-only conflict is resolved by keeping both sides.\n`;
+}
+
 /**
  * Wraps `fetchImpl` so a request that fails before any response (a dropped connection, a reset,
  * a DNS hiccup: Node's "fetch failed") is tried again after a pause. An HTTP error status is a
