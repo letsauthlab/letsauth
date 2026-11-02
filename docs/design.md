@@ -190,7 +190,7 @@ layer without extra specificity; a layout that styles slotted content puts those
 
 | Class | What it is |
 | --- | --- |
-| `.eyebrow`, `.lede`, `.facts`, `.page-head`, `.page-foot`, `.crumbs` (`layout`) | the page skeleton |
+| `.eyebrow`, `.lede`, `.facts`, `.page-head`, `.page-foot`, `.crumbs` (`layout`) | the page skeleton; on a sub-page `.crumbs` is the one line above the h1, in the eyebrow's place |
 | `.panel` | `--ground-2`, 10px radius, no border: a block of a different kind (an aside, an address) |
 | `.rows` (`.rows__head`, `.rows__title`, `.rows__meta`, `.rows.numbered`) | a list as hairline rows, title left, meta right |
 | `.plate` | the frame of a data view: 1px `--rule`, 14px radius, `--ground-2` |

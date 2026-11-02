@@ -243,7 +243,10 @@ becomes; WP2 builds the shared ones, later packages the product-specific ones.
 - Footer: `--ground-2` band with a statement, three link columns, and the legal line under a
   rule. Content as today.
 - Page head: eyebrow (sentence case, `--small`, `--ink-2`), h1 (max 24ch), lede (`--ink-2`,
-  48ch), optional meta line, optional facts row over a rule. Same structure, new type.
+  48ch), optional meta line, optional facts row over a rule. Same structure, new type. On a
+  page with a breadcrumb, the breadcrumb takes the eyebrow's place: one line above the h1,
+  ancestors as links and the eyebrow's facts as a closing note, never both lines (amended in
+  the unslop pass, November 2026).
 - `Document.astro`: article grid 15rem + measure on wide screens, sticky section list with
   `aria-current` tracking (CSS `:has(:target)` today; keep it, no observer), reading progress
   bar (M14), section numbers as `--tiny` labels in Geist, not mono.
