@@ -21,15 +21,18 @@ import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, PARTY_LABEL, STATUS_ORDER } from "@/lib/labels";
 import { latestScan, passiveChecks } from "@/lib/scanner";
 import ClassIcon from "./ClassIcon.astro";
+import Crumbs from "./Crumbs.astro";
 import Matrix from "./Matrix.svelte";
 import MatrixTable from "./MatrixTable.astro";
 import StatusCell from "./StatusCell.astro";
 
 interface Props {
   revisionId: string;
+  /** an older revision's page passes its breadcrumb, which takes the eyebrow's place */
+  crumbs?: { trail: { href: string; label: string }[]; current: string };
 }
 
-const { revisionId } = Astro.props;
+const { revisionId, crumbs } = Astro.props;
 const data = getDataset();
 const spec = getSpec(data);
 const matrix = matrixFor(data, revisionId);
@@ -65,8 +68,9 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
 ---
 
 <div class="wrap">
+  {crumbs && <Crumbs trail={crumbs.trail} current={crumbs.current} />}
   <header class="page-head">
-    <p class="eyebrow">Servers</p>
+    {!crumbs && <p class="eyebrow">Servers</p>}
     <h1>Who supports what</h1>
     <p class="lede">
       The public MCP servers we list, against what the MCP Authorization specification requires

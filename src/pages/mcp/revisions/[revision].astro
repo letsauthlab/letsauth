@@ -1,5 +1,4 @@
 ---
-import Crumbs from "@/components/Crumbs.astro";
 import MatrixPage from "@/components/MatrixPage.astro";
 import Base from "@/layouts/Base.astro";
 import { currentRevision, getSpec } from "@/lib/atlas";
@@ -19,8 +18,8 @@ if (currentRevision(getDataset()).id === revision) return Astro.redirect("/mcp/"
   description={`Which public MCP servers support which features of the MCP Authorization specification as of revision ${revision}.`}
   path={`/mcp/revisions/${revision}/`}
 >
-  <div class="wrap">
-    <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={`Revision ${revision}`} />
-  </div>
-  <MatrixPage revisionId={revision} />
+  <MatrixPage
+    revisionId={revision}
+    crumbs={{ trail: [{ href: "/mcp/", label: "Servers" }], current: `Revision ${revision}` }}
+  />
 </Base>

@@ -35,7 +35,6 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={`Changes ${from} to ${to}`} />
     <header class="page-head">
-      <p class="eyebrow">Revision diff</p>
       <h1>
         What changed from <a href={href(from)}>{from}</a> to <a href={href(to)}>{to}</a>
       </h1>

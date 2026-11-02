@@ -88,7 +88,6 @@ const classes = [
   <div class="wrap">
     <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={server.name} />
     <header class="page-head">
-      <p class="eyebrow">Server</p>
       <h1>{server.name}</h1>
       {server.vendor && server.vendor !== server.name && <p class="lede">by {server.vendor}</p>}
     </header>
