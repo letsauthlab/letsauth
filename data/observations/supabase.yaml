@@ -438,3 +438,23 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://api.supabase.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: supabase
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [analytics:read, database:read, database:write, edge_functions:read, edge_functions:write, environment:read, environment:write, organizations:read, projects:read, projects:write, secrets:read, storage:re…"
+- server: supabase
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.supabase.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [analytics:read, database:read, database:write, edge_functions:read, edge_functions:write, environment:read, environment:write, organizations:read, projects:read, projects:write, s…"

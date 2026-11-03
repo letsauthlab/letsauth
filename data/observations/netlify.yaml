@@ -418,3 +418,23 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://netlify-mcp.netlify.app/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: netlify
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://netlify-mcp.netlify.app/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [claudeai, offline_access, read, write]"
+- server: netlify
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://netlify-mcp.netlify.app/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported includes offline_access: [claudeai, offline_access, read, write]"

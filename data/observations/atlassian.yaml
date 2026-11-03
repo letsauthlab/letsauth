@@ -418,3 +418,23 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://auth.atlassian.com/.well-known/oauth-authorization-server/VCeDsk8ZHncYF1g234fKtc4lNipbBhu3 — HTTP 200; all 6 endpoints use https
+- server: atlassian
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.atlassian.com/.well-known/oauth-protected-resource/v2/mcp — HTTP 200; scopes_supported: [delete:jira:agent-interface, email, manage:jira:agent-interface, offline_access, read:account, read:all:twg, read:artifacts:agent-interface, read:assets:agent-interface, read:bitbucket:agent-interfa…"
+- server: atlassian
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.atlassian.com/.well-known/oauth-protected-resource/v2/mcp — HTTP 200; scopes_supported includes offline_access: [delete:jira:agent-interface, email, manage:jira:agent-interface, offline_access, read:account, read:all:twg, read:artifacts:agent-interface, read:assets:agent-interface, read…"
