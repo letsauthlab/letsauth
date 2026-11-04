@@ -50,9 +50,8 @@ say so and nothing is silently re-read against it.
 Nothing is ranked or scored by anything other than the data, and no vendor pays for placement or
 wording. Missing data is shown as unknown, never as a failure. Contact with third-party systems is
 passive by default: public information only, no credentials, no authorization flows. Any
-request beyond public
-metadata is justified in its spec before it runs, and only the scheduled scanner or a contributor
-may start one; a visitor and the site build never do.
+request beyond public metadata is justified in its spec before it runs, and only the scheduled
+scanner or a contributor may start one; a visitor and the site build never do.
 
 ### IV. Open, Reviewed, Append-Only Data
 
