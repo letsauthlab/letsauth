@@ -3,6 +3,7 @@
 Read first, in this order:
 
 1. `.specify/memory/constitution.md` — the rules. Every PR must comply; plans justify deviations.
+   `.specify/memory/tech-stack.md` beside it names the tools and budget numbers that meet them.
 2. `docs/data-model.md` — the shared data model. `src/schema/` is its executable form.
 3. `specs/<feature>/` — the Spec Kit artifacts for the feature you are working on
    (`spec.md`, `plan.md`, `tasks.md`). Mark tasks `[x]` in `tasks.md` as you complete them.

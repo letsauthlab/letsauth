@@ -1,82 +1,87 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.1 → 2.0.0 (MAJOR: principle VII narrowed, product list removed)
-- Modified principles: VII. European by Default no longer makes European regulation required
-  content; it keeps the EU hosting, storage, analytics and privacy rules.
-- Modified sections: preamble no longer lists products (they live in docs/roadmap.md);
-  Development Workflow no longer requires a generated changelog and newsletter.
-- Removed sections: none
-- Templates: .specify/templates/plan-template.md, spec-template.md and tasks-template.md need no
-  change; existing plans cite VII for EU hosting only, which still holds.
+- Version change: 1.0.1 → 2.0.0 (MAJOR: principles rewritten as verifiable laws; product list,
+  technology and changelog rules removed)
+- Modified principles: all seven keep their number and subject, so existing citations such as
+  "constitution VII" still point at the right rule.
+  - I. One Model, Many Views → I. One Shared Model (same rule, no list of products)
+  - II. Every Claim Cites a Revision (unchanged in substance)
+  - III. Neutral and Passive by Default (adds that any request beyond public information is
+    justified in its spec before it runs)
+  - IV. Static First, Open Data → IV. Open, Reviewed, Append-Only Data (append-only and
+    evidence move here from Development Workflow; no file format named)
+  - V. Craft and Budgets → V. Accessible and Within Budget (budget numbers move to tech-stack.md)
+  - VI. Agent-Legible Repository (tool names move to tech-stack.md)
+  - VII. European by Default (European regulation is no longer required content)
+- Added sections: none. New file .specify/memory/tech-stack.md holds the former Technology
+  Constraints, the budget numbers and the agent tooling.
+- Removed sections: Technology Constraints (moved to tech-stack.md); the product list in the
+  preamble (products live in docs/roadmap.md); the changelog and newsletter rule.
+- Templates: plan, spec and tasks templates need no change; plan-template derives its
+  Constitution Check gates from this file.
 - Follow-up TODOs: none. Remove this comment when the amendment is merged.
 -->
 # letsauth.eu Constitution
 
-letsauth.eu is an open, vendor-neutral lab where engineers and architects can see, test and break
-how AI agents are authorized. It covers the overlap of agent platforms (MCP, A2A, agent-to-API
-signup) with identity and access management (OAuth, OpenID Connect, token exchange, workload
-identity), with a European lens.
+These are the laws of the letsauth.eu repository. Every spec, plan, task and pull request MUST
+comply with them, and a reviewer can check each one with a yes or no.
 
-It is a set of products on one shared model. This constitution holds the standing rules every
-product follows. It names no products: which ones exist, and in what order they are built, is
-the roadmap's business (`docs/roadmap.md`), and each product has its own feature spec under
-`specs/`.
+The constitution names no products and no technologies. What gets built, and in what order, is in
+`docs/roadmap.md`. The tools and budget numbers in use today are in
+`.specify/memory/tech-stack.md`. Both can change without amending this file.
 
 ## Core Principles
 
-### I. One Model, Many Views
+### I. One Shared Model
 
-All products read from and write to one shared data model (`docs/data-model.md`): specs,
-revisions, features, relations, servers, observations, scenarios and vulnerabilities. A product
-MUST NOT keep a private copy of any of these entities. A new product is a new view on the model,
-not a new model. If a product needs a field the model lacks, the model is amended first, in its
-own PR, and every product that renders the entity picks the field up.
+Every product reads from and writes to one data model, described in `docs/data-model.md`. No
+product keeps a private copy of its entities. A product that needs a field the model lacks amends
+the model first, in its own pull request, and every view of that entity picks the field up.
 
 ### II. Every Claim Cites a Revision
 
-Every feature, scenario step, scan result and matrix cell MUST link to the spec revision and section it
-is derived from. A claim without a citation does not ship. When a spec revision changes, the
-affected pages say so and keep rendering correctly against the revision they cite; nothing is
-silently re-interpreted against a newer revision. Dates on observations are mandatory.
+Every status, feature, scenario step and scan result MUST link to the specification revision and
+section it rests on. A claim without a citation does not ship, and the build fails on a dangling
+one. A claim is read against the revision it cites; when a newer revision appears, affected pages
+say so and nothing is silently re-read against it.
 
 ### III. Neutral and Passive by Default
 
-The site does not rank vendors, products or servers by anything other than data in the model, and
-the data says how it was obtained. Observations carry a method (manual, vendor-claim,
-passive-scan, active-scan) and evidence. Scanning third-party systems is passive by default:
-public metadata only, no credentials, no authorization flows. Active probes run only against
-systems whose owner has proven control. Unknown is a valid, explicit value; the absence of data
-is never rendered as a failure.
+Nothing is ranked or scored by anything other than the data, and no vendor pays for placement or
+wording. Missing data is shown as unknown, never as a failure. Contact with third-party systems is
+passive by default: public information only, no credentials, no authorization flows. Active
+probes run only against systems whose owner has proven control. Any request beyond public
+metadata is justified in its spec before it runs, and only the scheduled scanner or a contributor
+may start one; a visitor and the site build never do.
 
-### IV. Static First, Open Data
+### IV. Open, Reviewed, Append-Only Data
 
-The site is pre-rendered. Data lives in the repository as YAML, validated by the schema, and
-changes through reviewed pull requests. A backend exists only for work that cannot be static (the
-scanner), and its output flows back into the repository as data so that the static site remains
-the single source of truth. The repository, the data and the scenarios are public.
+The site is pre-rendered from data that lives in the public repository and is validated against
+the schema. Data, code and automated output all change only through reviewed pull requests with
+passing CI. Every observation carries a date, a method and evidence a reviewer can open or verify.
+An observation is never edited or removed: a correction is a newer entry, and history stays
+visible.
 
-### V. Craft and Budgets
+### V. Accessible and Within Budget
 
-Every page meets WCAG 2.2 AA, renders in light and dark, respects reduced motion, and works at
-phone width with no horizontal scroll. One design token system (colour, type, spacing, motion) is
-defined once and used everywhere; islands do not bring their own. Performance budgets are enforced
-in CI: Lighthouse performance and accessibility at or above 95 on the home page, each atlas page
-and the explorer; no page ships more than 150 kB of compressed JavaScript without a documented
-exception. No third-party scripts other than privacy-preserving analytics.
+Every page meets the accessibility level set in the tech stack, renders in light and dark,
+respects reduced motion, works at phone width without horizontal scroll and reads fully without
+JavaScript. One design token system is defined once and used everywhere. Performance budgets are
+enforced in CI; a page over budget needs a documented exception.
 
 ### VI. Agent-Legible Repository
 
-The repository is built to be worked on by coding agents as much as by people. TypeScript is
-strict. One linter and formatter (Biome). Every check runs headless with one command and prints
-actionable output. End-to-end tests include screenshot comparisons so an agent can verify a visual
-change itself. The Zod schema is the readable contract for the data model. `CLAUDE.md` (and
-equivalents for other agents) points at this constitution, the data model and the commands, and
-contains nothing that contradicts them.
+The repository is built to be worked on by coding agents as much as by people. Every check runs
+headless with one command and prints actionable output. A visual change can be verified by an
+agent through screenshot comparison. Agent instruction files point at this constitution and
+contain nothing that contradicts it.
 
 ### VII. European by Default
 
-Hosting, storage and analytics run in the EU. No personal data is collected beyond what
-privacy-preserving analytics needs; no cookies that require consent.
+Hosting, storage, analytics and the scanner run with EU providers in the EU; any exception is
+named publicly with its reason. No personal data is collected beyond what privacy-preserving
+analytics needs, no cookie requires consent, and no third-party script runs other than that
+analytics.
 
 ## Honesty Tests
 
@@ -86,37 +91,12 @@ Any new product, page or series MUST pass all three before it is specified:
 2. **Compounding.** Each addition makes the existing site more useful, not just longer.
 3. **Maintainable by one person.** It can be kept correct by one maintainer with agent support.
 
-## Technology Constraints
-
-- **Site**: Astro, TypeScript (strict), Svelte 5 for interactive islands. Content collections for
-  data-driven pages. Islands only where interaction requires them; everything else is HTML.
-- **Data**: YAML under `data/`, validated at build time by Zod schemas under `packages/schema/`
-  (or `src/schema/` until a package split is justified). The schema is the contract that the site,
-  the explorer and the scanner import.
-- **Explorer**: scenarios are declarative state machines; sequence diagrams are rendered from the
-  machine definition so diagram and behaviour cannot drift.
-- **Tooling**: pnpm, Node LTS, Biome, Vitest, Playwright (with screenshot comparison), Pagefind
-  for search.
-- **Hosting**: Bunny Storage (EU) behind a Bunny CDN pull zone; Bunny Edge Scripting for small
-  dynamic behaviour (redirects, headers, shareable report URLs). Fonts self-hosted or via Bunny
-  Fonts.
-- **Backend (scanner only)**: Scaleway Serverless Containers in an EU region, Scaleway Object
-  Storage for results, a scheduled job that opens a PR with new observations.
-- **Analytics**: Plausible (EU). Nothing else.
-- **CI/CD**: GitHub Actions. Build, typecheck, lint, unit and e2e tests, data validation and
-  Lighthouse budgets run on every PR. Deploy to Bunny on merge to `main`.
-
 ## Development Workflow
 
-- Work follows Spec Kit: constitution → feature spec → plan → tasks → implement. One feature
-  spec per product (`specs/NNN-name/`). A spec that violates a principle is changed, or the
+- Work follows Spec Kit: constitution → feature spec → plan → tasks → implement, one spec per
+  feature under `specs/NNN-name/`. A spec that violates a principle is changed, or the
   constitution is amended first.
-- Every change is a pull request against `main`, including data changes. CI gates MUST pass.
-  Data PRs additionally require evidence links for each new or changed observation.
-- Spec revisions are added as data before any page references them. A revision's `status`
-  (draft, current, superseded, withdrawn) drives what the atlases show by default.
-- Observations are append-only. A newer observation supersedes an older one for the same server
-  and feature; history is kept and rendered.
+- A specification revision is added as data before any page cites it.
 - Releases are continuous: every merge to `main` deploys.
 
 ## Governance

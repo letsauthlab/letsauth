@@ -11,6 +11,7 @@
 | [`roadmap.md`](roadmap.md) | You want to know what comes next and why in that order. |
 | [`research/`](research/) | You want the positioning research and the documentation pass behind the seed data. |
 
-The rules all of these follow are in the [constitution](../.specify/memory/constitution.md).
+The rules all of these follow are in the [constitution](../.specify/memory/constitution.md), and the tools and budgets that meet them today in the
+[tech stack](../.specify/memory/tech-stack.md).
 Contribution guidelines are in [`CONTRIBUTING.md`](../CONTRIBUTING.md), the security policy in
 [`SECURITY.md`](../SECURITY.md).
