@@ -6,8 +6,8 @@ Sync Impact Report
   "constitution VII" still point at the right rule.
   - I. One Model, Many Views → I. One Shared Model (same rule, no list of products)
   - II. Every Claim Cites a Revision (unchanged in substance)
-  - III. Neutral and Passive by Default (adds that any request beyond public information is
-    justified in its spec before it runs)
+  - III. Neutral and Passive by Default (drops the owner-proven-control rule for active probes;
+    any request beyond public metadata is instead justified in its spec before it runs)
   - IV. Static First, Open Data → IV. Open, Reviewed, Append-Only Data (append-only and
     evidence move here from Development Workflow; no file format named)
   - V. Craft and Budgets → V. Accessible and Within Budget (budget numbers move to tech-stack.md)
@@ -49,8 +49,8 @@ say so and nothing is silently re-read against it.
 
 Nothing is ranked or scored by anything other than the data, and no vendor pays for placement or
 wording. Missing data is shown as unknown, never as a failure. Contact with third-party systems is
-passive by default: public information only, no credentials, no authorization flows. Active
-probes run only against systems whose owner has proven control. Any request beyond public
+passive by default: public information only, no credentials, no authorization flows. Any
+request beyond public
 metadata is justified in its spec before it runs, and only the scheduled scanner or a contributor
 may start one; a visitor and the site build never do.
 
