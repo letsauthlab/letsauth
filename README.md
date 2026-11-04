@@ -55,8 +55,8 @@ letsauth keeps one open dataset of what the agent protocols require and what rea
   an observation, so the atlas also records how servers changed over time.
 - **Neutral and passive.** Rows are in alphabetical order and nothing is ranked. The site build
   contacts no server. The scanner reads public metadata only and never sends a token.
-- **European.** Hosting, storage and analytics run in the EU. The site covers eIDAS 2.0, the AI
-  Act and NIS2 wherever they touch agent delegation.
+- **European.** Hosting, storage and analytics run in the EU, and the site sets no cookies that
+  need consent.
 
 ## What is live
 
@@ -68,8 +68,8 @@ letsauth keeps one open dataset of what the agent protocols require and what rea
 | 🩻 | **[Breach anatomy](https://letsauth.eu/breaches/)** | Published vulnerabilities and incidents in how agents were authorized, each written from its advisory and traced to the control that was missing, the atlas requirements that stand for it, and a replay toggle in the explorer. Export: [`data.json`](https://letsauth.eu/breaches/data.json). |
 | 🔍 | **[Scanner](https://letsauth.eu/mcp/scanner/)** | A passive scanner that reads each listed server's public OAuth metadata every night, checks it against the MCP Authorization specification and opens one pull request of observations. Nothing is graded: the atlas shows each status, and each server page counts them per requirement level and lists the requests behind them; the raw report is at `/mcp/servers/<id>/scan.json`. |
 
-Next on the [roadmap](docs/roadmap.md): agents under EU rules, and a changelog generated from
-the data.
+Next on the [roadmap](docs/roadmap.md): more servers and more feature checks in the atlas,
+agentic checks for correctness and completeness, and talks built from the observations.
 
 ## How it works
 
