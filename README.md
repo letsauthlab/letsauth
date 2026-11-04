@@ -55,8 +55,8 @@ letsauth keeps one open dataset of what the agent protocols require and what rea
   an observation, so the atlas also records how servers changed over time.
 - **Neutral and passive.** Rows are in alphabetical order and nothing is ranked. The site build
   contacts no server. The scanner reads public metadata only and never sends a token.
-- **European.** Hosting, storage and analytics run in the EU. The site covers eIDAS 2.0, the AI
-  Act and NIS2 wherever they touch agent delegation.
+- **European.** Hosting, storage and analytics run in the EU, and the site sets no cookies that
+  need consent.
 
 ## What is live
 

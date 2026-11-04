@@ -1,12 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: template (unversioned) → 1.0.0 (initial ratification)
-- Modified principles: none (all seven are new)
-- Added sections: Honesty Tests; Technology Constraints; Development Workflow; Governance
-- Removed sections: none (template placeholders [SECTION_2_NAME] and [SECTION_3_NAME] replaced by
-  Honesty Tests, Technology Constraints and Development Workflow)
-- Templates: .specify/templates/plan-template.md Constitution Check gate is generic and needs no change;
-  spec-template.md and tasks-template.md unchanged
+- Version change: 1.0.1 → 2.0.0 (MAJOR: principle VII narrowed, product list removed)
+- Modified principles: VII. European by Default no longer makes European regulation required
+  content; it keeps the EU hosting, storage, analytics and privacy rules.
+- Modified sections: preamble no longer lists products (they live in docs/roadmap.md);
+  Development Workflow no longer requires a generated changelog and newsletter.
+- Removed sections: none
+- Templates: .specify/templates/plan-template.md, spec-template.md and tasks-template.md need no
+  change; existing plans cite VII for EU hosting only, which still holds.
 - Follow-up TODOs: none. Remove this comment when the amendment is merged.
 -->
 # letsauth.eu Constitution
@@ -16,9 +17,10 @@ how AI agents are authorized. It covers the overlap of agent platforms (MCP, A2A
 signup) with identity and access management (OAuth, OpenID Connect, token exchange, workload
 identity), with a European lens.
 
-It is a set of products on one shared model: a standards atlas, an MCP feature atlas, a delegation
-chain explorer, a conformance scanner, breach anatomies, and a changelog newsletter. This
-constitution is the meta plan. Each product has its own feature spec under `specs/`.
+It is a set of products on one shared model. This constitution holds the standing rules every
+product follows. It names no products: which ones exist, and in what order they are built, is
+the roadmap's business (`docs/roadmap.md`), and each product has its own feature spec under
+`specs/`.
 
 ## Core Principles
 
@@ -74,9 +76,7 @@ contains nothing that contradicts them.
 ### VII. European by Default
 
 Hosting, storage and analytics run in the EU. No personal data is collected beyond what
-privacy-preserving analytics needs; no cookies that require consent. European regulation (eIDAS
-2.0 and the EUDI wallet, the AI Act, NIS2) is first-class content, not a footnote, wherever it
-touches agent delegation.
+privacy-preserving analytics needs; no cookies that require consent.
 
 ## Honesty Tests
 
@@ -117,8 +117,7 @@ Any new product, page or series MUST pass all three before it is specified:
   (draft, current, superseded, withdrawn) drives what the atlases show by default.
 - Observations are append-only. A newer observation supersedes an older one for the same server
   and feature; history is kept and rendered.
-- Releases are continuous. The changelog (and the newsletter) is generated from merged data and
-  content changes, never written independently of them.
+- Releases are continuous: every merge to `main` deploys.
 
 ## Governance
 
@@ -128,4 +127,4 @@ Report in the PR description. MAJOR for a changed or removed principle, MINOR fo
 principle or section, PATCH for wording. Every plan's Constitution Check lists each principle and
 states how the feature complies or justifies the deviation in its Complexity Tracking table.
 
-**Version**: 1.0.1 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-22
+**Version**: 2.0.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-11-04
