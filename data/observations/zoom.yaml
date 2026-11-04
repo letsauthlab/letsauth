@@ -508,3 +508,23 @@
   observedAt: 2026-10-22T01:18:38Z
   observedBy: scanner@0.4.0
   evidence: 'https://mcp.zoom.us/mcp/zoom/streamable — HTTP 401; WWW-Authenticate: Bearer resource_metadata="https://zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable", no scope parameter'
+- server: zoom
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable — HTTP 200; scopes_supported: [agentic_search:read:ask, agentic_search:read:search, cloud_recording:read:content, cloud_recording:read:list_user_recordings, docs:delete:collaborator, docs:read:export, docs:read:list_file_c…"
+- server: zoom
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zoom.us/.well-known/oauth-protected-resource/mcp/zoom/streamable — HTTP 200; scopes_supported without offline_access: [agentic_search:read:ask, agentic_search:read:search, cloud_recording:read:content, cloud_recording:read:list_user_recordings, docs:delete:collaborator, docs:read:export…"

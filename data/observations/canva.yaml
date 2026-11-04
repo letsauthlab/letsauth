@@ -448,3 +448,33 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://mcp.canva.com/.well-known/oauth-authorization-server — HTTP 200; all 4 endpoints use https
+- server: canva
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.canva.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [asset:read, asset:write, brandkit:read, brandtemplate:content:read, brandtemplate:content:write, brandtemplate:meta:read, comment:read, comment:write, design:content:read, design:content:write, design:meta…"
+- server: canva
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.canva.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [asset:read, asset:write, brandkit:read, brandtemplate:content:read, brandtemplate:content:write, brandtemplate:meta:read, comment:read, comment:write, design:content:read, design:con…"
+- server: canva
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.canva.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256, plain]"

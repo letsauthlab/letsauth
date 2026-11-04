@@ -508,3 +508,23 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://mcp.zapier.com/.well-known/oauth-authorization-server — HTTP 200; all 5 endpoints use https
+- server: zapier
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; scopes_supported: [email, openid, profile]"
+- server: zapier
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-03T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.zapier.com/.well-known/oauth-protected-resource/api/mcp/mcp — HTTP 200; scopes_supported without offline_access: [email, openid, profile]"
