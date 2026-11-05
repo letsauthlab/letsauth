@@ -498,3 +498,13 @@
   observedAt: 2026-11-03T02:18:57Z
   observedBy: scanner@0.4.0
   evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [accounting:read, accounting:write, agent_account_numbers:read, agent_wallet_policy:read, agent_wallet_policy:write, ai_spend:read, applications:read, applications:write, a…"
+- server: ramp
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-05T02:18:50Z
+  observedBy: scanner@0.4.0
+  evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [accounting:read, accounting:write, agent_account_numbers:read, agent_wallet_policy:read, agent_wallet_policy:write, ai_spend:read, applications:read, applications:write, approvals:read, approval…"
