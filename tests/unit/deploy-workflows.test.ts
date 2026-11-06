@@ -76,3 +76,14 @@ for (const file of ["deploy.yml", "scanner-deploy.yml"]) {
     });
   });
 }
+
+describe("deploy.yml social card", () => {
+  const steps: { run?: string }[] = parse(
+    readFileSync(new URL("../../.github/workflows/deploy.yml", import.meta.url), "utf8"),
+  ).jobs.deploy.steps;
+  it("regenerates the social card from the deployed data before the build", () => {
+    const at = (cmd: string) => steps.findIndex((s) => s.run?.trim() === cmd);
+    expect(at("pnpm generate:brand")).toBeGreaterThan(0);
+    expect(at("pnpm generate:brand")).toBeLessThan(at("pnpm build"));
+  });
+});

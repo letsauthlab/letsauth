@@ -108,7 +108,9 @@ network request. Both need Playwright's Chromium (`pnpm exec playwright install 
 - `pnpm generate:brand` after changing the SVGs, the tokens or the data: the adaptive favicon
   (follows the system theme), the 180×180 Apple touch icon and the 1200×630 social card, the
   last two on the light ground. The card is the home hero: wordmark, headline and the current
-  matrix on a plate.
+  matrix on a plate, with the date of the newest observation. The deploy workflow runs this
+  script before every build, so the published card follows the deployed data without a commit;
+  the committed `public/og.png` is a local copy for development.
 - `pnpm generate:readme` after changing the brand, the tokens or the data: the README's hero and
   how-it-works pictures under `docs/assets/readme/`, one light and one dark SVG each. GitHub
   renders a README image without the site's CSS, so the script resolves every token to a plain

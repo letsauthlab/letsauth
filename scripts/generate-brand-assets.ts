@@ -1,11 +1,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
-import { cellKey, currentRevision, matrixFor } from "../src/lib/atlas";
+import { cellKey, currentRevision, lastObservationDate, matrixFor } from "../src/lib/atlas";
 import { getDataset } from "../src/lib/data";
 import { plate, plateSvg, SECTION_PLATES, sectionCard } from "../src/lib/plate";
 
 // Run with `pnpm generate:brand` after changing public/brand, the tokens or the data. No network
-// requests are made.
+// requests are made. The deploy workflow runs it before every build, so the published social card
+// always shows the deployed data; the committed copy is only refreshed by hand.
 const icon = readFileSync("public/brand/icon.svg", "utf8");
 const iconDark = readFileSync("public/brand/icon-dark.svg", "utf8");
 const wordmark = readFileSync("public/brand/wordmark.svg", "utf8");
@@ -13,6 +14,7 @@ const tokens = readFileSync("src/styles/tokens.css", "utf8");
 const data = getDataset();
 const revision = currentRevision(data);
 const matrix = matrixFor(data, revision.id);
+const newest = lastObservationDate(data);
 const svgUrl = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 const fontUrl = (family: string) =>
   `data:font/woff2;base64,${readFileSync(
@@ -93,7 +95,9 @@ try {
     <div class="plate">
       <div class="head">MCP servers <span>${revision.id}</span></div>
       <div class="grid">${marks}</div>
-      <div class="foot">${matrix.rows.length} servers × ${matrix.columns.length} requirements</div>
+      <div class="foot">${matrix.rows.length} servers × ${matrix.columns.length} requirements${
+        newest ? ` · last observation ${newest}` : ""
+      }</div>
     </div>
     <p class="site">letsauth.eu</p>`);
   await page.evaluate(() => document.fonts.ready);

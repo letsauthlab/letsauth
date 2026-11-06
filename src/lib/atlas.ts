@@ -54,6 +54,17 @@ export function currentRevision(data: Dataset, specId = ATLAS_SPEC): Revision {
   return rev;
 }
 
+/**
+ * The UTC day (YYYY-MM-DD) of the newest observation in the dataset, or undefined when there is
+ * none. The home plate and the social card both print it, so neither carries a date of its own:
+ * merging new observations moves it on the next build.
+ */
+export function lastObservationDate(data: Pick<Dataset, "observations">): string | undefined {
+  let newest: string | undefined;
+  for (const o of data.observations) if (!newest || o.observedAt > newest) newest = o.observedAt;
+  return newest?.slice(0, 10);
+}
+
 /** Revisions of the atlas spec, newest first. */
 export function revisionsNewestFirst(data: Dataset, specId = ATLAS_SPEC): Revision[] {
   return [...getSpec(data, specId).revisions].sort((a, b) => b.date.localeCompare(a.date));
