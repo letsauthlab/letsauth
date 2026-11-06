@@ -57,6 +57,25 @@ jobs:
           cache: pnpm
       - if: steps.current.outputs.deploy == 'true'
         run: pnpm install --frozen-lockfile
+      # The social card (public/og.png) draws the matrix and the date of the newest observation,
+      # so it is regenerated from the data being deployed, never taken stale from the repository.
+      # The same browser cache as ci.yml: the lockfile pins the Playwright Chromium build.
+      - name: Restore Playwright browsers
+        id: playwright
+        if: steps.current.outputs.deploy == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Playwright's Chromium on a cache miss
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          CACHE_HIT: ${{ steps.playwright.outputs.cache-hit }}
+        run: |
+          if [ "$CACHE_HIT" != "true" ]; then pnpm exec playwright install --with-deps chromium; fi
+      - name: Regenerate the social card from the deployed data
+        if: steps.current.outputs.deploy == 'true'
+        run: pnpm generate:brand
       - if: steps.current.outputs.deploy == 'true'
         run: pnpm build
       # Before the upload, so the new pages never post to a path the zone does not forward yet.
