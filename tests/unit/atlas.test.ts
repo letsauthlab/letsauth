@@ -3,6 +3,7 @@ import {
   cellHistory,
   currentCell,
   featureShare,
+  lastObservationDate,
   matrixColumns,
   matrixFor,
   matrixRows,
@@ -227,4 +228,22 @@ it("orders instants across offsets and applies method strength to equivalent ins
   const tied = obs("a", "f", "partial", "manual", "2026-10-18T05:00:00-05:00");
   const history = observationsFor({ ...data, observations: [older, newer, tied] }, "a", "f", NEW);
   expect(history.map((o) => o.status)).toEqual(["supported", "partial", "unsupported"]);
+});
+
+describe("lastObservationDate", () => {
+  const at = (observedAt: string) => ({ observedAt }) as Observation;
+  it("is the UTC day of the newest observation, whatever the order", () => {
+    expect(
+      lastObservationDate({
+        observations: [
+          at("2026-10-22T01:18:38Z"),
+          at("2026-11-03T02:18:57Z"),
+          at("2026-10-28T23:59:59Z"),
+        ],
+      }),
+    ).toBe("2026-11-03");
+  });
+  it("is undefined without observations", () => {
+    expect(lastObservationDate({ observations: [] })).toBeUndefined();
+  });
 });

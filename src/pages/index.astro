@@ -3,7 +3,7 @@ import Facts from "@/components/Facts.astro";
 import MatrixThumb from "@/components/MatrixThumb.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
-import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
+import { cellKey, currentRevision, lastObservationDate, matrixFor } from "@/lib/atlas";
 import { breachList } from "@/lib/breaches";
 import { getDataset } from "@/lib/data";
 import { scenarioList } from "@/lib/explorer";
@@ -21,11 +21,7 @@ const scenarios = scenarioList(data);
 const toggles = scenarios.reduce((n, s) => n + s.toggles.length, 0);
 const breaches = breachList(data).length;
 const scanner = scannerFacts(scannerIndex(data));
-const newest = data.observations
-  .map((o) => o.observedAt)
-  .sort()
-  .at(-1)
-  ?.slice(0, 10);
+const newest = lastObservationDate(data);
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 // the six newest observations of the current matrix, one per requirement and one per server,
