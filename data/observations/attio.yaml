@@ -418,3 +418,13 @@
   observedAt: 2026-10-20T01:18:42Z
   observedBy: scanner@0.4.0
   evidence: https://app.attio.com/.well-known/oauth-authorization-server — HTTP 200; all 5 endpoints use https
+- server: attio
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-10T02:19:12Z
+  observedBy: scanner@0.4.0
+  evidence: https://app.attio.com/.well-known/oauth-authorization-server — HTTP 200; all 6 endpoints use https
