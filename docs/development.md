@@ -55,7 +55,7 @@ set.
   `pnpm build && pnpm exec lhci autorun --config=lighthouserc.json`.
 - **Byte budgets** (`pnpm check:budgets`) print one row per page and the size of each island,
   then a summary. Two limits fail the run today: the constitution's 150 kB of compressed
-  JavaScript per page, and 60 kB of preloaded fonts per page. The other targets of the redesign plan
+  JavaScript per page, and 75 kB of preloaded fonts per page. The other targets of the redesign plan
   (`specs/016-visual-redesign/plan.md`, section 7) are listed as reported; each one has an
   `enforce` flag in `LIMITS` at the top of `scripts/check-budgets.ts`, and the package that meets
   a target flips it.

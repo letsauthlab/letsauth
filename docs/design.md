@@ -80,7 +80,7 @@ migrated keep rendering. New code uses the names above.
 | `--status-*-soft` | the status ink at 12% (`unknown` 10%, `not-applicable` transparent) |
 | `--accent-glow` | `transparent` |
 | `--shadow-sm`, `--shadow`, `--shadow-lg`, `--inset-highlight` | an invisible shadow (`0 0 0 0 transparent`), so lists of shadows stay valid |
-| `--font-display` | `--font-body` (Geist) |
+| `--font-display` | `--font-serif` (Newsreader) |
 | `--text-2xs`, `--text-xs` | `--tiny` |
 | `--text-sm` | `--small` |
 | `--text-xl`, `--text-2xl` | `--h2`, `--h1` |
@@ -138,9 +138,12 @@ Every other pair in the plan passed as written.
 
 ## 3. Type
 
-Geist (variable, Latin subset) sets headlines, interface and body. Geist Mono sets identifiers,
-dates in tables, code, token views and the transcript. Both are self-hosted through
-`@fontsource-variable` and preloaded; together they are under the 60 kB preload budget.
+Newsreader, a serif, sets h1 and h2 at weight 400 (spec 019). Geist (variable, Latin subset)
+sets interface, body and the smaller headings; an h2 drawn at `--h3` size or below stays in
+Geist at 500. Geist Mono sets identifiers, dates, counts, rank figures, code, token views and the
+transcript. Geist and Geist Mono are self-hosted through `@fontsource-variable`; Newsreader is a
+21 kB cut (one weight, Latin) in `src/assets/fonts/`. All three are preloaded, under the 75 kB
+preload budget.
 
 `Geist Fallback` (`src/styles/fonts.css`) is local Arial with `size-adjust: 104.71%`,
 `ascent-override: 95.98%` and `descent-override: 28.17%` (Geist 1.7.2 metrics). It follows Geist
@@ -153,14 +156,14 @@ in `--font-body`, so the swap does not move text.
 | `--measure` | 66ch | prose width |
 | `--small` | 0.875rem | labels, eyebrows, table heads |
 | `--tiny` | 0.8125rem | the floor: no text is smaller than 13px |
-| `--h1-home` | `clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem)` | the home statement |
+| `--h1-home` | `clamp(2.5rem, 1.4rem + 4.4vw, 5.25rem)` | the home statement |
 | `--h1` | `clamp(2rem, 1.5rem + 2vw, 3.1rem)` | data page headings |
-| `--h2` | `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)` | section headings |
+| `--h2` | `clamp(1.55rem, 1.35rem + 0.8vw, 2rem)` | section headings |
 | `--h3` | 1.2rem | sub-sections |
 | `--lede` | `clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem)` | the lede under a page heading |
 | `--tracking-tight`, `--tracking-snug` | -0.03em, -0.015em | headings |
 
-Headings are weight 500 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
+h1 and h2 are Newsreader 400, h3 and h4 Geist 500, all with `text-wrap: balance`. Labels are sentence case Geist at `--small`
 or `--tiny` in `--ink-2`, with tabular figures where numbers align. Links in prose are `--signal`
 with a 1px underline at 45% that turns solid on hover.
 
@@ -233,6 +236,8 @@ component's.
 | `--dur-message` | 300ms | an explorer message drawing in |
 | `--stagger` | 40ms | the gap between rails that light up one after another |
 | `--dur-step` | 2500ms | one step of the explorer scene (not zeroed: under reduced motion the scene never plays) |
+| `--dur-sweep` | 900ms | the scan line's one pass over the home print (M20) |
+| `--dur-ring` | 1200ms | a ring on the home print lighting and settling (M20) |
 
 Under `prefers-reduced-motion: reduce` every duration is 0ms, the cross-document view transition
 is off, and every keyframe animation sits inside `@media (prefers-reduced-motion: no-preference)`
@@ -266,6 +271,8 @@ package of the redesign that builds it. Anything not in this table does not anim
 | M17 | Explorer toggles | A toggle link swaps the chain in place (crumbs, toggles, notice, steps) through a same-document view transition, 220ms; steps the two chains share morph, the rest fade, and M8 runs on the new rails. The toggle stays its own static page for a reload, a new tab or no JS | "the same chain, with one thing changed" | ordinary navigation | R-08 |
 | M18 | Explorer chain | A quiet decision log under the chain gains one line per step reached (number, sender → receiver, message), the newest fading in over 220ms; a line seeks back to its step | "what has happened so far" | lines appear | R-08 |
 | M19 | Standards map | Hovering or focusing a node fades the documents and lines outside its neighbourhood to 22% over 220ms, and its own lines to full colour. The highlight holds for 280ms while the pointer crosses the gap to the next node, so moving across the map changes the highlight once per node instead of flashing back to full strength in every gap | "these are its relations" | applied and lifted at once | R-12 |
+| M20 | Home print (`MatrixThumb.astro`, `index.astro`) | Once on load a 1.5px `--signal` scan line passes over the one-ink print of the matrix (`translateX` to `100cqw`, 900ms, `--ease-draw`); each ringed cell (status changed since the oldest day in the feed) lights in `--signal` as the line reaches its column and settles to `--ink-2` over 1200ms | "this is what the latest runs changed" | no line; rings shown in `--ink-2` | 019 |
+| M21 | Home, "Since the last run" | After the line has passed, the new status of each change rises 4px into place (220ms), 40ms apart, at most 400ms in all | "this cell changed to this" | statuses shown at once | 019 |
 
 Removed from the site by the redesign: the pulsing dot in the work-in-progress banner (it loops),
 the hover lifts on cards, buttons and the hero thumbnail, the rotating theme toggle, the ambient

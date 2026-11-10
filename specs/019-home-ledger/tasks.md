@@ -1,0 +1,10 @@
+# Tasks: Home as a ledger
+
+- [x] T01 `src/lib/changes.ts` and `tests/unit/changes.test.ts`
+- [x] T02 `MatrixThumb.astro` as a one-ink print with rings (M20)
+- [x] T03 `src/pages/index.astro`: dateline, facts line, print, "Since the last run", "Missing most often", index
+- [x] T04 Newsreader for h1 and h2: cut font, `fonts.css`, preload in `Base.astro`, `tokens.css`, `global.css`, small h2 overrides
+- [x] T05 Motion tokens and rows M20, M21 in `docs/design.md`; accessibility statement
+- [x] T06 Docs: `CLAUDE.md`, `docs/architecture.md`, `docs/development.md`, 016 plan 3.3 note, budget
+- [x] T07 `tests/e2e/home.spec.ts` for the new page
+- [ ] T08 Screenshot baselines: `refresh-screenshots` label on the pull request

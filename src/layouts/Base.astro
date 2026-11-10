@@ -1,9 +1,10 @@
 ---
 import "@/styles/global.css";
-// The two fonts every page paints with, preloaded so text does not reflow when they swap in
-// (the fontsource CSS declares them with font-display: swap; Vite gives both the same hashed URL).
+// The three fonts every page paints with, preloaded so text does not reflow when they swap in
+// (the fontsource CSS declares them with font-display: swap; Vite gives each the same hashed URL).
 import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
+import fontSerif from "@/assets/fonts/newsreader-400-latin.woff2?url";
 import BrandLogo from "@/components/BrandLogo.astro";
 import Reach from "@/components/Reach.astro";
 import { LAB, LEGAL_LINKS, OPERATOR, REPO } from "@/lib/site";
@@ -136,7 +137,7 @@ const nav = [
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {
-      [fontBody, fontMono].map((href) => (
+      [fontSerif, fontBody, fontMono].map((href) => (
         <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
       ))
     }

@@ -40,7 +40,8 @@ const LIMITS = {
     enforce: false,
     label: "Inline SVG per page",
   },
-  fontsPreloaded: { max: 60 * KB, enforce: true, label: "Preloaded fonts" },
+  // 75 kB since spec 019: Geist, Geist Mono and a 21 kB cut of Newsreader for h1 and h2
+  fontsPreloaded: { max: 75 * KB, enforce: true, label: "Preloaded fonts" },
 } satisfies Record<string, Limit>;
 
 const dist = resolve(process.argv[2] ?? "dist");

@@ -150,6 +150,9 @@ aliases of the new names in WP1 so unmigrated components keep rendering, and are
 
 ### 3.3 Type
 
+> Amended by spec 019 (home as a ledger, November 2026): h1 and h2 are set in Newsreader, a
+> self-hosted serif; Geist keeps body, interface and smaller headings, Geist Mono ids, dates and counts.
+
 - **Geist** (variable, Latin subset) for headlines, interface and body. **Geist Mono** for
   identifiers, dates in tables, code, token views and the transcript. Bricolage Grotesque is
   removed with its package and preload: one font request fewer, roughly 30 kB less on first
