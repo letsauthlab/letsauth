@@ -148,6 +148,10 @@ test.describe("home page (016 WP3)", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await expectNoSeriousA11yViolations(page);
+    // the dateline moves with every scan run: pin it, so scanner PRs need no new baseline
+    await page.locator("[data-nightly]").evaluateAll((els) => {
+      for (const el of els) el.textContent = "2026-11-10 02:19 UTC";
+    });
     await expect(page).toHaveScreenshot("home.png", { fullPage: false });
   });
 });
