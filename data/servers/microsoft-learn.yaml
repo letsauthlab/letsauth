@@ -1,0 +1,20 @@
+id: microsoft-learn
+name: "Microsoft Learn"
+vendor: "Microsoft"
+url: https://learn.microsoft.com/api/mcp
+homepage: https://learn.microsoft.com
+transport: streamable-http
+listed: maintainer-added
+source: https://learn.microsoft.com/en-us/training/support/mcp
+access:
+  class: public
+  method: manual
+  evidence: "https://learn.microsoft.com/en-us/training/support/mcp — Publicly available at no charge."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: none
+  method: manual
+  evidence: "https://learn.microsoft.com/en-us/training/support/mcp — No authentication is required to access the server."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

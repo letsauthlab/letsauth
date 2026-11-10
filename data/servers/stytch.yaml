@@ -1,0 +1,15 @@
+id: stytch
+name: "Stytch"
+url: https://mcp.stytch.dev/mcp
+homepage: https://stytch.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://stytch.com/docs/resources/workspace-management/stytch-mcp-server — The client goes through an authorization flow that grants it access to the user's Stytch workspace; https://mcp.stytch.dev/ offers mcp-remote for clients without remote OAuth."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  The directory lists the URL as http://; the vendor's page gives https://mcp.stytch.dev/mcp. Stytch is itself an identity provider for MCP servers, which makes its own server a useful reference.

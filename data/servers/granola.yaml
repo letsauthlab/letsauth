@@ -1,0 +1,19 @@
+id: granola
+name: "Granola"
+url: https://mcp.granola.ai/mcp
+homepage: https://granola.ai
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.granola.ai/help-center/sharing/integrations/mcp — The free Basic plan has MCP access (notes from the last 30 days); Enterprise admins choose the scopes members get."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.granola.ai/help-center/sharing/integrations/mcp — Every client signs in to the Granola account through the connector's authentication step (Claude Code: /mcp › Authenticate); no API key or token is documented."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

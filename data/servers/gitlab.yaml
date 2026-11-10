@@ -1,0 +1,21 @@
+id: gitlab
+name: "GitLab"
+url: https://gitlab.com/api/v4/mcp
+homepage: https://gitlab.com
+transport: streamable-http
+listed: maintainer-added
+source: https://docs.gitlab.com/user/model_context_protocol/mcp_server/
+access:
+  class: public
+  method: manual
+  evidence: "https://about.gitlab.com/blog/mcp-server-ga/ — Generally available with GitLab 19.5 on the Free, Premium and Ultimate tiers of GitLab.com; the MCP server must be allowed for a top-level group the user belongs to, which the group's owner turns on."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.gitlab.com/user/model_context_protocol/mcp_server/ — OAuth access token with the mcp scope, obtained through dynamic client registration or a pre-registered application; a fine-grained personal access token is also accepted."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  Self-managed and Dedicated instances serve the same endpoint at their own host; the atlas lists GitLab.com.
