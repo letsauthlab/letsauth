@@ -1,0 +1,21 @@
+id: fireflies
+name: "Fireflies.ai"
+url: https://api.fireflies.ai/mcp
+homepage: https://fireflies.ai
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.fireflies.ai/getting-started/mcp-configuration — An active Fireflies.ai account is the only prerequisite; no plan requirement is documented."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.fireflies.ai/getting-started/mcp-configuration — The remote server uses OAuth with the Fireflies account; a Fireflies API key as bearer header is optional."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  Streamable HTTP only; the HTTP+SSE transport was retired.

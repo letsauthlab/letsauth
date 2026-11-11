@@ -1,0 +1,15 @@
+id: amplitude
+name: "Amplitude"
+url: https://mcp.amplitude.com/mcp
+homepage: https://amplitude.com
+transport: streamable-http
+listed: maintainer-added
+source: https://amplitude.com/docs/amplitude-ai/amplitude-mcp
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://amplitude.com/docs/amplitude-ai/amplitude-mcp/other-clients — The server uses OAuth 2.0; clients that support only API keys or no authentication cannot connect. Enterprise service accounts use the client credentials grant."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  EU residency endpoint: https://mcp.eu.amplitude.com/mcp. The docs say any existing Amplitude customer can connect without naming a plan, so the access class is left open.

@@ -1,0 +1,21 @@
+id: postman
+name: "Postman"
+url: https://mcp.postman.com/mcp
+homepage: https://www.postman.com
+transport: streamable-http
+listed: maintainer-added
+source: https://github.com/postmanlabs/postman-mcp-server
+access:
+  class: public
+  method: manual
+  evidence: "https://learning.postman.com/docs/developer/postman-api/postman-mcp-server/overview/ — A Postman account is the only prerequisite."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://github.com/postmanlabs/postman-mcp-server — OAuth on the US remote server, described as compliant with the MCP Authorization specification; a Postman API key as bearer header is optional there."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  /mcp is the Full tool set; /minimal and /code serve smaller sets behind the same authorization. The EU remote server (https://mcp.eu.postman.com/mcp) accepts only API keys, not OAuth.

@@ -1,0 +1,21 @@
+id: apify
+name: "Apify"
+url: https://mcp.apify.com
+homepage: https://apify.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.apify.com/platform/integrations/mcp — An Apify account, created by self-service sign-up, is the only prerequisite; some tools work without one."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.apify.com/platform/integrations/mcp — The recommended hosted connection is Streamable HTTP with OAuth sign-in; an Apify API token as bearer header is the alternative."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  The directory labels this server API Key; Apify's docs now recommend OAuth, so the atlas records OAuth.
