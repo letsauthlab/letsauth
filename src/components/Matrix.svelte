@@ -191,7 +191,11 @@ onMount(() => {
   const region = view?.querySelector<HTMLElement>(".matrix-scroll");
   function showView(id: string) {
     if (!view) return;
-    view.dataset.view = id;
+    // with no attribute and no group anchor as :target, the stylesheet already draws "All", so
+    // the load leaves it unset: setting it re-matches the view's :has() selectors on every cell
+    // of the table, one long task on a big matrix
+    const drawnAsAll = !view.dataset.view && !location.hash.startsWith("#mx-");
+    if (id !== "all" || !drawnAsAll) view.dataset.view = id;
     for (const a of tabs) {
       if (a.id === `mx-${id}`) a.setAttribute("aria-current", "true");
       else a.removeAttribute("aria-current");
