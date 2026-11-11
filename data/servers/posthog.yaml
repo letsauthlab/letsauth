@@ -1,0 +1,19 @@
+id: posthog
+name: "PostHog"
+url: https://mcp.posthog.com/mcp
+homepage: https://posthog.com
+transport: streamable-http
+listed: maintainer-added
+source: https://posthog.com/docs/model-context-protocol
+access:
+  class: public
+  method: manual
+  evidence: "https://posthog.com/docs/model-context-protocol/faq — Connecting to the hosted server and calling its tools is free for any PostHog account; the authorization server routes to the US or EU region by the account that signs in."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://posthog.com/docs/model-context-protocol/faq — OAuth is the recommended path; clients without OAuth use a personal API key with the MCP Server preset."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

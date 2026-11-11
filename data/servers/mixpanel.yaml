@@ -1,0 +1,21 @@
+id: mixpanel
+name: "Mixpanel"
+url: https://mcp.mixpanel.com/mcp
+homepage: https://mixpanel.com
+transport: streamable-http
+listed: maintainer-added
+source: https://docs.mixpanel.com/docs/mcp
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.mixpanel.com/docs/mcp — On free and growth accounts created after 2026-08-01 MCP is on by default; on other accounts an organization admin turns it on under Settings › Org › AI Settings."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.mixpanel.com/docs/mcp — OAuth with RFC 9728 and RFC 8414 discovery, dynamic client registration and authorization code with PKCE (S256); service accounts send a static credential header (beta)."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  Regional endpoints with their own authorization servers: https://mcp-eu.mixpanel.com/mcp (EU) and https://mcp-in.mixpanel.com/mcp (IN). The atlas lists the US endpoint.

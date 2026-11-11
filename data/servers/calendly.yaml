@@ -1,0 +1,13 @@
+id: calendly
+name: "Calendly"
+url: https://mcp.calendly.com
+homepage: https://calendly.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://developer.calendly.com/calendly-mcp-server — OAuth 2.1 authorization code with PKCE (S256), dynamic client registration (RFC 7591) and discovery through protected resource metadata; personal access tokens and pre-registered client IDs are not supported."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"

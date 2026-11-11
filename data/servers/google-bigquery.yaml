@@ -1,0 +1,22 @@
+id: google-bigquery
+name: "BigQuery"
+vendor: "Google"
+url: https://bigquery.googleapis.com/mcp
+homepage: https://cloud.google.com/bigquery
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+access:
+  class: public
+  method: manual
+  evidence: "https://docs.cloud.google.com/bigquery/docs/use-bigquery-mcp — All Google Cloud identities can authenticate; the caller needs the MCP Tool User role and BigQuery roles on a project, which a self-service Google Cloud project grants its owner."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+auth:
+  class: oauth
+  method: manual
+  evidence: "https://docs.cloud.google.com/mcp/set-up-authentication-mcp-servers — OAuth 2.0 with IAM: Application Default Credentials, a client ID and secret the user creates in their project, or an OAuth bearer token. No dynamic client registration."
+  observedAt: 2026-11-10T23:00:00Z
+  observedBy: "jbspeakr (documentation pass with Claude Code)"
+notes: >
+  The directory labels this server API Key; Google's own pages describe OAuth 2.0 with a pre-registered client, so the atlas records OAuth. It stands for Google's managed remote MCP servers (Compute Engine, GKE, Maps), which share the same authorization model.
