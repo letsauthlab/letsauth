@@ -77,7 +77,7 @@ test.describe("home page (016 WP3)", () => {
   }) => {
     await page.goto("/");
     const thumb = page.locator(".home-plate svg.matrix-thumb");
-    await expect(thumb.locator("rect:not(.ring), circle, path")).toHaveCount(
+    await expect(thumb.locator("rect, circle, path")).toHaveCount(
       matrix.rows.length * matrix.columns.length,
     );
     expect(await thumb.evaluate((el) => getComputedStyle(el).viewTransitionName)).toBe("matrix");

@@ -5,8 +5,10 @@
  * distinction: supported is a filled square, partial a half-filled one, unsupported a cross, a
  * recorded unknown a dashed ring, a derived unknown (no observation) a faint dot, not applicable
  * a dash. Cells whose status changed recently carry a ring; on load a scan line passes over the
- * print once and the rings light as it reaches them (M20). Carries `view-transition-name:
- * matrix`, so the plate morphs into the matrix on /mcp/ (plan 016, M2).
+ * print once and the rings light as it reaches them (M20). The rings sit in their own unfiltered
+ * layer above the print: animating them inside the filtered drawing re-rasterised the whole print
+ * on every frame and cost the home page its Lighthouse budget. The print carries
+ * `view-transition-name: matrix`, so the plate morphs into the matrix on /mcp/ (plan 016, M2).
  */
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
@@ -38,59 +40,83 @@ const rings = [...ringed].filter((k) => matrix.cells.has(k)).length;
 const at = (x: number) => (x / Math.max(1, matrix.rows.length - 1)).toFixed(3);
 ---
 
-<svg
-  class="matrix-thumb"
-  viewBox={`0 0 ${width} ${height}`}
-  width={width}
-  height={height}
-  role="img"
-  aria-label={`The matrix as a print: ${matrix.rows.length} servers across, ${matrix.columns.length} requirements down, ${observed} cells observed${rings ? `, ${rings} ringed because their status changed recently` : ""}.`}
->
-  <defs>
-    <linearGradient id="thumb-half" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0.5" stop-color="currentColor"></stop>
-      <stop offset="0.5" stop-color="currentColor" stop-opacity="0"></stop>
-    </linearGradient>
-  </defs>
+<span class="matrix-print">
+  <svg
+    class="matrix-thumb"
+    viewBox={`0 0 ${width} ${height}`}
+    width={width}
+    height={height}
+    role="img"
+    aria-label={`The matrix as a print: ${matrix.rows.length} servers across, ${matrix.columns.length} requirements down, ${observed} cells observed${rings ? `, ${rings} ringed because their status changed recently` : ""}.`}
+  >
+    <defs>
+      <linearGradient id="thumb-half" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0.5" stop-color="currentColor"></stop>
+        <stop offset="0.5" stop-color="currentColor" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+    {
+      matrix.columns.map((feature, y) =>
+        matrix.rows.map((server, x) => {
+          const cell = matrix.cells.get(cellKey(server.id, feature.id));
+          const status = cell?.status ?? "unknown";
+          const cx = PAD + x * STEP_X;
+          const cy = PAD + y * STEP_Y;
+          if (status === "unknown" && (cell?.derived ?? true))
+            return <circle class="d" cx={cx + 5} cy={cy + 5} r="1.5" />;
+          if (status === "unknown")
+            return <rect class="u" x={cx + 0.75} y={cy + 0.75} width="8.5" height="8.5" rx="4.25" />;
+          if (status === "not-applicable")
+            return <rect class="n" x={cx + 2} y={cy + 4.25} width="6" height="1.5" />;
+          if (status === "unsupported")
+            return <path class="x" d={`M${cx + 1.5} ${cy + 1.5}l7 7m0-7-7 7`} />;
+          if (status === "partial")
+            return <rect class="p" x={cx + 0.75} y={cy + 0.75} width="8.5" height="8.5" rx="1.5" />;
+          return <rect class="s" x={cx} y={cy} width={CELL} height={CELL} rx="1.5" />;
+        }),
+      )
+    }
+  </svg>
   {
-    matrix.columns.map((feature, y) =>
-      matrix.rows.map((server, x) => {
-        const key = cellKey(server.id, feature.id);
-        const cell = matrix.cells.get(key);
-        const status = cell?.status ?? "unknown";
-        const cx = PAD + x * STEP_X;
-        const cy = PAD + y * STEP_Y;
-        const ring = ringed.has(key) && (
-          <rect
-            class="ring"
-            x={cx - 3}
-            y={cy - 3}
-            width={CELL + 6}
-            height={CELL + 6}
-            rx="8"
-            style={`--at:${at(x)}`}
-          />
-        );
-        let mark;
-        if (status === "unknown" && (cell?.derived ?? true))
-          mark = <circle class="d" cx={cx + 5} cy={cy + 5} r="1.5" />;
-        else if (status === "unknown")
-          mark = <rect class="u" x={cx + 0.75} y={cy + 0.75} width="8.5" height="8.5" rx="4.25" />;
-        else if (status === "not-applicable")
-          mark = <rect class="n" x={cx + 2} y={cy + 4.25} width="6" height="1.5" />;
-        else if (status === "unsupported")
-          mark = <path class="x" d={`M${cx + 1.5} ${cy + 1.5}l7 7m0-7-7 7`} />;
-        else if (status === "partial")
-          mark = <rect class="p" x={cx + 0.75} y={cy + 0.75} width="8.5" height="8.5" rx="1.5" />;
-        else mark = <rect class="s" x={cx} y={cy} width={CELL} height={CELL} rx="1.5" />;
-        return ring ? [ring, mark] : mark;
-      }),
+    rings > 0 && (
+      <svg class="matrix-rings" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+        {matrix.columns.map((feature, y) =>
+          matrix.rows.map(
+            (server, x) =>
+              ringed.has(cellKey(server.id, feature.id)) && (
+                <rect
+                  class="ring"
+                  x={PAD + x * STEP_X - 3}
+                  y={PAD + y * STEP_Y - 3}
+                  width={CELL + 6}
+                  height={CELL + 6}
+                  rx="8"
+                  style={`--at:${at(x)}`}
+                />
+              ),
+          ),
+        )}
+      </svg>
     )
   }
-</svg>
+</span>
 
 <style is:global>
   /* global so the hundreds of marks carry no scoping attribute; every selector is namespaced */
+  .matrix-print {
+    position: relative;
+    display: block;
+  }
+  .matrix-rings {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    /* its own layer, so a lit ring repaints only the rings */
+    will-change: transform;
+  }
   .matrix-thumb {
     display: block;
     width: 100%;
@@ -127,14 +153,14 @@ const at = (x: number) => (x / Math.max(1, matrix.rows.length - 1)).toFixed(3);
   .matrix-thumb .n {
     fill: var(--rule-strong);
   }
-  .matrix-thumb .ring {
+  .matrix-rings .ring {
     fill: none;
     stroke: var(--ink-2);
     stroke-width: 1;
   }
   /* M20: each ring lights as the scan line passes its column, then settles to the ink */
   @media (prefers-reduced-motion: no-preference) {
-    .matrix-thumb .ring {
+    .matrix-rings .ring {
       animation: thumb-ring var(--dur-ring) var(--ease) both;
       animation-delay: calc(var(--dur-fast) + var(--at) * var(--dur-sweep));
     }
