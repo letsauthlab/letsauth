@@ -22,3 +22,11 @@
   the h1 swap after first paint and move the page. The owner approved the serif knowing it costs
   a font request.
 - **016 plan 3.3** said Geist for headlines. Amended with a note pointing here.
+
+## Out of scope: the other pages
+
+The other pages keep their current heads, panels and stat rows in this change. A follow-up
+carries the home page's language to them in four moves, each its own pull request: facts as one
+mono line and rules instead of grey panels (mostly `global.css`); the server page's own print strip
+and evidence stacks; rings and a dateline on `/mcp/` with run ledgers on the feature and scanner
+pages, all from `src/lib/changes.ts`; one-ink head prints for standards, explorer and breaches.
