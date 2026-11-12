@@ -77,9 +77,10 @@ jobs:
 
   # Lighthouse was more than half of a CI run (12 URLs x 3 runs, about 6 minutes), waiting
   # behind the end-to-end tests. It builds the site itself (a few seconds) and runs beside the
-  # check job instead. Pull requests audit each URL once; main keeps the three runs of
-  # lighthouserc.json, since its scores are the ones posted as a commit status and a flaky
-  # failure there would hold back a deploy.
+  # check job instead. Pull requests and main both take the median of the three runs in
+  # lighthouserc.json. A single run on a pull request failed the matrix home page about one
+  # time in three (blocking time 210 to 370 ms against 200) while main, at the same code,
+  # passed every time; the median keeps the budget and drops the noise of one slow runner.
   lighthouse:
     name: Lighthouse budgets
     runs-on: ubuntu-latest
@@ -95,7 +96,7 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Lighthouse budgets
-        run: pnpm exec lhci autorun --config=lighthouserc.json --collect.numberOfRuns=${{ github.ref == 'refs/heads/main' && 3 || 1 }}
+        run: pnpm exec lhci autorun --config=lighthouserc.json
         env:
           LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Lighthouse reports
