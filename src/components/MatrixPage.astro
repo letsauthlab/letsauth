@@ -71,8 +71,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     .join(", ");
 ---
 
+{home && <slot name="hero" />}
 <div class="wrap">
   {crumbs && <Crumbs trail={crumbs.trail} current={crumbs.current} />}
+  {!home && (
   <header class="page-head">
     {!crumbs && (
       <p class="eyebrow">{home ? "An independent lab for agent authorization" : "Matrix"}</p>
@@ -110,6 +112,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     </p>
     )}
   </header>
+  )}
 
   <div class="matrix-bar">
     <slot name="bar" />

@@ -1,0 +1,205 @@
+---
+/*
+ * The home page's head (spec 019): a band across the full width of the page, the title, three
+ * figures and the two ways in, set over a drawing of the matrix itself. The drawing is every
+ * cell of the current matrix, servers across and requirements down, in the status colours,
+ * fading out under the text; a slow wave of light crosses it column by column, like a scan.
+ * It is decoration (aria-hidden), and still under reduced motion.
+ */
+import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+
+const data = getDataset();
+const matrix = matrixFor(data, currentRevision(data).id);
+const servers = matrix.rows.length;
+const requirements = matrix.columns.length;
+let observed = 0;
+for (const cell of matrix.cells.values()) if (cell.observation) observed += 1;
+const total = servers * requirements;
+const fmt = (n: number) => n.toLocaleString("en-GB");
+
+// the matrix, turned so the servers run across the band
+type Mark = "s" | "p" | "x" | "u" | "d" | "n";
+const STEP = 10;
+const CELL = 8;
+const columns = matrix.rows.map((server) =>
+  matrix.columns.map((feature): Mark => {
+    const cell = matrix.cells.get(cellKey(server.id, feature.id));
+    const status = cell?.status ?? "unknown";
+    if (status === "supported") return "s";
+    if (status === "partial") return "p";
+    if (status === "unsupported") return "x";
+    if (status === "not-applicable") return "n";
+    return (cell?.derived ?? true) ? "d" : "u";
+  }),
+);
+const fieldW = servers * STEP;
+const fieldH = requirements * STEP;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <svg
+    class="hero__field"
+    viewBox={`0 0 ${fieldW} ${fieldH}`}
+    preserveAspectRatio="xMaxYMid meet"
+    aria-hidden="true"
+    focusable="false"
+  >
+    {
+      columns.map((marks, x) => (
+        <g style={`--d:${x * -110}ms`}>
+          {marks.map((m, y) =>
+            m === "u" ? (
+              <rect class="u" x={x * STEP + 0.5} y={y * STEP + 0.5} width={CELL - 1} height={CELL - 1} rx="1.5" />
+            ) : m === "d" ? (
+              <rect class="d" x={x * STEP + 3} y={y * STEP + 3} width="2" height="2" />
+            ) : (
+              <rect class={m} x={x * STEP} y={y * STEP} width={CELL} height={CELL} rx="1.5" />
+            ),
+          )}
+        </g>
+      ))
+    }
+  </svg>
+  <div class="wrap hero__inner">
+    <p class="eyebrow">An independent lab for agent authorization</p>
+    <h1 id="hero-title">How MCP servers authorize AI agents</h1>
+    <dl class="facts hero__facts">
+      <div>
+        <dt>Public MCP servers</dt>
+        <dd>{fmt(servers)}</dd>
+        <dd class="hero__note">listed from public directories</dd>
+      </div>
+      <div>
+        <dt>Requirements</dt>
+        <dd>{fmt(requirements)}</dd>
+        <dd class="hero__note">in MCP Authorization <span class="hero__nowrap">{matrix.revision.id}</span></dd>
+      </div>
+      <div>
+        <dt>Checks with a result</dt>
+        <dd>
+          {fmt(observed)} <span class="of">/ {fmt(total)}</span>
+        </dd>
+        <dd class="hero__note">of {fmt(servers)} × {fmt(requirements)}; the rest are not yet observed</dd>
+      </div>
+    </dl>
+    <p class="hero__actions">
+      <a class="button" href="#matrix">Explore the matrix</a>
+      <a class="button quiet" href="/ledger/">See what changed</a>
+      <a class="hero__data" href="/mcp/data.json">Download the data</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  /* the band: full width, the field behind, the text in the page's column over it */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin-bottom: var(--space-7);
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero__field {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    /* the drawing fades out under the text on the left and towards the matrix below */
+    mask-image: linear-gradient(90deg, transparent 0%, transparent 44%, rgb(0 0 0 / 0.5) 56%, #000 72%);
+  }
+  .hero__inner {
+    padding-block: var(--space-8) var(--space-7);
+  }
+  .hero h1 {
+    max-width: 14ch;
+    margin-bottom: var(--space-6);
+  }
+  .hero__facts {
+    max-width: 38rem;
+    column-gap: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+  .hero__nowrap {
+    white-space: nowrap;
+  }
+  /* what a figure counts, said under it, so it reads on a phone and without a pointer */
+  .hero__facts .hero__note {
+    max-width: 11rem;
+    font-family: var(--font-body);
+    font-size: var(--tiny);
+    letter-spacing: 0;
+    line-height: var(--leading-snug);
+    color: var(--ink-2);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin: 0;
+  }
+  .hero__data {
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .hero__data:hover {
+    color: var(--signal);
+  }
+
+  /* the matrix field: the status colours, a wave of light crossing it column by column */
+  .hero__field g {
+    opacity: 0.4;
+    animation: hero-wave 8s var(--ease) infinite;
+    animation-delay: var(--d);
+  }
+  .s {
+    fill: var(--ok);
+  }
+  .p {
+    fill: var(--caution);
+  }
+  .x {
+    fill: var(--threat);
+  }
+  .n {
+    fill: var(--rule-strong);
+  }
+  .d {
+    fill: var(--ink-2);
+  }
+  .u {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 0.8;
+    stroke-dasharray: 1.5 1;
+  }
+  @keyframes hero-wave {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    12% {
+      opacity: 1;
+    }
+    30% {
+      opacity: 0.4;
+    }
+  }
+
+  @media (max-width: 56rem) {
+    .hero__field {
+      mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.08));
+    }
+    .hero__inner {
+      padding-block: var(--space-7) var(--space-6);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero__field g {
+      animation: none;
+      opacity: 0.7;
+    }
+  }
+</style>

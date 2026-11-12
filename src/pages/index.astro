@@ -1,4 +1,5 @@
 ---
+import HomeHero from "@/components/HomeHero.astro";
 /*
  * The home page is the matrix (spec 019): the state of the record today, and under it the
  * ledger since the last run. There is no second matrix page; /mcp/ forwards here. No script of
@@ -6,7 +7,6 @@
  */
 import Ledger from "@/components/Ledger.astro";
 import MatrixPage from "@/components/MatrixPage.astro";
-import MatrixPulse from "@/components/MatrixPulse.astro";
 import Base from "@/layouts/Base.astro";
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { changedSince, dayOf, scanRunsAfter, statusChanges } from "@/lib/changes";
@@ -34,9 +34,7 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
   path="/"
 >
   <MatrixPage revisionId={revision.id} home changed={changed}>
-    <div class="page-head__aside home-pulse" slot="aside">
-      <MatrixPulse />
-    </div>
+    <HomeHero slot="hero" />
     {
       newestDay && (
         <p class="home-latest" slot="bar">
@@ -75,18 +73,6 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
 </Base>
 
 <style>
-  /* the picture beside the title: wider than the small matrix of the other pages, and only where
-     it can stand beside the title */
-  :global(.page-head > .home-pulse) {
-    align-self: center;
-    width: 100%;
-    max-width: 14rem;
-  }
-  @media (max-width: 56rem) {
-    :global(.page-head > .home-pulse) {
-      display: none;
-    }
-  }
   /* what the dot in a cell means, said once, right above the matrix */
   .home-latest {
     display: flex;
