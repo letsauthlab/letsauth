@@ -56,15 +56,9 @@ const hrefFor = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}
 const scans = new Map(matrix.rows.map((s) => [s.id, latestScan(data, s, revisionId)]));
 const scannerChecks = passiveChecks(data, revisionId).length;
 
-// how much of the matrix has been observed, for the count under it
-let observedCells = 0;
-for (const cell of matrix.cells.values()) if (cell.observation) observedCells += 1;
-const totalCells = matrix.rows.length * matrix.columns.length;
-
 // the access and auth classes of the listed servers (009), for the filters and the legend
 const accessCounts = countBy(matrix.rows, ACCESS_ORDER, accessOf);
 const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
-const fmt = (n: number) => n.toLocaleString("en-GB");
 ---
 
 {home && <slot name="hero" />}
@@ -193,39 +187,31 @@ const fmt = (n: number) => n.toLocaleString("en-GB");
         <StatusCell status="unknown" derived variant="label" />
       </li>
     </ul>
-    <p class="matrix-key__count">
-      <span id="matrix-count" class="count" aria-live="polite">
+    <p class="matrix-key__aside">
+      <span id="matrix-count" class="count" aria-live="polite" hidden>
         {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
         {matrix.columns.length} features
       </span>
-      <span>{fmt(observedCells)} of {fmt(totalCells)} cells observed</span>
+      {home && (
+        <span class="matrix-key__revision">
+          Revision <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
+          <span class:list={["chip", { signal: isCurrent }]}>
+            {isCurrent ? "current" : matrix.revision.status}
+          </span>
+          {revisions
+            .filter((r) => r.id !== revisionId)
+            .map((r) => (
+              <>
+                {" · "}
+                <a class="revision-other" href={hrefFor(r.id)} title="An earlier revision">
+                  {r.id}
+                </a>
+              </>
+            ))}
+        </span>
+      )}
     </p>
   </div>
-  {home && (
-    <p class="matrix-revisions">
-      <span>
-        Revision{" "}
-        <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
-        <span class:list={["chip", { signal: isCurrent }]}>
-          {isCurrent ? "current" : matrix.revision.status}
-        </span>
-      </span>
-      <span>
-        {isCurrent ? "Earlier" : "Other revisions"}:{" "}
-        {revisions
-          .filter((r) => r.id !== revisionId)
-          .map((r, i) => (
-            <>
-              {i > 0 && ", "}
-              <a class="revision-other" href={hrefFor(r.id)}>
-                {r.id}
-              </a>
-            </>
-          ))}
-      </span>
-      {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
-    </p>
-  )}
 
   <section class="legend" aria-label="Reading the matrix">
     <div class="legend__group">
@@ -311,16 +297,6 @@ const fmt = (n: number) => n.toLocaleString("en-GB");
   .revision-line {
     column-gap: var(--space-5);
   }
-  /* on the home page the revisions are a quiet line under the key, not part of the head */
-  .matrix-revisions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    margin: var(--space-3) 0 0;
-    max-width: none;
-    font-size: var(--small);
-    color: var(--ink-2);
-  }
   .revision-id,
   .revision-other {
     white-space: nowrap;
@@ -396,10 +372,13 @@ const fmt = (n: number) => n.toLocaleString("en-GB");
     padding: 0;
     margin: 0;
   }
-  .matrix-key__count .count {
+  .matrix-key__aside .count {
     margin: 0;
   }
-  .matrix-key__count {
+  .matrix-key__aside .count[hidden] {
+    display: none;
+  }
+  .matrix-key__aside {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-1) var(--space-4);
@@ -559,7 +538,7 @@ const fmt = (n: number) => n.toLocaleString("en-GB");
     .matrix-key {
       gap: var(--space-2) var(--space-4);
     }
-    .matrix-key__count {
+    .matrix-key__aside {
       margin-left: 0;
     }
     .legend__statuses {
