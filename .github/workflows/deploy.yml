@@ -57,7 +57,7 @@ jobs:
           cache: pnpm
       - if: steps.current.outputs.deploy == 'true'
         run: pnpm install --frozen-lockfile
-      # The social card (public/og.png) draws the matrix and the date of the newest observation,
+      # The social card (public/og.png) draws the current matrix and its server and requirement counts,
       # so it is regenerated from the data being deployed, never taken stale from the repository.
       # The same browser cache as ci.yml: the lockfile pins the Playwright Chromium build.
       - name: Restore Playwright browsers
