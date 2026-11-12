@@ -16,7 +16,9 @@ const dotted = changedSince(changes, newestDay);
 test.describe("home page: the matrix, then the ledger (019)", () => {
   test("is the matrix, under the site's own title", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("h1")).toHaveText("Agent authorization, on the record");
+    await expect(page.locator("h1")).toHaveText(
+      `How ${matrix.rows.length} MCP servers authorize AI agents`,
+    );
     await expect(page.locator("table.matrix tbody tr[data-server]")).toHaveCount(
       matrix.rows.length,
     );

@@ -77,10 +77,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     {!crumbs && (
       <p class="eyebrow">{home ? "An independent lab for agent authorization" : "Matrix"}</p>
     )}
-    <h1>{home ? "Agent authorization, on the record" : "Who supports what"}</h1>
+    <h1>{home ? `How ${matrix.rows.length} MCP servers authorize AI agents` : "Who supports what"}</h1>
     <p class="lede">
       {home
-        ? `See how ${matrix.rows.length} public MCP servers handle authorization for AI agents. We check each one against the ${matrix.columns.length} requirements of the MCP Authorization specification and publish the results as open data.`
+        ? `Every public server, checked against the ${matrix.columns.length} requirements of the MCP Authorization specification. The results are open data.`
         : "The public MCP servers we list, against what the MCP Authorization specification requires of servers and their authorization servers. Each cell links to the observation behind it on the server's page."}
     </p>
     <slot name="aside" />
