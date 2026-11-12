@@ -151,35 +151,42 @@ onMount(() => {
     }
   }
   /*
-   * The pointer crosses empty space between two nodes on its way from one to the next. Letting
-   * go at once would flash the whole map back to full strength in every gap, so the highlight
-   * stays through a short grace and only lifts when the pointer rests off the nodes or leaves.
+   * Hover intent. A pointer on its way across the map passes over many nodes and the gaps
+   * between them; switching the highlight on each would re-dim half the drawing several times a
+   * second and throw the card about. So the highlight follows where the pointer comes to rest:
+   * it moves to a node once the pointer has stayed within a few pixels for REST ms, and lifts
+   * once it has rested off the nodes for LIFT ms or left the drawing. A fast sweep changes
+   * nothing; a pointer that stops on a node gets its neighbourhood at once.
    */
-  const GRACE = 280;
-  let release = 0;
-  const hold = () => window.clearTimeout(release);
-  const letGo = (delay: number) => {
-    hold();
-    release = window.setTimeout(() => highlight(null), delay);
+  const REST = 90;
+  const LIFT = 240;
+  const STILL = 4;
+  let pending = 0;
+  let anchor = { x: Number.NaN, y: Number.NaN };
+  const cancel = () => window.clearTimeout(pending);
+  const settle = (id: string | null, delay: number) => {
+    cancel();
+    pending = window.setTimeout(() => highlight(id), delay);
   };
   const nodeAt = (target: EventTarget | null) =>
     target instanceof Element ? target.closest<SVGElement>("a[data-spec]") : null;
-  svg.addEventListener("pointerover", (event) => {
-    if ((event as PointerEvent).pointerType === "touch") return;
-    const node = nodeAt(event.target);
-    if (!node) return;
-    hold();
-    highlight(node.dataset.spec ?? null);
+  svg.addEventListener("pointermove", (event) => {
+    if (event.pointerType === "touch") return;
+    // a tremor of a few pixels is still a rest; anything more starts the wait again
+    if (Math.hypot(event.clientX - anchor.x, event.clientY - anchor.y) <= STILL) return;
+    anchor = { x: event.clientX, y: event.clientY };
+    const id = nodeAt(event.target)?.dataset.spec ?? null;
+    if (id === shown) cancel();
+    else settle(id, id ? REST : LIFT);
   });
-  svg.addEventListener("pointerout", (event) => {
-    if ((event as PointerEvent).pointerType === "touch") return;
-    if (nodeAt(event.target) && !nodeAt((event as PointerEvent).relatedTarget)) letGo(GRACE);
+  svg.addEventListener("pointerleave", () => {
+    anchor = { x: Number.NaN, y: Number.NaN };
+    settle(null, LIFT);
   });
-  svg.addEventListener("pointerleave", () => letGo(0));
   for (const node of nodes) {
     const id = node.dataset.spec ?? null;
     node.addEventListener("focus", () => {
-      hold();
+      cancel();
       highlight(id);
     });
     node.addEventListener("blur", () => highlight(null));

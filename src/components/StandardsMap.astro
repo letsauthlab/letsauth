@@ -1,5 +1,5 @@
 ---
-import { type Layout, PAD, wrapLabel } from "@/lib/graph";
+import { LABEL_CHARS, LABEL_LINES, type Layout, wrapLabel } from "@/lib/graph";
 import {
   BODY_LABEL,
   BODY_SHORT,
@@ -246,7 +246,7 @@ const filterCss = [
         <g class="nodes">
           {
             nodes.map((n) => {
-              const lines = wrapLabel(n.spec.name, 24, 2);
+              const lines = wrapLabel(n.spec.name, LABEL_CHARS, LABEL_LINES);
               const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
               const tag = MATURITY_TAG[n.spec.maturity];
               return (
@@ -472,6 +472,15 @@ const filterCss = [
   .map-card[hidden] {
     display: none;
   }
+  /* the card fades in where it lands rather than popping; moving between nodes keeps it shown */
+  .map-card:not([hidden]) {
+    animation: map-card-in var(--dur-fast) var(--ease) both;
+  }
+  @keyframes map-card-in {
+    from {
+      opacity: 0;
+    }
+  }
   .map-card :global(.map-card__name) {
     margin: 0 0 var(--space-1);
     font-weight: 500;
@@ -583,7 +592,7 @@ const filterCss = [
     font-weight: 500;
     fill: var(--ink-2);
     stroke: var(--ground-2);
-    stroke-width: 4px;
+    stroke-width: 8px;
     stroke-linejoin: round;
     paint-order: stroke;
   }

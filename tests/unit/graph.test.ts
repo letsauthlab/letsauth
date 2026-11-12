@@ -4,6 +4,8 @@ import {
   dependencyDepths,
   type Layout,
   layoutGraph,
+  NODE_H,
+  nodeHeight,
   type TreeNode,
   wrapLabel,
 } from "@/lib/graph";
@@ -221,5 +223,14 @@ describe("wrapLabel", () => {
       "Authorization…",
     ]);
     expect(wrapLabel("PKCE", 14)).toEqual(["PKCE"]);
+  });
+});
+
+describe("nodeHeight", () => {
+  it("grows a node by one line for a name that needs a third, so no name is cut short", () => {
+    expect(nodeHeight("OAuth 2.0 Token Exchange")).toBe(NODE_H);
+    expect(nodeHeight("Proof Key for Code Exchange by OAuth Public Clients (PKCE)")).toBe(
+      NODE_H + 16,
+    );
   });
 });
