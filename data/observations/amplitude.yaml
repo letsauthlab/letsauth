@@ -1,0 +1,140 @@
+- server: amplitude
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp — HTTP 200; resource: https://mcp.amplitude.com/mcp"
+- server: amplitude
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp — HTTP 200; authorization_servers: [https://mcp.amplitude.com]"
+- server: amplitude
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [all:read, all:write]"
+- server: amplitude
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location
+- server: amplitude
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/mcp — HTTP 401; WWW-Authenticate resource_metadata: https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp"
+- server: amplitude
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.amplitude.com/mcp — HTTP 401; WWW-Authenticate: Bearer realm="OAuth", resource_metadata="https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp", error="invalid_request", error_description="Missing authorization header", no scope parameter'
+- server: amplitude
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [all:read, all:write]"
+- server: amplitude
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.amplitude.com equals the issuer the PRM named"
+- server: amplitude
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://mcp.amplitude.com"
+- server: amplitude
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: true"
+- server: amplitude
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://mcp.amplitude.com/register"
+- server: amplitude
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: absent"
+- server: amplitude
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: amplitude
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.amplitude.com/.well-known/oauth-authorization-server — HTTP 200; all 4 endpoints use https

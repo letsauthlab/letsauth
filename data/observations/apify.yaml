@@ -1,0 +1,140 @@
+- server: apify
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; resource: https://mcp.apify.com"
+- server: apify
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; authorization_servers: [https://console-backend.apify.com]"
+- server: apify
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported: [full_api_access]"
+- server: apify
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; found at the root location
+- server: apify
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/ — HTTP 401; WWW-Authenticate: absent, no resource_metadata parameter"
+- server: apify
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/ — HTTP 401; WWW-Authenticate: absent, no scope parameter"
+- server: apify
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported without offline_access: [full_api_access]"
+- server: apify
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://console-backend.apify.com equals the issuer the PRM named"
+- server: apify
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://console-backend.apify.com"
+- server: apify
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: true"
+- server: apify
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://console-backend.apify.com/oauth/apps"
+- server: apify
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: apify
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: apify
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; all 6 endpoints use https
