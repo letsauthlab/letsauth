@@ -153,11 +153,15 @@ test.describe("scan on the server page (US2)", () => {
     const ladder = page.locator("[data-ladder]");
     await ladder.scrollIntoViewIfNeeded();
     // contrast is judged on the end state, not on a ladder line still fading in (M12): wait
-    // until the ladder has started printing, then until its last line has finished
+    // until the ladder has started printing, then until its last line has finished (the field
+    // behind the page band waves for as long as the page is open, and is decoration)
     await expect(ladder).toHaveAttribute("data-play", "");
     await expect(page.locator("[data-verdict]")).toHaveCSS("opacity", "1");
     await page.waitForFunction(() =>
-      document.getAnimations().every((a) => a.playState !== "running"),
+      document
+        .getAnimations()
+        .filter((a) => !(a.effect as KeyframeEffect | null)?.target?.closest(".band"))
+        .every((a) => a.playState !== "running"),
     );
     await expectNoSeriousA11yViolations(page);
   });
