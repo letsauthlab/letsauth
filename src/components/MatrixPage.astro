@@ -80,7 +80,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     <h1>{home ? "Agent authorization, on the record" : "Who supports what"}</h1>
     <p class="lede">
       {home
-        ? "What the MCP Authorization specification requires, and which public MCP server does it. Each cell is a dated observation with its evidence, and the ledger keeps every change."
+        ? `See how ${matrix.rows.length} public MCP servers handle authorization for AI agents. We check each one against the ${matrix.columns.length} requirements of the MCP Authorization specification, show the evidence behind every result and record every change. Independent, open data, and no server is ranked.`
         : "The public MCP servers we list, against what the MCP Authorization specification requires of servers and their authorization servers. Each cell links to the observation behind it on the server's page."}
     </p>
     <slot name="aside" />
