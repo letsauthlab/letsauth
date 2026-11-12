@@ -85,7 +85,7 @@ test.describe("server page (US2)", () => {
     await page.goto(`/mcp/servers/${withdrawn?.id}/`);
     await expect(page.getByText("Withdrawn from the atlas")).toBeVisible();
     await expect(page.locator("table.features")).toHaveCount(0);
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expect(page.locator(`#matrix tbody tr[data-server="${withdrawn?.id}"]`)).toHaveCount(0);
   });
 

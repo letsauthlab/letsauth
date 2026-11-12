@@ -26,10 +26,10 @@ the command line and in CI. A product that needs a field the model lacks amends 
 ## Data flow
 
 ```
- specifications ─┐                                    ┌─▶ /mcp         matrix, server, feature, revision and scan pages
+ specifications ─┐                                    ┌─▶ / and /mcp   the matrix, then server, requirement, revision and scan pages
  vendor docs ────┼─▶ pull request ─▶ data/ (YAML) ─▶ build ─┼─▶ /standards   the standards map
  nightly scanner ┘        ▲                           ├─▶ /explorer    delegation chains, toggles, tokens
-                          │                           ├─▶ /breaches    one anatomy per vulnerability, linked to its replay
+                          │                           ├─▶ /ledger      every status change, dated, with its evidence
                           │                           └─▶ *.json       exports under CC BY 4.0
                    review: CI green,
                    evidence opened
@@ -50,11 +50,11 @@ One top-level segment per product; a product's pages all live under it. Nothing 
 that has no page of its own.
 
 ```
-/                               home
-/mcp/                           MCP auth atlas: the matrix for the current revision
-/mcp/servers/<id>/              one server, with its newest passive scan; <id>.json and scan.json are its exports
-/mcp/features/<id>/             one requirement
-/mcp/revisions/<id>/            the matrix as of an older revision (the current one redirects to /mcp/)
+/                               the matrix for the current revision, with the ledger since the last run below it
+/ledger/                        the ledger: every status change on record (/mcp/ redirects to /)
+/mcp/servers/<id>/              one server: its row of the matrix, its ledger and its newest passive scan; <id>.json and scan.json are its exports
+/mcp/features/<id>/             one requirement: its column of the matrix and its ledger
+/mcp/revisions/<id>/            the matrix as of an older revision (the current one redirects to /)
 /mcp/changes/<from>/<to>/       what changed between two revisions
 /mcp/scanner/                   what the scanner reads, how it counts, and what it does not check
 /mcp/data.json                  the atlas export
@@ -64,7 +64,6 @@ that has no page of its own.
 /explorer/                      Delegation chain explorer
 /explorer/<scenario>/           one scenario; /<toggle>/ below it is one toggle switched on
 /explorer/data.json
-/breaches/                      Breach anatomy (roadmap 005), one breach per /<id>/
 /contribute/                    how to add or correct data
 /about/  /made-in-europe/       the lab
 /imprint/  /privacy/  /disclaimer/  /accessibility/   legal
@@ -115,8 +114,8 @@ tests/
   and the scan transcript. Every page reads fully without JavaScript, and no page ships more than
   150 kB of compressed JavaScript.
 - **One design token system** in `src/styles/tokens.css`. Colours are OKLCH pairs resolved with
-  `light-dark()`; `data-theme` only flips `color-scheme`. Type is Geist for headlines and
-  text, Geist Mono for ids and code, both self-hosted. `docs/design.md` lists the tokens, their
+  `light-dark()`; `data-theme` only flips `color-scheme`. Type is Newsreader for h1 and
+  h2, Geist for text and interface, Geist Mono for ids, dates and code, all self-hosted. `docs/design.md` lists the tokens, their
   contrast and the motion catalogue.
 - **Status glyphs** are one component, `StatusCell`: observed statuses are filled chips, a recorded
   `unknown` is a dashed ring, a derived status (no observation) a faint dot. The distinction is

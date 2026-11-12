@@ -59,7 +59,7 @@ const ladder = [
   path="/mcp/scanner/"
 >
   <div class="wrap">
-    <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current="Scanner" />
+    <Crumbs trail={[{ href: "/", label: "Matrix" }]} current="Scanner" />
     <header class="page-head">
       <h1>The nightly scanner</h1>
       <p class="lede">
@@ -155,13 +155,13 @@ const ladder = [
       <h2 id="where-title">Where the results show</h2>
       <p>
         The scanner has no list of its own. Its results live in the{" "}
-        <a href="/mcp/">MCP auth atlas</a>: the matrix cells are the latest observations, and
+        <a href="/">matrix</a>: the matrix cells are the latest observations, and
         "scan" next to each server name opens that server's page. There the {checks.length} checks
         are rows of the feature tables, marked passive scan with the metadata each one read; the
         status panel counts them per requirement level, and "What the scanner asked" lists the
         requests behind them with the answer each got. A server without a scanner
         observation reads "not scanned": the nightly run has not yet been able to read its metadata, or
-        has not run since it was listed. Servers whose <a href="/mcp/#f-auth">auth class</a> is API
+        has not run since it was listed. Servers whose <a href="/#f-auth">auth class</a> is API
         key or no authentication read "no OAuth" and are not scanned; a server whose class is not yet
         stated is scanned, and the run summary says what its endpoint's answer suggests.
       </p>
@@ -178,7 +178,7 @@ const ladder = [
 pnpm scan notion                        # a listed server by id
 pnpm scan notion --write                # append what the nightly rule would</code></pre>
         <p>
-          <code>--write</code> appends observations to <code>data/observations/&lt;id&gt;.yaml</code>
+          <code>--write</code> appends observations to <code>data/observations/&lt;id&gt;.yaml</code>{" "}
           following the same append rule as the nightly run; open a pull request with the result.
           See <a href={`${repo}/blob/main/docs/scanner.md`} rel="noopener">docs/scanner.md</a>.
         </p>

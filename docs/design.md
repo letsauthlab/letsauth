@@ -80,7 +80,7 @@ migrated keep rendering. New code uses the names above.
 | `--status-*-soft` | the status ink at 12% (`unknown` 10%, `not-applicable` transparent) |
 | `--accent-glow` | `transparent` |
 | `--shadow-sm`, `--shadow`, `--shadow-lg`, `--inset-highlight` | an invisible shadow (`0 0 0 0 transparent`), so lists of shadows stay valid |
-| `--font-display` | `--font-body` (Geist) |
+| `--font-display` | `--font-serif` (Newsreader) |
 | `--text-2xs`, `--text-xs` | `--tiny` |
 | `--text-sm` | `--small` |
 | `--text-xl`, `--text-2xl` | `--h2`, `--h1` |
@@ -138,9 +138,12 @@ Every other pair in the plan passed as written.
 
 ## 3. Type
 
-Geist (variable, Latin subset) sets headlines, interface and body. Geist Mono sets identifiers,
-dates in tables, code, token views and the transcript. Both are self-hosted through
-`@fontsource-variable` and preloaded; together they are under the 60 kB preload budget.
+Newsreader, a serif, sets h1 and h2 at weight 400 (spec 019). Geist (variable, Latin subset)
+sets interface, body and the smaller headings; an h2 drawn at `--h3` size or below stays in
+Geist at 500. Geist Mono sets identifiers, dates, counts, rank figures, code, token views and the
+transcript. Geist and Geist Mono are self-hosted through `@fontsource-variable`; Newsreader is a
+21 kB cut (one weight, Latin) in `src/assets/fonts/`. All three are preloaded, under the 75 kB
+preload budget.
 
 `Geist Fallback` (`src/styles/fonts.css`) is local Arial with `size-adjust: 104.71%`,
 `ascent-override: 95.98%` and `descent-override: 28.17%` (Geist 1.7.2 metrics). It follows Geist
@@ -153,14 +156,13 @@ in `--font-body`, so the swap does not move text.
 | `--measure` | 66ch | prose width |
 | `--small` | 0.875rem | labels, eyebrows, table heads |
 | `--tiny` | 0.8125rem | the floor: no text is smaller than 13px |
-| `--h1-home` | `clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem)` | the home statement |
 | `--h1` | `clamp(2rem, 1.5rem + 2vw, 3.1rem)` | data page headings |
-| `--h2` | `clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem)` | section headings |
+| `--h2` | `clamp(1.55rem, 1.35rem + 0.8vw, 2rem)` | section headings |
 | `--h3` | 1.2rem | sub-sections |
 | `--lede` | `clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem)` | the lede under a page heading |
 | `--tracking-tight`, `--tracking-snug` | -0.03em, -0.015em | headings |
 
-Headings are weight 500 with `text-wrap: balance`. Labels are sentence case Geist at `--small`
+h1 and h2 are Newsreader 400, h3 and h4 Geist 500, all with `text-wrap: balance`. Labels are sentence case Geist at `--small`
 or `--tiny` in `--ink-2`, with tabular figures where numbers align. Links in prose are `--signal`
 with a 1px underline at 45% that turns solid on hover.
 
@@ -205,12 +207,19 @@ Deprecated until WP10: `.card` and `.cards` (now flat `--ground-2` panels; move 
 `.rows`), `.pill` and `.pill.accent` (aliases of `.chip` and `.chip.signal`) and
 `.button.primary` (a plain `.button` is the filled one).
 
-The page head of `/explorer/`, `/breaches/` and every spec page carries a decorative drawing
+The page head of `/explorer/` and every spec page carries a decorative drawing
 (`Plate.astro`, WP8): a small delegation chain drawn from the page id and title by
 `src/lib/plate.ts`, so a page always gets the same one. It is the first child of
 `header.page-head`, floats beside the title from 64rem up and is left out below that. It has no
 frame and uses the existing inks only: `--signal` for the path, `--boundary` for the trust
 boundary dash, hairlines for the rest. It never goes on a page with a data view above the fold.
+
+The shared frame (spec 019): under the header every page carries the record line (`.record` in
+`Base.astro`: the section, the newest observation's time, the current revision). The page head is
+an 8/3 grid; pages that are a cut of the matrix put `MatrixThumb` (the matrix in small, in the
+status colours, with the page's row, column or cells lit) in the narrow column as
+`a.page-head__aside`. A section below the head opens with `.section-head` (a 2px ink rule, the
+h2 and a note) and may close with `.section-more`. Status changes are always `Ledger.astro`.
 
 The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
 
@@ -259,7 +268,7 @@ package of the redesign that builds it. Anything not in this table does not anim
 | M10 | Matrix | Removed: a cell links to its row on the server page instead of opening a dialog (the inline records were most of the page's weight) | n/a | n/a | WP4 |
 | M11 | Matrix filters | Count text changes with no animation; hidden rows collapse instantly (today's behaviour) | n/a | n/a | WP4 |
 | M12 | Scanner report | The request ladder prints line by line, 60ms apart, when the section scrolls into view, once; the count of checks appears last | "this is what the scanner did, in order" | all lines shown | WP7 |
-| M13 | Breach page, spec page revisions | Timeline rail draws in top to bottom, 480ms; on the breach page the dates fade in behind it | "events in sequence" | shown | WP6 |
+| M13 | Spec page revisions | Timeline rail draws in top to bottom, 480ms | "events in sequence" | shown | WP6 |
 | M14 | Long-form pages (`Document.astro`) | Reading progress bar, 2px `--signal`, `animation-timeline: scroll(root)` behind `@supports` | place in the text | hidden | WP2 |
 | M15 | Controls | Colour and border transitions on hover/focus, 120ms | affordance | instant | WP2 |
 | M16 | Theme toggle | Icon swap only; no rotation | n/a | n/a | WP2 |

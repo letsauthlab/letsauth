@@ -16,7 +16,10 @@ export default defineConfig({
   // becomes a small page that forwards to the new address; the JSON exports moved too but a
   // forwarding page is HTML, so those need the edge rules listed in docs/deploy.md.
   redirects: {
-    "/atlas/mcp": "/mcp",
+    // the matrix moved to the home page (spec 019)
+    "/mcp": "/",
+    "/atlas/mcp": "/",
+    "/breaches": "/",
     "/atlas/mcp/contribute": "/contribute",
     "/atlas/mcp/servers/[id]": "/mcp/servers/[id]",
     "/atlas/mcp/features/[id]": "/mcp/features/[id]",

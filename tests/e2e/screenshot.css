@@ -1,0 +1,4 @@
+/* Applied only while a screenshot is taken: the record line's date moves with every scan run. */
+[data-record] {
+  visibility: hidden;
+}

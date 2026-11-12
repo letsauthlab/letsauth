@@ -73,7 +73,7 @@ const entry = `- server: stripe                     # must equal the file's serv
   <pre tabindex="0"><code>{entry}</code></pre>
   <p>
     <strong>Evidence</strong> is a URL a reviewer can open, such as a metadata document, a
-    documentation page or a response capture. A precise note works too.
+    documentation page or a response capture. A precise note works too.{" "}
     <strong>Method</strong> says how you know. Use <code>manual</code> for something you checked
     by hand, <code>vendor-claim</code> for what the vendor says, <code>passive-scan</code> for
     reading public metadata and <code>active-scan</code> for sending requests.
@@ -104,7 +104,7 @@ const entry = `- server: stripe                     # must equal the file's serv
 
   <h2>Listing a server</h2>
   <p>
-    Add <code>data/servers/&lt;id&gt;.yaml</code> with the endpoint, the transport and
+    Add <code>data/servers/&lt;id&gt;.yaml</code> with the endpoint, the transport and{" "}
     <code>listed</code>. If you maintain the server, use <code>listed: opt-in</code>. If not,
     give the <code>source</code> that lists it publicly. We list servers as they appear in public
     directories, and we score or rank nobody.
@@ -113,7 +113,7 @@ const entry = `- server: stripe                     # must equal the file's serv
   <h2>Withdrawing a server</h2>
   <p>
     If you maintain a server and do not want it listed, use the issue form. Choose "withdraw my
-    server" and give us a way to check that you maintain it. A pull request then sets
+    server" and give us a way to check that you maintain it. A pull request then sets{" "}
     <code>withdrawn</code> on the server. It leaves the matrix and the export, and its
     observations stay in the repository history.
   </p>
