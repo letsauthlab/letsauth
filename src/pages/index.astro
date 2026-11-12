@@ -29,18 +29,19 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
 
 <Base
   title="letsauth"
-  description={`letsauth is an independent lab for agent authorization. See how public MCP servers handle authorization for AI agents, checked against the MCP Authorization specification (revision ${revision.id}), with the results as open data.`}
+  description={`How ${matrix.rows.length} public MCP servers authorize AI agents, checked against the ${matrix.columns.length} requirements of the MCP Authorization specification (revision ${revision.id}). An independent lab; the results are open data.`}
   path="/"
 >
   <MatrixPage revisionId={revision.id} home changed={changed}>
     {
       newestDay && (
-        <p class="page-head__meta home-latest" slot="aside">
+        <p class="home-latest" slot="bar">
+          <span class="home-latest__dot" aria-hidden="true" />
           <span>
-            Latest change <time datetime={newestDay}>{newestDay}</time>:{" "}
-            {plural(changed.size, "cell")}, dotted below
+            {changed.size === 1 ? "Changed" : `${changed.size} cells changed`} on{" "}
+            <time datetime={newestDay}>{newestDay}</time>
           </span>
-          <a href="#since">The ledger since the last run</a>
+          <a href="#since">See the ledger</a>
         </p>
       )
     }
@@ -70,6 +71,21 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
 </Base>
 
 <style>
+  /* what the dot in a cell means, said once, right above the matrix */
+  .home-latest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+    max-width: none;
+  }
+  .home-latest__dot {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: var(--ink);
+  }
   .home-latest time {
     font-family: var(--font-mono);
   }

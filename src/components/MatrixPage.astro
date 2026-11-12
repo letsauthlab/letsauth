@@ -84,97 +84,97 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
         : "The public MCP servers we list, against what the MCP Authorization specification requires of servers and their authorization servers. Each cell links to the observation behind it on the server's page."}
     </p>
     <slot name="aside" />
-    <div class="page-head__meta revision-line">
+    <p class="page-head__meta revision-line">
       <span>
-        Revision <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
+        Measured against <a href={matrix.revision.url} rel="noopener">MCP Authorization</a>{" "}
+        <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
         <span class:list={["chip", { signal: isCurrent }]}>
           {isCurrent ? "current" : matrix.revision.status}
         </span>
       </span>
-      {
-        matrix.revision.date !== matrix.revision.id && (
-          <span>
-            published <time datetime={matrix.revision.date}>{matrix.revision.date}</time>
-          </span>
-        )
-      }
-      <a href={matrix.revision.url} rel="noopener">Specification text</a>
-      <a href="/standards/mcp-authorization/">About this specification</a>
-      {
-        revisions
+      <span>
+        {isCurrent ? "Earlier" : "Other revisions"}:{" "}
+        {revisions
           .filter((r) => r.id !== revisionId)
-          .map((r) => (
-            <a class="revision-other" href={hrefFor(r.id)}>
-              Revision {r.id}
-            </a>
-          ))
-      }
+          .map((r, i) => (
+            <>
+              {i > 0 && ", "}
+              <a class="revision-other" href={hrefFor(r.id)}>
+                {r.id}
+              </a>
+            </>
+          ))}
+      </span>
       {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
-      <details class="filters" id="matrix-filter-panel">
-        <summary class="button small quiet">Filter and group</summary>
-        <form id="matrix-filters" class="toolbar explainer" method="get" action={hrefFor(revisionId)}>
-          <div class="field search">
-            <label for="f-q">Search servers</label>
-            <div class="search__box">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
-              <input id="f-q" name="q" type="search" placeholder="e.g. stripe" autocomplete="off" />
-            </div>
-          </div>
-          <div class="field">
-            <label for="f-access">Access</label>
-            <select id="f-access" name="access">
-              <option value="">Any access</option>
-              {accessCounts.map((c) => <option value={c.value}>{ACCESS_LABEL[c.value]} ({c.count})</option>)}
-            </select>
-          </div>
-          <div class="field">
-            <label for="f-auth">Auth</label>
-            <select id="f-auth" name="auth">
-              <option value="">Any auth</option>
-              {authCounts.map((c) => <option value={c.value}>{AUTH_LABEL[c.value]} ({c.count})</option>)}
-            </select>
-          </div>
-          <div class="field">
-            <label for="f-group">Group rows</label>
-            <select id="f-group" name="group">
-              <option value="">A to Z</option>
-              <option value="access">By access</option>
-              <option value="auth">By auth</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="f-level">Level</label>
-            <select id="f-level" name="level">
-              <option value="">All levels</option>
-              {levels.filter((l) => usedLevels.has(l)).map((l) => <option value={l}>{l}</option>)}
-            </select>
-          </div>
-          <div class="field">
-            <label for="f-category">Category</label>
-            <select id="f-category" name="category">
-              <option value="">All categories</option>
-              {usedCategories.map((c) => <option value={c}>{CATEGORY_LABEL[c]}</option>)}
-            </select>
-          </div>
-          <div class="field">
-            <label for="f-party">Party</label>
-            <select id="f-party" name="party">
-              <option value="">Both parties</option>
-              <option value="mcp-server">{PARTY_LABEL["mcp-server"]}</option>
-              <option value="authorization-server">{PARTY_LABEL["authorization-server"]}</option>
-            </select>
-          </div>
-          <div class="field actions">
-            <button type="submit" class="button small">Apply</button>
-            <button type="reset" class="button small quiet">Reset</button>
-          </div>
-        </form>
-      </details>
-    </div>
+    </p>
   </header>
+
+  <div class="matrix-bar">
+    <slot name="bar" />
+    <details class="filters" id="matrix-filter-panel">
+      <summary class="button small quiet">Filter and group</summary>
+      <form id="matrix-filters" class="toolbar explainer" method="get" action={hrefFor(revisionId)}>
+        <div class="field search">
+          <label for="f-q">Search servers</label>
+          <div class="search__box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input id="f-q" name="q" type="search" placeholder="e.g. stripe" autocomplete="off" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-access">Access</label>
+          <select id="f-access" name="access">
+            <option value="">Any access</option>
+            {accessCounts.map((c) => <option value={c.value}>{ACCESS_LABEL[c.value]} ({c.count})</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-auth">Auth</label>
+          <select id="f-auth" name="auth">
+            <option value="">Any auth</option>
+            {authCounts.map((c) => <option value={c.value}>{AUTH_LABEL[c.value]} ({c.count})</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-group">Group rows</label>
+          <select id="f-group" name="group">
+            <option value="">A to Z</option>
+            <option value="access">By access</option>
+            <option value="auth">By auth</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-level">Level</label>
+          <select id="f-level" name="level">
+            <option value="">All levels</option>
+            {levels.filter((l) => usedLevels.has(l)).map((l) => <option value={l}>{l}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-category">Category</label>
+          <select id="f-category" name="category">
+            <option value="">All categories</option>
+            {usedCategories.map((c) => <option value={c}>{CATEGORY_LABEL[c]}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-party">Party</label>
+          <select id="f-party" name="party">
+            <option value="">Both parties</option>
+            <option value="mcp-server">{PARTY_LABEL["mcp-server"]}</option>
+            <option value="authorization-server">{PARTY_LABEL["authorization-server"]}</option>
+          </select>
+        </div>
+        <div class="field actions">
+          <button type="submit" class="button small">Apply</button>
+          <button type="reset" class="button small quiet">Reset</button>
+        </div>
+      </form>
+    </details>
+  </div>
 
   <MatrixTable matrix={matrix} diff={diff} scans={scans} changed={changed} />
   <Matrix client:idle />
@@ -293,6 +293,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   .revision-line {
     column-gap: var(--space-5);
   }
+  .revision-id,
+  .revision-other {
+    white-space: nowrap;
+  }
   .revision-id {
     font-family: var(--font-mono);
     font-weight: 500;
@@ -300,9 +304,19 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   }
 
   /*
-   * The filters fold into one quiet button at the end of the head's meta line, so the matrix is
-   * the first thing under the head; opened, they take the line's full width.
+   * The bar right above the matrix: on the left what the page wants to point out in the matrix
+   * (the home page: the cells that changed last), on the right the filters folded into one quiet
+   * button; opened, they take the bar's full width.
    */
+  .matrix-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin: 0 0 var(--space-3);
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
   .filters {
     margin-left: auto;
   }
