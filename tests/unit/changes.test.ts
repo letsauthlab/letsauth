@@ -3,6 +3,7 @@ import { cellKey } from "@/lib/atlas";
 import {
   changedSince,
   changesByDay,
+  firstObservedAfter,
   missingMostOften,
   scanRunsAfter,
   statusChanges,
@@ -126,6 +127,14 @@ describe("scanRunsAfter", () => {
       "2026-11-05T02:18",
       "2026-11-10T02:18",
     ]);
+  });
+});
+
+describe("firstObservedAfter", () => {
+  it("lists servers whose first observation of the revision comes after a moment", () => {
+    // gamma's first observation of REV is on 2026-11-05; its 2026-09-01 one is another revision
+    expect(firstObservedAfter(data, "2026-11-02T02:18:00Z", REV)).toEqual(["gamma"]);
+    expect(firstObservedAfter(data, "2026-11-05T02:18:00Z", REV)).toEqual([]);
   });
 });
 

@@ -9,7 +9,13 @@ import Ledger from "@/components/Ledger.astro";
 import MatrixPage from "@/components/MatrixPage.astro";
 import Base from "@/layouts/Base.astro";
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
-import { changedSince, dayOf, scanRunsAfter, statusChanges } from "@/lib/changes";
+import {
+  changedSince,
+  dayOf,
+  firstObservedAfter,
+  scanRunsAfter,
+  statusChanges,
+} from "@/lib/changes";
 import { getDataset } from "@/lib/data";
 
 const data = getDataset();
@@ -24,6 +30,19 @@ const changes = statusChanges(data, revision.id).filter((c) =>
 const newest = changes[0]?.observation.observedAt;
 const newestDay = newest ? dayOf(newest) : undefined;
 const runsSince = newest ? scanRunsAfter(data, newest) : [];
+// servers the runs since saw for the first time: not a change, but not "nothing" either
+const rowIds = new Set(matrix.rows.map((s) => s.id));
+const newServers = newest
+  ? firstObservedAfter(data, newest, revision.id).filter((id) => rowIds.has(id))
+  : [];
+const quiet = [
+  runsSince.length === 1
+    ? "One scan run since the last change."
+    : `${runsSince.length} scan runs since the last change.`,
+  newServers.length > 0
+    ? `${newServers.length === 1 ? "One server" : `${newServers.length} servers`} observed for the first time, no status changed on the others.`
+    : "No status changed.",
+].join(" ");
 // the dots in the matrix: the cells of the newest day with a change
 const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>();
 ---
@@ -56,11 +75,7 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
         runsSince.length > 0 && (
           <p class="home-quiet">
             <time datetime={runsSince.at(-1)}>{dayOf(runsSince.at(-1) ?? "")}</time>
-            <span>
-              {runsSince.length === 1
-                ? "One scan run since the last change. No status changed."
-                : `${runsSince.length} scan runs since the last change. No status changed.`}
-            </span>
+            <span>{quiet}</span>
           </p>
         )
       }

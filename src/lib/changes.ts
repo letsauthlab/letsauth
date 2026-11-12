@@ -103,6 +103,29 @@ export function scanRunsAfter(data: Pick<Dataset, "observations">, after: string
   return [...runs].sort();
 }
 
+/**
+ * Servers first observed after a given moment for one revision: their earliest observation of
+ * any cell comes later. A first observation is not a status change (there is no status before
+ * it), so the quiet line under the matrix names these on their own. Sorted by id.
+ */
+export function firstObservedAfter(
+  data: Pick<Dataset, "observations">,
+  after: string,
+  revisionId: string,
+  specId = ATLAS_SPEC,
+): string[] {
+  const first = new Map<string, string>();
+  for (const o of data.observations) {
+    if (o.revision.spec !== specId || o.revision.revision !== revisionId) continue;
+    const seen = first.get(o.server);
+    if (!seen || o.observedAt < seen) first.set(o.server, o.observedAt);
+  }
+  return [...first]
+    .filter(([, at]) => at > after)
+    .map(([id]) => id)
+    .sort();
+}
+
 export interface MissingRequirement {
   feature: string;
   /** Servers whose current cell for this requirement is unsupported. */

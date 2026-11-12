@@ -40,7 +40,9 @@ ledger of status changes behind it, and for the breach pages to go.
   has a URL, and the earlier observations in a `<details>` disclosure. Three or more changes of
   one server on one day fold into one line on pages that list every server.
 - **FR-005**: Scan runs after the newest change MUST be stated on the home page as a line of their
-  own ("no status changed").
+  own ("no status changed"). A first observation of a server is not a status change, but that
+  line MUST name how many servers those runs observed for the first time, so a run that adds
+  servers never reads as a run where nothing happened (amended 2026-11-12).
 - **FR-006**: On the home page, cells that changed on the newest day of the ledger MUST carry a
   small ink dot in the corner, named in the cell's accessible label, and the head MUST say how
   many and link to the ledger section.
