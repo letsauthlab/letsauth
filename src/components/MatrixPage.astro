@@ -4,6 +4,7 @@ import {
   getSpec,
   matrixFor,
   revisionDiff,
+  revisionHref,
   revisionsNewestFirst,
 } from "@/lib/atlas";
 import {
@@ -50,25 +51,19 @@ const usedLevels = new Set(
   matrix.columns.map((f) => f.revisions.find((r) => r.revision === revisionId)?.level),
 );
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
-const hrefFor = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}/`);
+// the revisions with a matrix page of their own: one without any observation has none
+const otherRevisions = revisions.filter(
+  (r) => r.id !== revisionId && revisionHref(data, r.id) !== undefined,
+);
+const hrefFor = (id: string) => revisionHref(data, id) ?? "/";
 
 // the nightly scanner's view per server: its requests are linked next to the name, never sorted on
 const scans = new Map(matrix.rows.map((s) => [s.id, latestScan(data, s, revisionId)]));
 const scannerChecks = passiveChecks(data, revisionId).length;
 
-// how much of the matrix has been observed, for the head line
-let observedCells = 0;
-for (const cell of matrix.cells.values()) if (cell.observation) observedCells += 1;
-const totalCells = matrix.rows.length * matrix.columns.length;
-
-// the access and auth classes of the listed servers (009), for the facts, the filters and the legend
+// the access and auth classes of the listed servers (009), for the filters and the legend
 const accessCounts = countBy(matrix.rows, ACCESS_ORDER, accessOf);
 const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
-const classWords = (counts: { value: string; count: number }[], label: Record<string, string>) =>
-  counts
-    .filter((c) => c.count > 0)
-    .map((c) => `${c.count} ${label[c.value]?.toLowerCase()}`)
-    .join(", ");
 ---
 
 {home && <slot name="hero" />}
@@ -95,11 +90,10 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
           {isCurrent ? "current" : matrix.revision.status}
         </span>
       </span>
+      {otherRevisions.length > 0 && (
       <span>
         {isCurrent ? "Earlier" : "Other revisions"}:{" "}
-        {revisions
-          .filter((r) => r.id !== revisionId)
-          .map((r, i) => (
+        {otherRevisions.map((r, i) => (
             <>
               {i > 0 && ", "}
               <a class="revision-other" href={hrefFor(r.id)}>
@@ -108,6 +102,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
             </>
           ))}
       </span>
+      )}
       {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
     </p>
     )}
@@ -197,109 +192,91 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
         <StatusCell status="unknown" derived variant="label" />
       </li>
     </ul>
-    <p id="matrix-count" class="count matrix-key__count" aria-live="polite">
-      {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
-      {matrix.columns.length} features
-    </p>
-  </div>
-  {home && (
-    <p class="matrix-revisions">
-      <span>
-        Revision{" "}
-        <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
-        <span class:list={["chip", { signal: isCurrent }]}>
-          {isCurrent ? "current" : matrix.revision.status}
-        </span>
+    <p class="matrix-key__aside">
+      <span id="matrix-count" class="count" aria-live="polite" hidden>
+        {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
+        {matrix.columns.length} features
       </span>
-      <span>
-        {isCurrent ? "Earlier" : "Other revisions"}:{" "}
-        {revisions
-          .filter((r) => r.id !== revisionId)
-          .map((r, i) => (
+      {home && (
+        <span class="matrix-key__revision">
+          Revision <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
+          <span class:list={["chip", { signal: isCurrent }]}>
+            {isCurrent ? "current" : matrix.revision.status}
+          </span>
+          {otherRevisions.map((r, i) => (
             <>
-              {i > 0 && ", "}
+              {i === 0 ? " · earlier: " : ", "}
               <a class="revision-other" href={hrefFor(r.id)}>
                 {r.id}
               </a>
             </>
           ))}
-      </span>
-      {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
+        </span>
+      )}
     </p>
-  )}
+  </div>
 
   <section class="legend" aria-label="Reading the matrix">
-    <p class="legend__note">
-      <span class="level level-MUST">MUST</span>, <span class="level level-SHOULD">SHOULD</span>
-      {" and "}
-      <span class="level level-MAY">MAY</span> are the requirement levels the revision puts on the
-      feature. <abbr title="MCP server (resource server)">RS</abbr>
-      {" and "}
-      <abbr title="Authorization server">AS</abbr> name the party the feature is observed on. The{" "}
-      <a href="/mcp/scanner/">nightly scanner</a> reads {scannerChecks} of these requirements from
-      public metadata; the trace mark
-      <svg class="legend__scan" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h2l1.5-4 3 8 1.5-4h3" /></svg>
-      next to a server's name opens what it asked.
-      Rows are alphabetical. Nothing here is scored or ranked.
-    </p>
-    <dl class="legend__classes" aria-label="Access and auth classes">
-      <div>
-        <dt>Access</dt>
-        <dd>
-          {ACCESS_ORDER.map((v, i) => (
-            <>
-              {i > 0 && " · "}
-              <dfn title={ACCESS_DESCRIPTION[v]}>
-                <ClassIcon kind="access" value={v} class="legend__icon" />
-                {ACCESS_LABEL[v].toLowerCase()}
-              </dfn>
-            </>
-          ))}
-          : who can connect, as the server page's evidence says.
-        </dd>
-      </div>
-      <div>
-        <dt>Auth</dt>
-        <dd>
-          {AUTH_ORDER.map((v, i) => (
-            <>
-              {i > 0 && " · "}
-              <dfn title={AUTH_DESCRIPTION[v]}>
-                <ClassIcon kind="auth" value={v} class="legend__icon" />
-                {AUTH_LABEL[v].toLowerCase()}
-              </dfn>
-            </>
-          ))}
-          : how the endpoint authenticates clients. A faint mark after a server's name is a class
-          nobody has stated yet. Both come from the evidence on the server page. API-key and unauthenticated
-          servers are not scanned.
-        </dd>
-      </div>
-    </dl>
+    <div class="legend__group">
+      <h2 class="legend__head">Column heads</h2>
+      <dl class="legend__list">
+        <div>
+          <dt>
+            <span class="level level-MUST">MUST</span> · <span class="level level-SHOULD">SHOULD</span> ·{" "}
+            <span class="level level-MAY">MAY</span>
+          </dt>
+          <dd>the level the revision puts on the requirement</dd>
+        </div>
+        <div>
+          <dt>
+            <abbr title="MCP server (resource server)">RS</abbr> · <abbr title="Authorization server">AS</abbr>
+          </dt>
+          <dd>the party it is observed on</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="legend__group">
+      <h2 class="legend__head">Access <span>who can connect</span></h2>
+      <ul class="legend__classes">
+        {accessCounts.map((c) => (
+          <li>
+            <ClassIcon kind="access" value={c.value} class="legend__icon" />
+            <dfn title={ACCESS_DESCRIPTION[c.value]}>{ACCESS_LABEL[c.value]}</dfn>
+            <span class="legend__n">{c.count}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div class="legend__group">
+      <h2 class="legend__head">Auth <span>how clients authenticate</span></h2>
+      <ul class="legend__classes">
+        {authCounts.map((c) => (
+          <li>
+            <ClassIcon kind="auth" value={c.value} class="legend__icon" />
+            <dfn title={AUTH_DESCRIPTION[c.value]}>{AUTH_LABEL[c.value]}</dfn>
+            <span class="legend__n">{c.count}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div class="legend__group">
+      <h2 class="legend__head">Rows</h2>
+      <ul class="legend__notes">
+        <li>
+          <svg class="legend__scan" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h2l1.5-4 3 8 1.5-4h3" /></svg>
+          <span>
+            opens what the <a href="/mcp/scanner/">nightly scanner</a> asked; it reads{" "}
+            {scannerChecks} requirements from public metadata, on OAuth servers only
+          </span>
+        </li>
+        <li>
+          <ClassIcon kind="access" value="unknown" class="legend__icon legend__icon--faint" />
+          <span>a faint mark is a class nobody has stated yet</span>
+        </li>
+        <li class="legend__plain">Alphabetical; nothing is scored or ranked.</li>
+      </ul>
+    </div>
   </section>
-
-  <dl class="facts atlas-facts" aria-label="Atlas at a glance">
-    <div>
-      <dt>Servers</dt>
-      <dd class="num">{matrix.rows.length}</dd>
-    </div>
-    <div>
-      <dt>Requirements</dt>
-      <dd class="num">{matrix.columns.length}</dd>
-    </div>
-    <div>
-      <dt>Cells observed</dt>
-      <dd class="num">{observedCells}<span class="of"> / {totalCells}</span></dd>
-    </div>
-    <div>
-      <dt>Access</dt>
-      <dd class="words" data-classes="access">{classWords(accessCounts, ACCESS_LABEL)}</dd>
-    </div>
-    <div>
-      <dt>Auth</dt>
-      <dd class="words" data-classes="auth">{classWords(authCounts, AUTH_LABEL)}</dd>
-    </div>
-  </dl>
 
   <slot name="after" />
 
@@ -322,16 +299,6 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   /* the revision the matrix is measured against, and the way to the others, as the head's meta line */
   .revision-line {
     column-gap: var(--space-5);
-  }
-  /* on the home page the revisions are a quiet line under the key, not part of the head */
-  .matrix-revisions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    margin: var(--space-3) 0 0;
-    max-width: none;
-    font-size: var(--small);
-    color: var(--ink-2);
   }
   .revision-id,
   .revision-other {
@@ -400,8 +367,27 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     gap: var(--space-3) var(--space-5);
     margin: var(--space-4) 0 0;
   }
-  .matrix-key__count {
+  .legend__statuses {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    padding: 0;
+    margin: 0;
+  }
+  .matrix-key__aside .count {
+    margin: 0;
+  }
+  .matrix-key__aside .count[hidden] {
+    display: none;
+  }
+  .matrix-key__aside {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
     margin: 0 0 0 auto;
+    font-size: var(--small);
+    color: var(--ink-2);
   }
 
   /* the filters: the part of the page the reader operates, so it sits in an explainer */
@@ -431,86 +417,131 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     align-items: end;
   }
 
+  /*
+   * The legend: four short columns across the page's width, each a heading and a list a glance
+   * can take in. The class counts sit in it, so the page needs no facts row of its own.
+   */
   .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3) var(--space-6);
-    align-items: center;
-    margin: var(--space-5) 0 var(--space-6);
-    font-size: var(--small);
-  }
-  .atlas-facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-6);
+    margin: var(--space-5) 0 var(--space-7);
     padding-top: var(--space-5);
     border-top: 1px solid var(--rule);
-    margin-bottom: var(--space-6);
-  }
-  .legend__statuses {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    padding: 0;
-    margin: 0;
-  }
-  .legend__note {
-    margin: 0;
+    font-size: var(--small);
     color: var(--ink-2);
-    max-width: 62ch;
-    font-size: var(--tiny);
-    line-height: 1.55;
+  }
+  .legend__head {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--small);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .legend__head span {
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+  .legend__head span::before {
+    content: "· ";
+  }
+  .legend__list,
+  .legend__classes,
+  .legend__notes {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    line-height: 1.45;
+  }
+  .legend__list dt {
+    color: var(--ink);
+  }
+  .legend__list dd {
+    margin: 0;
   }
   /* the levels as the column heads show them: plain text, not in their level colours */
-  .legend__note .level {
+  .legend .level {
     color: var(--ink);
   }
-  .legend__classes :global(.legend__icon) {
-    margin-right: 0.2em;
+  .legend__classes li {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr auto;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 16rem;
+  }
+  .legend__n {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+  }
+  .legend dfn {
+    font-style: normal;
     color: var(--ink);
+    text-decoration: underline dotted;
+        text-underline-offset: 0.2em;
+    cursor: help;
+  }
+  .legend :global(.legend__icon) {
+    color: var(--ink);
+  }
+  .legend :global(.legend__icon--faint) {
+    color: var(--ink-2);
+    opacity: 0.5;
+  }
+  .legend__notes li {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr;
+    gap: var(--space-2);
+    align-items: start;
+  }
+  .legend__notes li > :first-child {
+    margin-top: 0.2em;
+  }
+  .legend__notes .legend__plain {
+    display: block;
+    padding-left: calc(1.1rem + var(--space-2));
   }
   .legend__scan {
     width: 0.9rem;
     height: 0.9rem;
-    vertical-align: -0.15em;
     fill: none;
     stroke: var(--ink);
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .legend__classes {
-    flex-basis: 100%;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-1) var(--space-3);
-    margin: 0;
-    font-size: var(--tiny);
-    color: var(--ink-2);
-    line-height: 1.55;
+
+  @media (max-width: 64rem) {
+    .legend {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
-  .legend__classes > div {
-    display: contents;
-  }
-  .legend__classes dt {
-    font-weight: 500;
-    color: var(--ink);
-  }
-  .legend__classes dd {
-    margin: 0;
-    max-width: 80ch;
-  }
-  .legend__classes dfn {
-    font-style: normal;
-    color: var(--ink);
-    text-decoration: underline dotted;
-    text-underline-offset: 0.2em;
-    cursor: help;
+  /* on a phone the two class lists sit side by side, the two notes run the full width */
+  @media (max-width: 40rem) {
+    .legend {
+      gap: var(--space-5) var(--space-4);
+    }
+    .legend__group:first-child,
+    .legend__group:last-child {
+      grid-column: 1 / -1;
+    }
+    .legend__head span {
+      display: block;
+    }
+    .legend__head span::before {
+      content: none;
+    }
   }
 
   @media (max-width: 40rem) {
     .matrix-key {
       gap: var(--space-2) var(--space-4);
     }
-    .matrix-key__count {
+    .matrix-key__aside {
       margin-left: 0;
     }
     .legend__statuses {

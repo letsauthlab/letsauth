@@ -1,11 +1,16 @@
 ---
 import MatrixPage from "@/components/MatrixPage.astro";
 import Base from "@/layouts/Base.astro";
-import { currentRevision, getSpec } from "@/lib/atlas";
+import { currentRevision, getSpec, revisionObserved } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
 
+// a page per revision with observations (the current one redirects home); one without any
+// would be a matrix of unknowns, so it gets no page
 export function getStaticPaths() {
-  return getSpec(getDataset()).revisions.map((r) => ({ params: { revision: r.id } }));
+  const data = getDataset();
+  return getSpec(data)
+    .revisions.filter((r) => r.status === "current" || revisionObserved(data, r.id))
+    .map((r) => ({ params: { revision: r.id } }));
 }
 
 const { revision } = Astro.params;

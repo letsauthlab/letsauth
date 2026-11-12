@@ -155,6 +155,8 @@ onMount(() => {
     regroup(s.group, visibleFeatures.size);
     if (count) {
       count.textContent = `${shown} of ${total} servers, ${visibleFeatures.size} of ${heads.length} features`;
+      // the count speaks only while a filter hides something; unfiltered the matrix is whole
+      count.hidden = shown === total && visibleFeatures.size === heads.length;
     }
     if (pushUrl) {
       const params = new URLSearchParams();
