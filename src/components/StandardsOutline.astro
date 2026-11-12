@@ -1,285 +1,169 @@
 ---
-import type { Forest, TreeNode } from "@/lib/graph";
 import { BODY_LABEL } from "@/lib/labels";
-import type { RelationGroups } from "@/lib/standards";
-import type { Relation, Spec } from "@/schema";
+import { currentRevisionOf, specsByBody } from "@/lib/standards";
+import type { Spec } from "@/schema";
 import MaturityTag from "./MaturityTag.astro";
-import StandardsOutlineRow from "./StandardsOutlineRow.astro";
 
 interface Props {
-  forest: Forest;
-  groupsOf: (id: string) => RelationGroups;
-  /** the builds-on spine, oldest document first */
-  spine: Relation[];
+  /** the specifications on the map */
+  specs: Spec[];
   withdrawn: Spec[];
   recent: Set<string>;
 }
 
-const { forest, groupsOf, spine, withdrawn, recent } = Astro.props;
-const onSpine = new Set(spine.flatMap((r) => [r.from, r.to]));
-const count = (nodes: TreeNode[]): number =>
-  nodes.reduce((n, node) => n + 1 + count(node.children), 0);
+const { specs, withdrawn, recent } = Astro.props;
+// within a publisher the names run A to Z, a leading "The" ignored, so a name is found by eye
+const sortKey = (s: Spec) => s.name.replace(/^The /, "").toLowerCase();
+// a publisher with many documents takes the full width, its list in columns of its own
+const WIDE = 8;
+const groups = specsByBody(specs)
+  .map((g) => ({ ...g, specs: [...g.specs].sort((a, b) => sortKey(a).localeCompare(sortKey(b))) }))
+  .sort((a, b) => Number(b.specs.length >= WIDE) - Number(a.specs.length >= WIDE));
 ---
 
-<section id="spec-list" class="outline" aria-labelledby="list-title">
-  <h2 id="list-title">Every specification, under what it builds on</h2>
+<section id="spec-list" class="specs" aria-labelledby="list-title">
+  <h2 id="list-title">Every specification, by publisher</h2>
   <p class="note">
-    A specification sits under the document it builds on, profiles or replaces. The other
-    relations are the chips on its row. Open one to see the documents it names. A document
-    without a maturity tag is published.
+    The {specs.length} documents on the map. A document without a tag is published; its page
+    has its relations and every revision.
   </p>
-  <p class="outline__cols" aria-hidden="true">
-    <span>Specification</span>
-    <span class="col body">Publisher</span>
-    <span class="col kind">Kind</span>
-    <span class="col rev">Current revision</span>
-  </p>
-  {
-    forest.trees.map((tree) => (
-      <section class="family" data-tree={tree.spec.id} aria-label={`${tree.spec.name} and what builds on it`}>
-        <p class="family__head">
-          <span class="n">{count([tree])}</span> documents stand on {tree.spec.name}
-        </p>
-        <ul class="tree">
-          <StandardsOutlineRow node={tree} groupsOf={groupsOf} spine={onSpine} recent={recent} />
-        </ul>
-      </section>
-    ))
-  }
-  {
-    forest.standalone.length > 0 && (
-      <section class="family" data-tree="standalone" aria-labelledby="tree-standalone">
-        <p class="family__head" id="tree-standalone">
-          <span class="n">{forest.standalone.length}</span> documents stand alone
-        </p>
-        <ul class="tree">
-          {forest.standalone.map((spec) => (
-            <StandardsOutlineRow
-              node={{ spec, alsoParents: [], children: [], depth: 0 }}
-              groupsOf={groupsOf}
-              spine={onSpine}
-              recent={recent}
-            />
-          ))}
-        </ul>
-      </section>
-    )
-  }
+  <div class="pubs">
+    {
+      groups.map((g) => (
+        <section
+          class:list={["card", "pub", { "pub--wide": g.specs.length >= WIDE }]}
+          data-body={g.body} aria-labelledby={`pub-${g.body}`}>
+          <h3 class="pub__head" id={`pub-${g.body}`}>
+            {BODY_LABEL[g.body]} <span class="n">{g.specs.length}</span>
+          </h3>
+          <ul class="pub__list" role="list">
+            {g.specs.map((spec) => {
+              const current = currentRevisionOf(spec);
+              return (
+                <li
+                  data-spec={spec.id}
+                  data-body={spec.body}
+                  data-maturity={spec.maturity}
+                  data-recent={recent.has(spec.id) ? "" : undefined}
+                >
+                  <span class="pub__name">
+                    <a href={`/standards/${spec.id}/`}>{spec.name}</a>
+                    <MaturityTag maturity={spec.maturity} note={spec.maturityNote} quietPublished />
+                  </span>
+                  <time datetime={current.date} title={`Current revision: ${current.id}`}>
+                    {current.date}
+                  </time>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
   {
     withdrawn.length > 0 && (
-      <section class="family" data-tree="withdrawn" aria-labelledby="tree-withdrawn">
-        <p class="family__head" id="tree-withdrawn">
-          <span class="n">{withdrawn.length}</span> withdrawn
-        </p>
-        <p class="note">Withdrawn documents leave the map but keep their page and their relations.</p>
-        <ul class="tree">
-          {withdrawn.map((spec) => (
-            <li data-withdrawn={spec.id}>
-              <div class="row">
-                <span class="who">
-                  <a href={`/standards/${spec.id}/`}>{spec.name}</a>
-                  <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
-                </span>
-                <span class="col body">{BODY_LABEL[spec.body]}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <p class="note specs__withdrawn">
+        Withdrawn, off the map but with their pages kept:{" "}
+        {withdrawn.map((spec, i) => (
+          <>
+            {i > 0 && ", "}
+            <a href={`/standards/${spec.id}/`} data-withdrawn={spec.id}>
+              {spec.name}
+            </a>
+          </>
+        ))}
+        .
+      </p>
     )
   }
 </section>
 
-<style is:global>
+<style>
   /*
-   * The outline: the dependency forest as nested lists. Global because the rows come from a
-   * recursive component. The indent is the builds-on line; a hairline in the signal ink marks the
-   * rows on the spine, so the one drawn idea of the map survives the change of form on phones.
+   * The list under the map: one card per publishing body, packed in columns so the long IETF
+   * OAuth card and the one-line ones fill the width without gaps. Each line is a name and the
+   * date of its current revision; a tag only where the document is not published. The
+   * relations and revisions live on each spec's page, the shape of them on the map above.
    */
-  .outline h2 {
+  .specs h2 {
     font-size: var(--h2);
+    margin-bottom: var(--space-2);
   }
-  .outline > .note {
+  .specs > .note {
     max-width: var(--measure);
     margin: 0 0 var(--space-5);
+    color: var(--ink-2);
   }
-  /*
-   * No content-visibility here: with a 20rem placeholder for an unrendered family, a long tree
-   * reported its chips under the next family, and axe read them as obscured targets. The list
-   * is 41 rows, small enough to render whole.
-   */
-  .outline .family {
-    margin-bottom: var(--space-6);
+  .pubs {
+    columns: 20rem 3;
+    column-gap: var(--space-4);
   }
-  .outline .family__head {
+  .pub {
+    break-inside: avoid;
+    margin: 0 0 var(--space-4);
+    padding: var(--space-4) var(--space-5);
+  }
+  .pub--wide {
+    column-span: all;
+  }
+  .pub--wide .pub__list {
+    columns: 20rem 3;
+    column-gap: var(--space-6);
+  }
+  .pub--wide .pub__list li {
+    break-inside: avoid;
+  }
+  .pub__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-body);
     font-size: var(--small);
     font-weight: 500;
-    color: var(--ink-2);
-    margin: 0 0 var(--space-2);
-  }
-  .outline .family__head .n {
-    font-variant-numeric: tabular-nums;
     color: var(--ink);
   }
-  .outline .tree {
+  .pub__head .n {
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+  .pub__list {
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  .outline .tree .tree {
-    margin-left: var(--space-3);
-    padding-left: var(--space-4);
-    border-left: 1px solid var(--rule);
-  }
-  .outline li[data-spine] > .row {
-    box-shadow: -2px 0 0 0 var(--signal);
-    margin-left: -2px;
-    padding-left: 2px;
-  }
-  /*
-   * A row is one line of a table: the name, with its tags and relation chips beside it, takes
-   * the free width and the three facts sit in fixed columns at the right edge, so they line up
-   * down the whole outline at every depth of the tree. The column heads sit once above it.
-   */
-  .outline .row,
-  .outline__cols {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 9.5rem 7.5rem 11rem;
-    align-items: baseline;
-    column-gap: var(--space-4);
-  }
-  .outline .row {
-    padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .outline__cols {
-    margin: 0;
-    max-width: none;
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--rule-strong);
-    font-size: var(--tiny);
-    font-weight: 500;
-    color: var(--ink-2);
-  }
-  .outline__cols + .family {
-    margin-top: var(--space-4);
-  }
-  .outline .who {
+  .pub__list li {
     display: flex;
-    flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--space-1) var(--space-2);
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--rule);
+    font-size: var(--small);
+  }
+  .pub__name {
     min-width: 0;
   }
-  .outline .who > a {
-    font-weight: 500;
+  .pub__name a {
     color: var(--ink);
     text-decoration: none;
     margin-right: var(--space-1);
   }
-  .outline .who > a:hover {
-    color: var(--signal);
-  }
-  .outline .rel {
-    font-size: var(--tiny);
-    color: var(--ink-2);
-  }
-  .outline .col {
-    color: var(--ink-2);
-    font-size: var(--tiny);
-    font-variant-numeric: tabular-nums;
-  }
-  .outline .rev {
-    justify-self: end;
-    display: inline-flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0 var(--space-2);
-    text-decoration: none;
-    white-space: nowrap;
-    min-width: 0;
-  }
-  .outline__cols .rev {
-    justify-self: end;
-  }
-  .outline a.rev:hover {
+  .pub__name a:hover {
     color: var(--signal);
     text-decoration: underline;
   }
-  .outline .rev code,
-  .outline .rev time {
+  .pub__list time {
+    flex: none;
     font-family: var(--font-mono);
     font-size: var(--tiny);
-    background: none;
-    padding: 0;
-    color: inherit;
+    color: var(--ink-2);
   }
-  /* an open chip takes the rest of the line, so its list reads under the name */
-  .outline .xl[open] {
-    flex-basis: 100%;
-  }
-  .outline .xl > summary {
-    list-style: none;
-    cursor: pointer;
-  }
-  .outline .xl > summary::-webkit-details-marker {
-    display: none;
-  }
-  .outline .xl > summary .n {
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-  }
-  .outline .xl[open] > summary {
-    border-color: var(--ink-2);
-  }
-  .outline .xl > ul {
-    list-style: none;
-    margin: var(--space-2) 0 var(--space-1);
-    padding: 0 0 0 var(--space-3);
-    border-left: 1px solid var(--rule);
+  .specs__withdrawn {
+    margin-top: var(--space-2);
     font-size: var(--small);
-  }
-  .outline .xl > ul li {
-    padding: var(--space-1) 0;
-  }
-  /* a tablet keeps the table but lets the kind go, so the names keep their width */
-  @media (max-width: 64rem) {
-    .outline .row,
-    .outline__cols {
-      grid-template-columns: minmax(0, 1fr) 8.5rem 11rem;
-    }
-    .outline .kind {
-      display: none;
-    }
-  }
-  /* narrower: the facts fold under the name as one line, and the column heads go */
-  @media (max-width: 48rem) {
-    .outline__cols {
-      display: none;
-    }
-    .outline .row {
-      display: flex;
-      flex-wrap: wrap;
-      column-gap: var(--space-1);
-      row-gap: var(--space-1);
-    }
-    .outline .who {
-      flex-basis: 100%;
-      margin-bottom: var(--space-1);
-    }
-    .outline .kind {
-      display: inline;
-    }
-    .outline .col + .col::before {
-      content: "/ ";
-    }
-    .outline .rev {
-      justify-self: auto;
-      justify-content: flex-start;
-    }
-    .outline .rev code {
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
   }
 </style>

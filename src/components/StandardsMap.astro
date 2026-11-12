@@ -63,17 +63,13 @@ const scope = "#standards";
 const unchecked = (name: string, value: string) =>
   `${scope}:has(input[name="${name}"][value="${value}"]:not(:checked))`;
 const filterCss = [
-  ...usedTypes.map(
-    (t) =>
-      `${unchecked("type", t)} #map .edge-${t} { visibility: hidden }\n` +
-      `${unchecked("type", t)} #spec-list .xl[data-type="${t}"] { display: none }`,
-  ),
+  ...usedTypes.map((t) => `${unchecked("type", t)} #map .edge-${t} { visibility: hidden }`),
   `${scope}:has(input[name="view"][value="recent"]:checked) :is(#map .node:not([data-recent]), #map .band, #map .edge) { opacity: 0.2 }`,
-  `${scope}:has(input[name="view"][value="recent"]:checked) #spec-list li:not([data-recent]) > .row { opacity: 0.35 }`,
+  `${scope}:has(input[name="view"][value="recent"]:checked) #spec-list li[data-spec]:not([data-recent]) { opacity: 0.35 }`,
   ...bodies.map(
     (b) =>
       `${unchecked("body", b)} :is(#map .node[data-body="${b}"], #map .band[data-body="${b}"], #map .edge[data-from-body="${b}"], #map .edge[data-to-body="${b}"]) { visibility: hidden }\n` +
-      `${unchecked("body", b)} #spec-list li[data-body="${b}"] > .row { display: none }`,
+      `${unchecked("body", b)} #spec-list .pub[data-body="${b}"] { display: none }`,
   ),
 ].join("\n");
 ---
@@ -302,7 +298,7 @@ const filterCss = [
         )
       }
       Each relation type has its own colour and dash pattern, so the map reads without colour.
-      The <a href="#spec-list">outline below</a> carries the same information as text.
+      The <a href="#spec-list">list below</a> names every document by publisher.
     </figcaption>
   </figure>
 
