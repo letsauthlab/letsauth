@@ -77,13 +77,14 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     {!crumbs && (
       <p class="eyebrow">{home ? "An independent lab for agent authorization" : "Matrix"}</p>
     )}
-    <h1>{home ? `How ${matrix.rows.length} MCP servers authorize AI agents` : "Who supports what"}</h1>
+    <h1>{home ? "How MCP servers authorize AI agents" : "Who supports what"}</h1>
     <p class="lede">
       {home
-        ? `Every public server, checked against the ${matrix.columns.length} requirements of the MCP Authorization specification. The results are open data.`
+        ? `${matrix.rows.length} MCP servers, checked against the ${matrix.columns.length} requirements of the MCP Authorization spec.`
         : "The public MCP servers we list, against what the MCP Authorization specification requires of servers and their authorization servers. Each cell links to the observation behind it on the server's page."}
     </p>
     <slot name="aside" />
+    {!home && (
     <p class="page-head__meta revision-line">
       <span>
         Measured against <a href={matrix.revision.url} rel="noopener">MCP Authorization</a>{" "}
@@ -107,6 +108,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       </span>
       {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
     </p>
+    )}
   </header>
 
   <div class="matrix-bar">
@@ -197,6 +199,31 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       {matrix.columns.length} features
     </p>
   </div>
+  {home && (
+    <p class="matrix-revisions">
+      <span>
+        Revision{" "}
+        <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
+        <span class:list={["chip", { signal: isCurrent }]}>
+          {isCurrent ? "current" : matrix.revision.status}
+        </span>
+      </span>
+      <span>
+        {isCurrent ? "Earlier" : "Other revisions"}:{" "}
+        {revisions
+          .filter((r) => r.id !== revisionId)
+          .map((r, i) => (
+            <>
+              {i > 0 && ", "}
+              <a class="revision-other" href={hrefFor(r.id)}>
+                {r.id}
+              </a>
+            </>
+          ))}
+      </span>
+      {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
+    </p>
+  )}
 
   <section class="legend" aria-label="Reading the matrix">
     <p class="legend__note">
@@ -292,6 +319,16 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
   /* the revision the matrix is measured against, and the way to the others, as the head's meta line */
   .revision-line {
     column-gap: var(--space-5);
+  }
+  /* on the home page the revisions are a quiet line under the key, not part of the head */
+  .matrix-revisions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    max-width: none;
+    font-size: var(--small);
+    color: var(--ink-2);
   }
   .revision-id,
   .revision-other {

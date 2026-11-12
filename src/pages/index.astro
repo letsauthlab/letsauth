@@ -6,6 +6,7 @@
  */
 import Ledger from "@/components/Ledger.astro";
 import MatrixPage from "@/components/MatrixPage.astro";
+import MatrixPulse from "@/components/MatrixPulse.astro";
 import Base from "@/layouts/Base.astro";
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { changedSince, dayOf, scanRunsAfter, statusChanges } from "@/lib/changes";
@@ -29,10 +30,13 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
 
 <Base
   title="letsauth"
-  description={`How ${matrix.rows.length} public MCP servers authorize AI agents, checked against the ${matrix.columns.length} requirements of the MCP Authorization specification (revision ${revision.id}). An independent lab; the results are open data.`}
+  description={`How MCP servers authorize AI agents: ${matrix.rows.length} MCP servers, checked against the ${matrix.columns.length} requirements of the MCP Authorization specification (revision ${revision.id}). An independent lab; the results are open data.`}
   path="/"
 >
   <MatrixPage revisionId={revision.id} home changed={changed}>
+    <div class="page-head__aside home-pulse" slot="aside">
+      <MatrixPulse />
+    </div>
     {
       newestDay && (
         <p class="home-latest" slot="bar">
@@ -71,6 +75,18 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
 </Base>
 
 <style>
+  /* the picture beside the title: wider than the small matrix of the other pages, and only where
+     it can stand beside the title */
+  :global(.page-head > .home-pulse) {
+    align-self: center;
+    width: 100%;
+    max-width: 14rem;
+  }
+  @media (max-width: 56rem) {
+    :global(.page-head > .home-pulse) {
+      display: none;
+    }
+  }
   /* what the dot in a cell means, said once, right above the matrix */
   .home-latest {
     display: flex;
