@@ -15,7 +15,7 @@ const days = changesByDay(changes);
 test.describe("ledger page (019)", () => {
   test("lists every day with a change, newest first", async ({ page }) => {
     await page.goto("/ledger/");
-    await expect(page.locator("h1")).toHaveText("The ledger");
+    await expect(page.locator("h1")).toHaveText("Every status change on record");
     await expect(page.locator(".facts dd").first()).toHaveText(String(changes.length));
     const dates = page.locator(".ledger__date time");
     await expect(dates).toHaveCount(days.length);
