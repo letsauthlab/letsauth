@@ -16,9 +16,11 @@ interface Props {
    * here and nothing is a sort key.
    */
   scans?: Map<string, ScanView>;
+  /** Cells whose status changed lately, as `cellKey(server, feature)`: each carries a dot. */
+  changed?: Set<string>;
 }
 
-const { matrix, diff, scans } = Astro.props;
+const { matrix, diff, scans, changed } = Astro.props;
 const { columns, rows, cells, revision } = matrix;
 
 // group columns by category for the top header row
@@ -247,11 +249,12 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                       data-feature={feature.id}
                       data-status={cell.status}
                       data-derived={cell.derived ? "true" : "false"}
+                      data-changed={changed?.has(cellKey(server.id, feature.id)) ? "" : undefined}
                     >
                       <a
                         class="cell"
                         href={`/mcp/servers/${server.id}/#${feature.id}`}
-                        aria-label={`${server.name}, ${feature.name}: ${cell.status}`}
+                        aria-label={`${server.name}, ${feature.name}: ${cell.status}${changed?.has(cellKey(server.id, feature.id)) ? ", changed lately" : ""}`}
                       >
                         <StatusCell status={cell.status} derived={cell.derived} />
                       </a>
@@ -641,6 +644,21 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       border-radius: var(--radius-focus);
     }
 
+    /* a cell whose status changed lately: a dot in the ink on its corner (spec 019) */
+    .matrix td[data-changed] .cell {
+      position: relative;
+    }
+    .matrix td[data-changed] .cell::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0.4375rem;
+      height: 0.4375rem;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 0 0 1.5px var(--ground);
+    }
     .matrix .cell:focus-visible {
       outline: 2px solid var(--signal);
       outline-offset: 1px;

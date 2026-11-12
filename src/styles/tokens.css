@@ -52,7 +52,8 @@
   --toggle-attack: var(--threat);
   --toggle-misconfiguration: var(--caution);
 
-  /* type: Geist for headlines, interface and body; Geist Mono for ids, code and tokens */
+  /* type: Newsreader for h1 and h2, Geist for interface and body, Geist Mono for ids, dates and code */
+  --font-serif: Newsreader, Georgia, "Times New Roman", serif;
   --font-body:
     "Geist Variable", Geist, "Geist Fallback", "SF Pro Text", "Segoe UI", system-ui, -apple-system,
     sans-serif;
@@ -63,9 +64,8 @@
   --small: 0.875rem;
   /* the floor: no text on the site is smaller than 13px */
   --tiny: 0.8125rem;
-  --h1-home: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
   --h1: clamp(2rem, 1.5rem + 2vw, 3.1rem);
-  --h2: clamp(1.4rem, 1.25rem + 0.6vw, 1.7rem);
+  --h2: clamp(1.55rem, 1.35rem + 0.8vw, 2rem);
   --h3: 1.2rem;
   --lede: clamp(1.125rem, 1.08rem + 0.25vw, 1.25rem);
   --leading-tight: 1.05;
@@ -109,6 +109,7 @@
   --dur-message: 300ms;
   --stagger: 40ms;
   --dur-step: 2500ms;
+  /* the home plate (spec 019): the scan line's one pass, and a ring lighting and settling */
 
   /*
    * Legacy names (specs/016-visual-redesign plan 3.2). They alias the tokens above so that
@@ -128,7 +129,7 @@
   --accent-ink: var(--on-signal);
   --accent-2: var(--threat);
   --focus: var(--signal);
-  --font-display: var(--font-body);
+  --font-display: var(--font-serif);
   --text-2xs: var(--tiny);
   --text-xs: var(--tiny);
   --text-sm: var(--small);

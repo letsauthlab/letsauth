@@ -14,7 +14,14 @@ export default defineConfig({
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
   snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}-{projectName}{ext}",
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.02, animations: "disabled" } },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+      animations: "disabled",
+      // the record line under the header names the newest observation, which moves every night
+      stylePath: "tests/e2e/screenshot.css",
+    },
+  },
   webServer: {
     command: `pnpm astro preview --port ${port}`,
     port,

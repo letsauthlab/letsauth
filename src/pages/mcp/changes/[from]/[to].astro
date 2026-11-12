@@ -17,7 +17,7 @@ const { from, to } = Astro.params;
 const data = getDataset();
 const diff = revisionDiff(data, from, to);
 const current = currentRevision(data);
-const href = (id: string) => (id === current.id ? "/mcp/" : `/mcp/revisions/${id}/`);
+const href = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}/`);
 const unchanged = data.features.filter(
   (f) =>
     featureInRevision(f, from) &&
@@ -33,7 +33,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
   path={`/mcp/changes/${from}/${to}/`}
 >
   <div class="wrap">
-    <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={`Changes ${from} to ${to}`} />
+    <Crumbs trail={[{ href: "/", label: "Matrix" }]} current={`Changes ${from} to ${to}`} />
     <header class="page-head">
       <h1>
         What changed from <a href={href(from)}>{from}</a> to <a href={href(to)}>{to}</a>
@@ -193,6 +193,8 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
     margin-top: var(--space-6);
   }
   .changes h2 {
+    font-family: var(--font-body);
+    font-weight: 500;
     display: flex;
     align-items: baseline;
     gap: var(--space-3);

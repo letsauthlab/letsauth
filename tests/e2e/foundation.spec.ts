@@ -93,11 +93,11 @@ test.describe("foundation pages", () => {
 
   test("the current section is marked and shown in the navigation", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
-    await page.goto("/breaches/");
+    await page.goto("/ledger/");
     const current = page
       .getByRole("navigation", { name: "Primary" })
       .locator('a[aria-current="page"]');
-    await expect(current).toHaveText("Breaches");
+    await expect(current).toHaveText("Ledger");
     await expect(current).toBeInViewport({ ratio: 1 });
     expect(await current.evaluate((el) => getComputedStyle(el).borderBottomWidth)).toBe("2px");
   });
@@ -157,7 +157,7 @@ test.describe("foundation pages", () => {
   }
 
   test("every page links the legal pages from the footer", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     const legal = page.getByRole("navigation", { name: "Legal" });
     for (const link of LEGAL_LINKS) {
       await expect(legal.getByRole("link", { name: link.label })).toHaveAttribute(

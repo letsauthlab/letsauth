@@ -10,7 +10,7 @@ export function getStaticPaths() {
 
 const { revision } = Astro.params;
 // The current revision lives at the atlas root; its revision URL is a redirect page there.
-if (currentRevision(getDataset()).id === revision) return Astro.redirect("/mcp/", 301);
+if (currentRevision(getDataset()).id === revision) return Astro.redirect("/", 301);
 ---
 
 <Base
@@ -20,6 +20,6 @@ if (currentRevision(getDataset()).id === revision) return Astro.redirect("/mcp/"
 >
   <MatrixPage
     revisionId={revision}
-    crumbs={{ trail: [{ href: "/mcp/", label: "Servers" }], current: `Revision ${revision}` }}
+    crumbs={{ trail: [{ href: "/", label: "Matrix" }], current: `Revision ${revision}` }}
   />
 </Base>

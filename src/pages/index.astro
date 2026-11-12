@@ -1,424 +1,97 @@
 ---
-import Facts from "@/components/Facts.astro";
-import MatrixThumb from "@/components/MatrixThumb.astro";
-import StatusCell from "@/components/StatusCell.astro";
+/*
+ * The home page is the matrix (spec 019): the state of the record today, and under it the
+ * ledger since the last run. There is no second matrix page; /mcp/ forwards here. No script of
+ * its own: the matrix island is the same one the revision pages use.
+ */
+import Ledger from "@/components/Ledger.astro";
+import MatrixPage from "@/components/MatrixPage.astro";
 import Base from "@/layouts/Base.astro";
-import { cellKey, currentRevision, lastObservationDate, matrixFor } from "@/lib/atlas";
-import { breachList } from "@/lib/breaches";
+import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
+import { changedSince, dayOf, scanRunsAfter, statusChanges } from "@/lib/changes";
 import { getDataset } from "@/lib/data";
-import { scenarioList } from "@/lib/explorer";
-import { CATEGORY_LABEL, METHOD_LABEL } from "@/lib/labels";
-import { scannerFacts, scannerIndex } from "@/lib/scanner";
-import { mapRelations, specNodes } from "@/lib/standards";
-import type { Observation } from "@/schema";
 
 const data = getDataset();
 const revision = currentRevision(data);
 const matrix = matrixFor(data, revision.id);
-const specs = specNodes(data).length;
-const relations = mapRelations(data).length;
-const scenarios = scenarioList(data);
-const toggles = scenarios.reduce((n, s) => n + s.toggles.length, 0);
-const breaches = breachList(data).length;
-const scanner = scannerFacts(scannerIndex(data));
-const newest = lastObservationDate(data);
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// the six newest observations of the current matrix, one per requirement and one per server,
-// so a scan run that touched every server at once still shows six different rows
-const serverName = new Map(data.servers.map((s) => [s.id, s]));
-const featureName = new Map(data.features.map((f) => [f.id, f]));
-const latest: Observation[] = [];
-const seen = new Set<string>();
-for (const o of [...data.observations].sort(
-  (a, b) => b.observedAt.localeCompare(a.observedAt) || a.server.localeCompare(b.server),
-)) {
-  if (latest.length === 6) break;
-  if (!matrix.cells.has(cellKey(o.server, o.feature))) continue;
-  if (o.revision.spec !== matrix.spec.id || o.revision.revision !== revision.id) continue;
-  if (seen.has(o.feature) || seen.has(o.server)) continue;
-  seen.add(o.feature).add(o.server);
-  latest.push(o);
-}
-const cells = [...matrix.cells.values()];
-const observedCells = cells.filter((c) => !c.derived).length;
-
-const products = [
-  {
-    href: "/mcp/",
-    name: "MCP auth atlas",
-    text: `Public MCP servers against the requirements of MCP Authorization ${revision.id}, one dated observation per cell.`,
-    count: plural(matrix.rows.length, "server"),
-  },
-  {
-    href: "/standards/",
-    name: "Agent auth atlas",
-    text: "The specifications behind agent authorization as one graph, with what builds on what and the dated revisions of each.",
-    count: `${plural(specs, "specification")}, ${plural(relations, "relation")}`,
-  },
-  {
-    href: "/explorer/",
-    name: "Delegation chain explorer",
-    text: "Delegation scenarios stepped hop by hop, with the decoded token at each step and toggles that break the chain.",
-    count: `${plural(scenarios.length, "scenario")}, ${plural(toggles, "toggle")}`,
-  },
-  {
-    href: "/breaches/",
-    name: "Breach anatomy",
-    text: "Published vulnerabilities in how agents were authorized, each traced to the control that was missing.",
-    count: plural(breaches, "entry", "entries"),
-  },
-  {
-    href: "/mcp/scanner/",
-    name: "Scanner",
-    text: "A passive scanner that reads the public metadata of each listed server and records what it finds as observations.",
-    count: `${scanner.scanned} of ${scanner.servers} servers scanned`,
-  },
-];
+// what changed: only cells the current matrix shows
+const changes = statusChanges(data, revision.id).filter((c) =>
+  matrix.cells.has(cellKey(c.server, c.feature)),
+);
+const newest = changes[0]?.observation.observedAt;
+const newestDay = newest ? dayOf(newest) : undefined;
+const runsSince = newest ? scanRunsAfter(data, newest) : [];
+// the dots in the matrix: the cells of the newest day with a change
+const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>();
 ---
 
 <Base
   title="letsauth"
-  description="letsauth is an independent lab for agent authorization. It keeps one open dataset of what the agent protocols require and what public servers do, starting with the MCP auth atlas."
+  description={`letsauth is an independent lab for agent authorization. Its matrix shows which public MCP servers do what the MCP Authorization specification, revision ${revision.id}, requires, and its ledger keeps every change.`}
   path="/"
 >
-  <div class="wrap">
-    <section class="hero">
-      <header class="page-head hero__copy">
-        <p class="eyebrow">An independent lab for agent authorization</p>
-        <h1>Agent authorization, on the record</h1>
-        <p class="lede">
-          letsauth keeps one open dataset of what the agent protocols require and what public
-          servers do. Each requirement cites a specification revision and each status cites a
-          dated observation.
-        </p>
-        <p class="hero__actions">
-          <a class="button" href="/mcp/">Open the MCP auth atlas</a>
-          <a class="button quiet" href="/mcp/data.json">Download the data</a>
-        </p>
-      </header>
-
-      <figure class="plate home-plate">
-        <figcaption class="home-plate__head">
-          <span>MCP auth atlas <span class="home-plate__rev">{revision.id}</span></span>
-          <a href="/mcp/">Open the matrix</a>
-        </figcaption>
-        <a class="home-plate__grid" href="/mcp/" aria-label="Open the matrix of the MCP auth atlas">
-          <MatrixThumb revisionId={revision.id} />
-        </a>
-        <div class="home-plate__foot">
+  <MatrixPage revisionId={revision.id} home changed={changed}>
+    {
+      newestDay && (
+        <p class="page-head__meta home-latest" slot="aside">
           <span>
-            {`${matrix.rows.length} servers × ${matrix.columns.length} requirements`}
-            {newest && (
-              <>
-                {" · last observation "}
-                <time datetime={newest}>{newest}</time>
-              </>
-            )}
+            Latest change <time datetime={newestDay}>{newestDay}</time>:{" "}
+            {plural(changed.size, "cell")}, dotted below
           </span>
-          <span class="home-plate__key" aria-hidden="true">
-            <span><i class="k-s"></i>Supported</span>
-            <span><i class="k-p"></i>Partial</span>
-            <span><i class="k-x"></i>Unsupported</span>
-            <span><i class="k-u"></i>Unknown</span>
-            <span><i class="k-d"></i>No observation</span>
-          </span>
-        </div>
-      </figure>
-    </section>
-
-    <div class="home-facts">
-      <Facts
-        label="The dataset at a glance"
-        items={[
-          { label: "Servers", value: matrix.rows.length },
-          { label: "Requirements", value: matrix.columns.length },
-          { label: "Cells observed", value: observedCells, of: cells.length },
-          { label: "Specifications", value: specs },
-        ]}
-      />
-    </div>
-
-    <div class="split">
-      <section aria-labelledby="products">
-        <p class="eyebrow">The lab</p>
-        <h2 id="products">What the lab publishes</h2>
-        <ol class="rows numbered products">
-          {
-            products.map((p) => (
-              <li>
-                <div class="rows__head">
-                  <h3 class="rows__title">
-                    <a href={p.href}>{p.name}</a>
-                  </h3>
-                  <span class="rows__meta">{p.count}</span>
-                </div>
-                <p>{p.text}</p>
-              </li>
-            ))
-          }
-        </ol>
-      </section>
-
-      <section class="panel latest" aria-labelledby="latest">
-        <p class="eyebrow">Activity</p>
-        <h2 id="latest">Latest observations</h2>
-        <ol class="rows latest__list">
-          {
-            latest.map((o) => {
-              const s = serverName.get(o.server);
-              const f = featureName.get(o.feature);
-              return (
-                <li>
-                  <StatusCell status={o.status} variant="cell" />
-                  <span class="latest__what">
-                    <a href={`/mcp/servers/${o.server}/`}>{s?.name ?? o.server}</a>
-                    <span>
-                      <a href={`/mcp/features/${o.feature}/`}>{f?.name ?? o.feature}</a>
-                      {f && <> · {CATEGORY_LABEL[f.category]}</>}
-                    </span>
-                  </span>
-                  <span class="latest__meta">
-                    <time datetime={o.observedAt}>{o.observedAt.slice(0, 10)}</time>
-                    <span>{METHOD_LABEL[o.method]}</span>
-                  </span>
-                </li>
-              );
-            })
-          }
-        </ol>
-        <p class="latest__note">
-          Each row names its method. A cell with no observation on record reads unknown.
+          <a href="#since">The ledger since the last run</a>
         </p>
-        <p class="latest__more">
-          <a class="button quiet small" href="/mcp/">See the full matrix</a>
-        </p>
-      </section>
-    </div>
-
-    <footer class="page-foot">
-      <p class="page-foot__links">
-        <a href={`/mcp/revisions/${revision.id}/`}>MCP Authorization {revision.id}</a>
-        <a href="/standards/">The standards map</a>
-        <a href="/contribute/">Add an observation</a>
+      )
+    }
+    <section slot="after" aria-labelledby="since">
+      <div class="section-head">
+        <h2 id="since">The ledger, since the last run</h2>
+        <span>{plural(changes.length, "status change")} on record</span>
+      </div>
+      {
+        runsSince.length > 0 && (
+          <p class="home-quiet">
+            <time datetime={runsSince.at(-1)}>{dayOf(runsSince.at(-1) ?? "")}</time>
+            <span>
+              {runsSince.length === 1
+                ? "One scan run since the last change. No status changed."
+                : `${runsSince.length} scan runs since the last change. No status changed.`}
+            </span>
+          </p>
+        )
+      }
+      <Ledger changes={changes} limit={6} />
+      <p class="section-more">
+        <a href="/ledger/">Open the ledger: all {plural(changes.length, "status change")}</a>
       </p>
-    </footer>
-  </div>
+    </section>
+  </MatrixPage>
 </Base>
 
 <style>
-  /* statement at the left, the matrix on its plate at the right; stacked below 64rem */
-  .hero {
+  .home-latest time {
+    font-family: var(--font-mono);
+  }
+  /* a run without a change is still a line of the ledger */
+  .home-quiet {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: var(--space-7);
-    align-items: center;
-    padding-block: var(--space-4) var(--space-7);
-  }
-  .hero__copy {
-    margin-bottom: 0;
-  }
-  .hero__copy h1 {
-    font-size: var(--h1-home);
-  }
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin: var(--space-5) 0 0;
-  }
-
-  /* the flagship data view: a head, the whole matrix, a foot with the size and the key */
-  .home-plate {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: var(--space-5);
     margin: 0;
-    padding: 0;
-  }
-  .home-plate__head,
-  .home-plate__foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-1) var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--small);
+    padding-block: var(--space-4);
+    max-width: none;
+    border-top: 1px solid var(--rule-strong);
     color: var(--ink-2);
   }
-  .home-plate__head {
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink);
-    font-weight: 500;
-  }
-  .home-plate__rev {
-    margin-left: var(--space-2);
+  .home-quiet time {
     font-family: var(--font-mono);
     font-size: var(--tiny);
-    font-weight: 400;
-    color: var(--ink-2);
-  }
-  .home-plate__grid {
-    display: block;
-    padding: var(--space-5) var(--space-4);
-    background: var(--ground);
-    transition: background-color var(--dur-fast) var(--ease);
-  }
-  .home-plate__grid:hover {
-    background: color-mix(in oklch, var(--signal) 4%, var(--ground));
-  }
-  .home-plate__foot {
-    border-top: 1px solid var(--rule);
     font-variant-numeric: tabular-nums;
   }
-  .home-plate__key {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-    font-size: var(--tiny);
-  }
-  .home-plate__key span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4em;
-  }
-  .home-plate__key i {
-    display: inline-block;
-    width: 0.625rem;
-    height: 0.625rem;
-    border-radius: 2px;
-  }
-  .k-s {
-    background: var(--ok);
-  }
-  .k-p {
-    background: var(--caution);
-  }
-  .k-x {
-    background: var(--threat);
-  }
-  .k-u {
-    border: 1.5px dashed var(--ink-2);
-  }
-  .home-plate__key .k-d {
-    width: 0.25rem;
-    height: 0.25rem;
-    margin-inline: 0.1875rem;
-    border-radius: 50%;
-    background: var(--ink-2);
-    opacity: 0.45;
-  }
-
-  /* the facts as one band: equal columns between two rules, a hairline between each */
-  .home-facts {
-    margin-bottom: var(--space-8);
-    border-block: 1px solid var(--rule);
-  }
-  .home-facts :global(.facts) {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
-  }
-  .home-facts :global(.facts > div) {
-    padding: var(--space-5) var(--space-5) var(--space-5) 0;
-  }
-  .home-facts :global(.facts dt) {
-    white-space: normal;
-  }
-  .home-facts :global(.facts > div + div) {
-    padding-left: var(--space-5);
-    border-left: 1px solid var(--rule);
-  }
-
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-7);
-    align-items: start;
-  }
-  .split h2 {
-    margin-bottom: var(--space-5);
-  }
-  /* the left column starts where the text inside the panel beside it does */
-  .split > section:first-child {
-    padding-top: var(--space-5);
-  }
-  .products .rows__head {
-    align-items: center;
-  }
-
-  /* the latest observations: a series, so it sits on a panel */
-  .latest {
-    padding: var(--space-5) var(--space-5) var(--space-4);
-  }
-  .latest__list {
-    margin-bottom: var(--space-4);
-  }
-  .latest__list > li {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: var(--space-3);
-    align-items: center;
-    padding-block: var(--space-3);
-    font-size: var(--small);
-  }
-  .latest__what {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    min-width: 0;
-  }
-  .latest__what > a {
-    color: var(--ink);
-    font-weight: 500;
-    text-decoration: none;
-  }
-  .latest__what > a:hover {
-    color: var(--signal);
-  }
-  .latest__what > span {
-    color: var(--ink-2);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .latest__what > span a {
-    color: var(--ink-2);
-  }
-  .latest__meta {
-    display: flex;
-    flex-direction: column;
-    align-items: end;
-    gap: 0.1rem;
-    font-size: var(--tiny);
-    color: var(--ink-2);
-    white-space: nowrap;
-  }
-  .latest__meta time {
-    font-family: var(--font-mono);
-    color: var(--ink);
-  }
-  .latest__note {
-    color: var(--ink-2);
-    font-size: var(--small);
-  }
-  .latest__more {
-    margin: 0;
-  }
-
-  @media (max-width: 64rem) {
-    .hero,
-    .split {
+  @media (max-width: 56rem) {
+    .home-quiet {
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--space-6);
-    }
-    .home-facts :global(.facts) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .home-facts :global(.facts > div:nth-child(3)) {
-      padding-left: 0;
-      border-left: 0;
-    }
-    .home-facts :global(.facts > div:nth-child(n + 3)) {
-      border-top: 1px solid var(--rule);
     }
   }
 </style>

@@ -1,0 +1,288 @@
+---
+/*
+ * The ledger (spec 019): status changes as dated lines, newest first, one rule per day. Every
+ * page that shows changes uses this one component: the home page (the latest), the ledger page
+ * (all of them), a server's page (its row of the matrix) and a requirement's page (its column).
+ * A line reads: what changed, the old and the new status, and in the margin the evidence: the
+ * method, how often the cell was observed, the source, and the earlier observations behind a
+ * disclosure. Reads fully without JavaScript; nothing here ranks a server.
+ */
+import StatusCell from "@/components/StatusCell.astro";
+import { changesByDay, type StatusChange } from "@/lib/changes";
+import { getDataset } from "@/lib/data";
+import { METHOD_LABEL, STATUS_META } from "@/lib/labels";
+
+interface Props {
+  changes: StatusChange[];
+  /** What a line names: the server and the requirement, or only the one the page is not about. */
+  subject?: "both" | "server" | "feature";
+  /** Show at most this many lines; the caller says where the rest are. */
+  limit?: number;
+  /** Fold three or more changes of one server on one day into one line. */
+  fold?: boolean;
+}
+
+const { changes, subject = "both", limit = Number.POSITIVE_INFINITY } = Astro.props;
+const fold = Astro.props.fold ?? subject === "both";
+const data = getDataset();
+const serverName = new Map(data.servers.map((s) => [s.id, s.name]));
+const featureName = new Map(data.features.map((f) => [f.id, f.name]));
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const stamp = (iso: string) => `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
+const evidenceUrl = (s: string) => s.match(/^(https:\/\/\S+)/)?.[1];
+const evidenceRest = (s: string) => s.replace(/^https:\/\/\S+\s*/, "").replace(/^\u2014\s*/, "");
+const clip = (s: string, n = 140) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+
+type Line =
+  | { kind: "one"; change: StatusChange }
+  | { kind: "many"; server: string; changes: StatusChange[] };
+const days: [string, Line[]][] = [];
+let shown = 0;
+for (const [day, list] of changesByDay(changes)) {
+  if (shown >= limit) break;
+  const lines: Line[] = [];
+  if (fold) {
+    const byServer = new Map<string, StatusChange[]>();
+    for (const c of list) byServer.set(c.server, [...(byServer.get(c.server) ?? []), c]);
+    for (const [server, group] of byServer) {
+      if (group.length >= 3) lines.push({ kind: "many", server, changes: group });
+      else for (const change of group) lines.push({ kind: "one", change });
+    }
+  } else for (const change of list) lines.push({ kind: "one", change });
+  const kept = lines.slice(0, limit - shown);
+  days.push([day, kept]);
+  shown += kept.length;
+}
+---
+
+<div class="ledger">
+  {
+    days.map(([day, lines]) => (
+      <div class="ledger__day">
+        <p class="ledger__date">
+          <time datetime={day}>{day}</time>
+        </p>
+        <ol class="ledger__lines" role="list">
+          {lines.map((line) => {
+            if (line.kind === "many") {
+              const counts = new Map<string, number>();
+              for (const c of line.changes) counts.set(c.to, (counts.get(c.to) ?? 0) + 1);
+              return (
+                <li class="change">
+                  <p class="change__what">
+                    <a class="change__server" href={`/mcp/servers/${line.server}/`}>
+                      {serverName.get(line.server) ?? line.server}
+                    </a>
+                    <span>{line.changes.length} cells changed in one run</span>
+                  </p>
+                  <p class="change__status">
+                    {[...counts].map(([status, n]) => (
+                      <span class="change__count">
+                        <StatusCell status={status as StatusChange["to"]} /> {n}
+                      </span>
+                    ))}
+                  </p>
+                  <div class="change__evidence">
+                    <details>
+                      <summary>{plural(line.changes.length, "cell")}</summary>
+                      <ol role="list">
+                        {line.changes.map((c) => (
+                          <li>
+                            <StatusCell status={c.to} />
+                            <span>
+                              <a href={`/mcp/features/${c.feature}/`}>
+                                {featureName.get(c.feature) ?? c.feature}
+                              </a>
+                              , was {STATUS_META[c.from].label.toLowerCase()}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  </div>
+                </li>
+              );
+            }
+            const c = line.change;
+            const earlier = c.history.filter((o) => o !== c.observation);
+            const url = evidenceUrl(c.observation.evidence);
+            const rest = evidenceRest(c.observation.evidence);
+            return (
+              <li class="change">
+                <p class="change__what">
+                  {subject !== "feature" && (
+                    <a class="change__server" href={`/mcp/servers/${c.server}/`}>
+                      {serverName.get(c.server) ?? c.server}
+                    </a>
+                  )}
+                  {subject !== "server" && (
+                    <a href={`/mcp/features/${c.feature}/`}>
+                      {featureName.get(c.feature) ?? c.feature}
+                    </a>
+                  )}
+                </p>
+                <p class="change__status">
+                  <StatusCell status={c.from} />
+                  <span class="change__arrow" aria-label="changed to">
+                    →
+                  </span>
+                  <StatusCell status={c.to} variant="label" />
+                </p>
+                <div class="change__evidence">
+                  <p>
+                    {METHOD_LABEL[c.observation.method]} · observed {c.history.length} times
+                    {url && (
+                      <>
+                        {" · "}
+                        <a href={url} rel="noopener">
+                          source
+                        </a>
+                      </>
+                    )}
+                  </p>
+                  {rest && <p class="change__note">{clip(rest)}</p>}
+                  {earlier.length > 0 && (
+                    <details>
+                      <summary>{plural(earlier.length, "earlier observation")}</summary>
+                      <ol role="list">
+                        {earlier.map((o) => (
+                          <li>
+                            <StatusCell status={o.status} />
+                            <span>
+                              <time datetime={o.observedAt}>{stamp(o.observedAt)}</time>
+                              {" · "}
+                              {STATUS_META[o.status].label} · {METHOD_LABEL[o.method]}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  /* a day: its date in the first column, its lines in the rest, a full rule above */
+  .ledger__day {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: var(--space-5);
+    border-top: 1px solid var(--rule-strong);
+  }
+  .ledger__date {
+    margin: 0;
+    padding-top: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .ledger__lines {
+    margin: 0;
+    padding: 0;
+  }
+  /* a line: what changed, the turn of status, and the evidence in the margin */
+  .change {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(9rem, 2fr) minmax(0, 4fr);
+    column-gap: var(--space-5);
+    align-items: start;
+    padding-block: var(--space-4);
+  }
+  .change + .change {
+    border-top: 1px solid var(--rule);
+  }
+  .change p {
+    margin: 0;
+    max-width: none;
+  }
+  .change__what {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+    font-size: 1.0625rem;
+    line-height: var(--leading-snug);
+  }
+  .change__what a {
+    /* a touch target of 24px even where the names wrap onto lines of their own */
+    display: inline-block;
+    padding-block: 0.125rem;
+    color: var(--ink);
+  }
+  .change__what a:hover {
+    color: var(--signal);
+  }
+  .change__server {
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .change__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--small);
+    white-space: nowrap;
+  }
+  .change__arrow {
+    color: var(--ink-2);
+  }
+  .change__count {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-variant-numeric: tabular-nums;
+  }
+  .change__evidence {
+    font-size: var(--tiny);
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .change__note {
+    overflow-wrap: anywhere;
+  }
+  .change__evidence summary {
+    width: fit-content;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-underline-offset: 0.2em;
+    list-style: none;
+  }
+  .change__evidence summary::-webkit-details-marker {
+    display: none;
+  }
+  .change__evidence summary:hover {
+    color: var(--signal);
+  }
+  .change__evidence details ol {
+    margin: var(--space-2) 0 0;
+    padding: 0;
+  }
+  .change__evidence details li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-block: var(--space-1);
+    border-top: 1px dotted var(--rule-strong);
+  }
+  .change__evidence time {
+    font-family: var(--font-mono);
+  }
+  @media (max-width: 56rem) {
+    .ledger__day {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .change {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--space-2);
+    }
+  }
+</style>

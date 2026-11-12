@@ -31,14 +31,14 @@ test.describe("revisions (US5)", () => {
     ).toHaveCount(1);
   });
 
-  test("the current revision canonicalises to /mcp/", async ({ page }) => {
+  test("the current revision canonicalises to the home page", async ({ page }) => {
     await page.goto(`/mcp/revisions/${current.id}/`);
-    await page.waitForURL("**/mcp/");
+    await page.waitForURL((url) => url.pathname === "/");
     await expect(page.locator("[data-revision]")).toHaveText(current.id);
   });
 
   test("the matrix header links to the changes page for changed columns", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     const badge = page.locator("th[data-feature='mcp.as.dcr'] a.changed");
     await expect(badge).toHaveAttribute("href", `/mcp/changes/${older.id}/${newer.id}/`);
   });

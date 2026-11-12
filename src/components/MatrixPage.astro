@@ -30,9 +30,13 @@ interface Props {
   revisionId: string;
   /** an older revision's page passes its breadcrumb, which takes the eyebrow's place */
   crumbs?: { trail: { href: string; label: string }[]; current: string };
+  /** the home page (spec 019) gives the matrix the site's own title and statement */
+  home?: boolean;
+  /** cells whose status changed lately, dotted in the matrix */
+  changed?: Set<string>;
 }
 
-const { revisionId, crumbs } = Astro.props;
+const { revisionId, crumbs, home = false, changed } = Astro.props;
 const data = getDataset();
 const spec = getSpec(data);
 const matrix = matrixFor(data, revisionId);
@@ -46,7 +50,7 @@ const usedLevels = new Set(
   matrix.columns.map((f) => f.revisions.find((r) => r.revision === revisionId)?.level),
 );
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
-const hrefFor = (id: string) => (id === current.id ? "/mcp/" : `/mcp/revisions/${id}/`);
+const hrefFor = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}/`);
 
 // the nightly scanner's view per server: its requests are linked next to the name, never sorted on
 const scans = new Map(matrix.rows.map((s) => [s.id, latestScan(data, s, revisionId)]));
@@ -70,13 +74,16 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
 <div class="wrap">
   {crumbs && <Crumbs trail={crumbs.trail} current={crumbs.current} />}
   <header class="page-head">
-    {!crumbs && <p class="eyebrow">Servers</p>}
-    <h1>Who supports what</h1>
+    {!crumbs && (
+      <p class="eyebrow">{home ? "An independent lab for agent authorization" : "Matrix"}</p>
+    )}
+    <h1>{home ? "Agent authorization, on the record" : "Who supports what"}</h1>
     <p class="lede">
-      The public MCP servers we list, against what the MCP Authorization specification requires
-      of servers and their authorization servers. Each cell links to the observation behind it on
-      the server's page.
+      {home
+        ? "What the MCP Authorization specification requires, and which public MCP server does it. Each cell is a dated observation with its evidence, and the ledger keeps every change."
+        : "The public MCP servers we list, against what the MCP Authorization specification requires of servers and their authorization servers. Each cell links to the observation behind it on the server's page."}
     </p>
+    <slot name="aside" />
     <div class="page-head__meta revision-line">
       <span>
         Revision <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
@@ -169,7 +176,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
     </div>
   </header>
 
-  <MatrixTable matrix={matrix} diff={diff} scans={scans} />
+  <MatrixTable matrix={matrix} diff={diff} scans={scans} changed={changed} />
   <Matrix client:idle />
 
   <div class="matrix-key">
@@ -198,7 +205,7 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       <span class="level level-MAY">MAY</span> are the requirement levels the revision puts on the
       feature. <abbr title="MCP server (resource server)">RS</abbr>
       {" and "}
-      <abbr title="Authorization server">AS</abbr> name the party the feature is observed on. The
+      <abbr title="Authorization server">AS</abbr> name the party the feature is observed on. The{" "}
       <a href="/mcp/scanner/">nightly scanner</a> reads {scannerChecks} of these requirements from
       public metadata; the trace mark
       <svg class="legend__scan" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h2l1.5-4 3 8 1.5-4h3" /></svg>
@@ -263,6 +270,8 @@ const classWords = (counts: { value: string; count: number }[], label: Record<st
       <dd class="words" data-classes="auth">{classWords(authCounts, AUTH_LABEL)}</dd>
     </div>
   </dl>
+
+  <slot name="after" />
 
   <footer class="page-foot prose">
     <p>

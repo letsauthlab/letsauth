@@ -1,10 +1,13 @@
 ---
 /*
- * The whole matrix as a thumbnail: one mark per cell, servers across, requirements down. The
- * marks keep StatusCell's distinction without colour: an observed status is a filled square, a
- * recorded unknown a dashed ring, a derived unknown (no observation) a faint dot, not applicable
- * a dash. Carries `view-transition-name: matrix`, so the home plate morphs into the matrix on
- * /mcp/ when that page names its table the same way (plan 016, M2).
+ * The matrix in small (spec 019): the picture in the head of every page below the matrix that
+ * shows where the page sits in it. Servers run down and requirements across, as in the matrix
+ * itself, and the marks keep StatusCell's colours and its distinctions: an observed status is a
+ * filled square, a recorded unknown a hollow one, a derived unknown (no observation) a faint dot,
+ * not applicable a dash. A page lights its own row (`server`), its own column (`feature`) or a
+ * set of cells (`cells`); the rest is drawn faint. Each status is one path, so the drawing costs
+ * a few kilobytes however many servers are listed. Carries `view-transition-name: matrix`, so it
+ * morphs into the matrix when the visitor opens it (plan 016, M2).
  */
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
@@ -12,20 +15,61 @@ import { getDataset } from "@/lib/data";
 interface Props {
   /** The revision whose matrix to draw; the current one by default. */
   revisionId?: string;
+  /** Light this server's row. */
+  server?: string;
+  /** Light this requirement's column. */
+  feature?: string;
+  /** Light these cells, as `cellKey(server, feature)`. */
+  cells?: Set<string>;
+  /** What is lit, in words, for the accessible name. */
+  label?: string;
 }
 
 const data = getDataset();
 const revisionId = Astro.props.revisionId ?? currentRevision(data).id;
+const { server, feature, cells, label } = Astro.props;
 const matrix = matrixFor(data, revisionId);
+const focused = Boolean(server || feature || cells);
 
-const CELL = 12;
-const STEP = CELL + 3;
-const width = matrix.rows.length * STEP - 3;
-const height = matrix.columns.length * STEP - 3;
-// one-letter classes keep the page small: supported, partial, unsupported (x)
-const MARK = { supported: "s", partial: "p", unsupported: "x" } as const;
-let observed = 0;
-for (const cell of matrix.cells.values()) if (cell.observation) observed += 1;
+const CELL = 5;
+const STEP = 6;
+const width = matrix.columns.length * STEP - 1;
+const height = matrix.rows.length * STEP - 1;
+
+type Mark = "s" | "p" | "x" | "u" | "d" | "n";
+const marks: Mark[] = ["s", "p", "x", "u", "d", "n"];
+const faint: Record<Mark, string> = { s: "", p: "", x: "", u: "", d: "", n: "" };
+const lit: Record<Mark, string> = { s: "", p: "", x: "", u: "", d: "", n: "" };
+const square = (x: number, y: number) => `M${x} ${y}h${CELL}v${CELL}h-${CELL}z`;
+const shape: Record<Mark, (x: number, y: number) => string> = {
+  s: square,
+  p: square,
+  x: square,
+  u: (x, y) => `M${x + 0.5} ${y + 0.5}h${CELL - 1}v${CELL - 1}h-${CELL - 1}z`,
+  d: (x, y) => `M${x + 1.75} ${y + 1.75}h1.5v1.5h-1.5z`,
+  n: (x, y) => `M${x + 0.5} ${y + 2}h${CELL - 1}v1h-${CELL - 1}z`,
+};
+matrix.rows.forEach((s, y) => {
+  matrix.columns.forEach((f, x) => {
+    const key = cellKey(s.id, f.id);
+    const cell = matrix.cells.get(key);
+    const status = cell?.status ?? "unknown";
+    const mark: Mark =
+      status === "supported"
+        ? "s"
+        : status === "partial"
+          ? "p"
+          : status === "unsupported"
+            ? "x"
+            : status === "not-applicable"
+              ? "n"
+              : (cell?.derived ?? true)
+                ? "d"
+                : "u";
+    const on = !focused || s.id === server || f.id === feature || (cells?.has(key) ?? false);
+    (on ? lit : faint)[mark] += shape[mark](x * STEP, y * STEP);
+  });
+});
 ---
 
 <svg
@@ -34,58 +78,51 @@ for (const cell of matrix.cells.values()) if (cell.observation) observed += 1;
   width={width}
   height={height}
   role="img"
-  aria-label={`Thumbnail of the matrix: ${matrix.rows.length} servers across, ${matrix.columns.length} requirements down, ${observed} cells observed.`}
+  aria-label={`The matrix in small: ${matrix.rows.length} servers down, ${matrix.columns.length} requirements across${label ? `, with ${label} lit` : ""}.`}
 >
   {
-    matrix.columns.map((feature, y) =>
-      matrix.rows.map((server, x) => {
-        const cell = matrix.cells.get(cellKey(server.id, feature.id));
-        const status = cell?.status ?? "unknown";
-        const cx = x * STEP;
-        const cy = y * STEP;
-        if (status === "unknown" && (cell?.derived ?? true))
-          return <circle class="d" cx={cx + 6} cy={cy + 6} r="1.6" />;
-        if (status === "unknown")
-          return <rect class="u" x={cx + 1} y={cy + 1} width="10" height="10" rx="3" />;
-        if (status === "not-applicable")
-          return <rect class="n" x={cx + 3} y={cy + 5} width="6" height="2" />;
-        return <rect class={MARK[status]} x={cx} y={cy} width={CELL} height={CELL} rx="3" />;
-      }),
+    focused && (
+      <g class="faint">
+        {marks.map((m) => faint[m] && <path class={m} d={faint[m]} />)}
+      </g>
     )
   }
+  {marks.map((m) => lit[m] && <path class={m} d={lit[m]} />)}
 </svg>
 
-<style is:global>
-  /* global so the hundreds of marks carry no scoping attribute; every selector is namespaced */
+<style>
   .matrix-thumb {
     display: block;
     width: 100%;
     height: auto;
     view-transition-name: matrix;
   }
-  .matrix-thumb .s {
+  .faint {
+    opacity: 0.2;
+  }
+  .s {
     fill: var(--ok);
   }
-  .matrix-thumb .p {
+  .p {
     fill: var(--caution);
   }
-  .matrix-thumb .u {
-    fill: none;
-    stroke: var(--ink-2);
-    stroke-width: 1.5;
-    stroke-dasharray: 2.5 2;
-  }
-  .matrix-thumb .d {
-    fill: var(--ink-2);
-    opacity: 0.45;
-  }
-  .matrix-thumb .n {
-    fill: var(--rule-strong);
-  }
-  .matrix-thumb .x {
+  .x {
     fill: var(--threat);
   }
-  ::view-transition-group(matrix) {
+  .u {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 1;
+    stroke-dasharray: 1.5 1;
+  }
+  .d {
+    fill: var(--ink-2);
+    opacity: 0.5;
+  }
+  .n {
+    fill: var(--rule-strong);
+  }
+  :global(::view-transition-group(matrix)) {
     animation-duration: var(--dur-slow);
     animation-timing-function: var(--ease);
   }

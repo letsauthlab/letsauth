@@ -35,7 +35,7 @@ test.describe("matrix page (US1)", () => {
   test("names the revision and renders every server, feature and cell (FR-001)", async ({
     page,
   }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expect(page.locator("[data-revision]")).toHaveText(revision.id);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix thead th[data-feature]")).toHaveCount(matrix.columns.length);
@@ -49,7 +49,7 @@ test.describe("matrix page (US1)", () => {
 
   test("a cell links to its observation on the server page (FR-002)", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto(`/mcp/${dcrGroup}`);
+    await page.goto(`/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const cell = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] a.cell`,
@@ -73,7 +73,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     test.skip(!allUnknown, "no all-unknown server in the seed data");
-    await page.goto("/mcp/");
+    await page.goto("/");
     const row = page.locator(`#matrix tbody tr[data-server="${allUnknown?.id}"]`);
     await expect(row.locator("td[data-status='unknown']")).toHaveCount(matrix.columns.length);
     await expect(row.locator("td[data-status='unsupported']")).toHaveCount(0);
@@ -81,7 +81,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("filter state in the URL restores the filtered view (FR-008)", async ({ page }) => {
-    await page.goto("/mcp/?level=MUST&q=stripe");
+    await page.goto("/?level=MUST&q=stripe");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page.locator("#matrix-count")).toHaveText(/^1 of \d+ servers/);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(1);
@@ -98,7 +98,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("every row carries its access and auth class as pills (009 FR-002)", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     for (const server of matrix.rows.slice(0, 5)) {
       const row = page.locator(`#matrix tbody tr[data-server="${server.id}"]`);
       const access = accessOf(server);
@@ -113,7 +113,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("filters rows by access and auth class from the URL (009 FR-003)", async ({ page }) => {
-    await page.goto(`/mcp/?access=${topAccess?.value}&auth=${topAuth?.value}`);
+    await page.goto(`/?access=${topAccess?.value}&auth=${topAuth?.value}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const visible = page.locator("#matrix tbody tr[data-server]:not([hidden])");
     await expect(visible).toHaveCount(bothCount);
@@ -131,7 +131,7 @@ test.describe("matrix page (US1)", () => {
   test("groups rows by a class with a header per group, alphabetical within (009 FR-003)", async ({
     page,
   }) => {
-    await page.goto("/mcp/?group=auth");
+    await page.goto("/?group=auth");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const present = countBy(matrix.rows, AUTH_ORDER, authOf).filter((c) => c.count > 0);
     const heads = page.locator("#matrix tbody tr.group");
@@ -171,7 +171,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("rows are alphabetical and nothing sorts or scores servers (FR-014)", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     const names = await page
       .locator("#matrix tbody th[scope='row'] a.server-link")
       .allTextContents();
@@ -182,7 +182,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("each server links its latest scan and shows no grade (017 FR-004)", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     const links = page.locator("#matrix tbody th[scope='row'] a.scan-link");
     await expect(links).toHaveCount(matrix.rows.length);
     for (const server of matrix.rows.slice(0, 5)) {
@@ -197,7 +197,7 @@ test.describe("matrix page (US1)", () => {
 
   test("keyboard-only walkthrough follows a cell", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto(`/mcp/${dcrGroup}`);
+    await page.goto(`/${dcrGroup}`);
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const cell = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] a.cell`,
@@ -210,7 +210,7 @@ test.describe("matrix page (US1)", () => {
 
   test("has no horizontal page scroll at phone width (constitution V)", async ({ page }) => {
     await page.setViewportSize({ width: 412, height: 900 });
-    await page.goto("/mcp/?group=access");
+    await page.goto("/?group=access");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const [scroll, inner] = await page.evaluate(() => [
       document.documentElement.scrollWidth,
@@ -223,7 +223,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const region = page.locator(".matrix-scroll");
     expect(await region.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
@@ -239,7 +239,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 800 });
-    await page.goto("/mcp/#mx-discovery");
+    await page.goto("/#mx-discovery");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       320,
@@ -259,7 +259,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page.locator("#mx-all")).toHaveAttribute("aria-current", "true");
     const region = page.locator(".matrix-scroll");
@@ -272,7 +272,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const category = matrix.columns[0]?.category ?? "";
     const inGroup = matrix.columns.filter((f) => f.category === category);
@@ -290,7 +290,7 @@ test.describe("matrix page (US1)", () => {
   test("looks right in greyscale: the five status forms differ in shape (016 WP4)", async ({
     page,
   }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     const legend = page.locator(".legend__statuses");
     await legend.evaluate((el) => {
       (el as HTMLElement).style.filter = "grayscale(1)";
@@ -299,7 +299,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("the crosshair shows at once under reduced motion (M9)", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expectEndStateUnderReducedMotion(page, "#matrix tbody tr[data-server]");
     const row = page.locator("#matrix tbody tr[data-server]").nth(1);
     const cell = row.locator("td[data-feature]").nth(3);
@@ -316,12 +316,12 @@ test.describe("matrix page (US1)", () => {
   test("has no serious accessibility violations", async ({ page }) => {
     // axe walks every cell and its observation, which takes most of the default 30 s on a busy runner
     test.slow();
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expectNoSeriousA11yViolations(page);
   });
 
   test("looks right", async ({ page }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page).toHaveScreenshot("matrix.png", {
       mask: [page.locator("#matrix a.scan-link")],
@@ -334,7 +334,7 @@ test.describe("matrix page without JavaScript", () => {
 
   test("renders the full matrix and cells that link to their observation", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto(`/mcp/?level=MUST${dcrGroup}`);
+    await page.goto(`/?level=MUST${dcrGroup}`);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(
       matrix.rows.length,
@@ -352,7 +352,7 @@ test.describe("matrix page without JavaScript", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/mcp/");
+    await page.goto("/");
     const category = matrix.columns[0]?.category ?? "";
     const inGroup = matrix.columns.filter((f) => f.category === category);
     const row = page.locator("#matrix tbody tr[data-server]").first();
@@ -366,7 +366,7 @@ test.describe("matrix page without JavaScript", () => {
   test("highlights the row and column under the pointer without the island (M9)", async ({
     page,
   }) => {
-    await page.goto("/mcp/");
+    await page.goto("/");
     const row = page.locator("#matrix tbody tr[data-server]").nth(2);
     const cell = row.locator("td[data-feature]").nth(4);
     const plain = page.locator("#matrix tbody tr[data-server]").nth(8).locator("td").nth(4);
@@ -391,7 +391,7 @@ test.describe("matrix page without JavaScript", () => {
   test("renders every row alphabetically with its class pills and no group rows (009 FR-003)", async ({
     page,
   }) => {
-    await page.goto("/mcp/?group=auth&access=public");
+    await page.goto("/?group=auth&access=public");
     await expect(page.locator("#matrix tbody tr.group")).toHaveCount(0);
     await expect(page.locator("#matrix tbody tr[data-server] .classes .class")).toHaveCount(
       matrix.rows.length * 2,

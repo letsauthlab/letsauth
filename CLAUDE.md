@@ -42,14 +42,20 @@ front page and advertises the lab; keep working notes out of it.
   cells arrive by pull request.
 - One token system: `src/styles/tokens.css`. Components use tokens, never literal colours.
   Colours are OKLCH pairs resolved with `light-dark()`; `data-theme` only flips `color-scheme`.
-  Type is Geist for headlines, text and interface, Geist Mono for ids and code. Shared surfaces (`.card`, `.button`, `.pill`, `.level`, `.kv`, `.field`, `.crumbs`,
+  Type is Newsreader for h1 and h2, Geist for text, interface and smaller headings, Geist Mono for ids, dates, counts and code; all self-hosted. Shared surfaces (`.card`, `.button`, `.pill`, `.level`, `.kv`, `.field`, `.crumbs`,
   `.eyebrow`) live in `src/styles/global.css`; reuse them before adding page-local styles.
 - One page skeleton: every page is a left-aligned `.wrap` column that opens with
   `header.page-head` (eyebrow, h1, `.lede`, optional `.page-head__meta` line, optional
-  `dl.facts` row) and closes a data page with `footer.page-foot`. Pages below `/mcp/` and
+  `dl.facts` row) and closes a data page with `footer.page-foot`. The head is an 8/3 grid: text
+  in the wide column, and on pages that are a cut of the matrix (ledger, server, requirement) an
+  `a.page-head__aside` with `MatrixThumb`, the matrix in small with the page's cells lit. Pages below `/mcp/` and
   `/standards/` put `<Crumbs>` above the h1 in the eyebrow's place (one line, never both); long-form text pages use
   `src/layouts/Document.astro` (numbered sections, a rail of them on wide screens, no
   breadcrumb). New pages take these before inventing a head of their own.
+- The site is one matrix and one ledger (spec 019): `/` is the matrix, `/ledger/` every status
+  change, and `Ledger.astro` is the only rendering of changes (home, ledger, server and
+  requirement pages). `/mcp/` and `/breaches/` redirect to `/`; there are no breach pages.
+  `Base.astro` puts a record line (newest observation, current revision) under the header.
 - Status glyphs come from `StatusCell`: observed statuses are filled chips, a recorded `unknown`
   is a dashed ring, a derived one (no observation) a faint dot. Keep that distinction.
 - Islands only where interaction needs them. Pages must read fully without JavaScript.
