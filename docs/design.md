@@ -156,7 +156,6 @@ in `--font-body`, so the swap does not move text.
 | `--measure` | 66ch | prose width |
 | `--small` | 0.875rem | labels, eyebrows, table heads |
 | `--tiny` | 0.8125rem | the floor: no text is smaller than 13px |
-| `--h1-home` | `clamp(2.5rem, 1.4rem + 4.4vw, 5.25rem)` | the home statement |
 | `--h1` | `clamp(2rem, 1.5rem + 2vw, 3.1rem)` | data page headings |
 | `--h2` | `clamp(1.55rem, 1.35rem + 0.8vw, 2rem)` | section headings |
 | `--h3` | 1.2rem | sub-sections |
@@ -208,12 +207,19 @@ Deprecated until WP10: `.card` and `.cards` (now flat `--ground-2` panels; move 
 `.rows`), `.pill` and `.pill.accent` (aliases of `.chip` and `.chip.signal`) and
 `.button.primary` (a plain `.button` is the filled one).
 
-The page head of `/explorer/`, `/breaches/` and every spec page carries a decorative drawing
+The page head of `/explorer/` and every spec page carries a decorative drawing
 (`Plate.astro`, WP8): a small delegation chain drawn from the page id and title by
 `src/lib/plate.ts`, so a page always gets the same one. It is the first child of
 `header.page-head`, floats beside the title from 64rem up and is left out below that. It has no
 frame and uses the existing inks only: `--signal` for the path, `--boundary` for the trust
 boundary dash, hairlines for the rest. It never goes on a page with a data view above the fold.
+
+The shared frame (spec 019): under the header every page carries the record line (`.record` in
+`Base.astro`: the section, the newest observation's time, the current revision). The page head is
+an 8/3 grid; pages that are a cut of the matrix put `MatrixThumb` (the matrix in small, in the
+status colours, with the page's row, column or cells lit) in the narrow column as
+`a.page-head__aside`. A section below the head opens with `.section-head` (a 2px ink rule, the
+h2 and a note) and may close with `.section-more`. Status changes are always `Ledger.astro`.
 
 The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
 
@@ -236,8 +242,6 @@ component's.
 | `--dur-message` | 300ms | an explorer message drawing in |
 | `--stagger` | 40ms | the gap between rails that light up one after another |
 | `--dur-step` | 2500ms | one step of the explorer scene (not zeroed: under reduced motion the scene never plays) |
-| `--dur-sweep` | 900ms | the scan line's one pass over the home print (M20) |
-| `--dur-ring` | 1200ms | a ring on the home print lighting and settling (M20) |
 
 Under `prefers-reduced-motion: reduce` every duration is 0ms, the cross-document view transition
 is off, and every keyframe animation sits inside `@media (prefers-reduced-motion: no-preference)`
@@ -264,15 +268,13 @@ package of the redesign that builds it. Anything not in this table does not anim
 | M10 | Matrix | Removed: a cell links to its row on the server page instead of opening a dialog (the inline records were most of the page's weight) | n/a | n/a | WP4 |
 | M11 | Matrix filters | Count text changes with no animation; hidden rows collapse instantly (today's behaviour) | n/a | n/a | WP4 |
 | M12 | Scanner report | The request ladder prints line by line, 60ms apart, when the section scrolls into view, once; the count of checks appears last | "this is what the scanner did, in order" | all lines shown | WP7 |
-| M13 | Breach page, spec page revisions | Timeline rail draws in top to bottom, 480ms; on the breach page the dates fade in behind it | "events in sequence" | shown | WP6 |
+| M13 | Spec page revisions | Timeline rail draws in top to bottom, 480ms | "events in sequence" | shown | WP6 |
 | M14 | Long-form pages (`Document.astro`) | Reading progress bar, 2px `--signal`, `animation-timeline: scroll(root)` behind `@supports` | place in the text | hidden | WP2 |
 | M15 | Controls | Colour and border transitions on hover/focus, 120ms | affordance | instant | WP2 |
 | M16 | Theme toggle | Icon swap only; no rotation | n/a | n/a | WP2 |
 | M17 | Explorer toggles | A toggle link swaps the chain in place (crumbs, toggles, notice, steps) through a same-document view transition, 220ms; steps the two chains share morph, the rest fade, and M8 runs on the new rails. The toggle stays its own static page for a reload, a new tab or no JS | "the same chain, with one thing changed" | ordinary navigation | R-08 |
 | M18 | Explorer chain | A quiet decision log under the chain gains one line per step reached (number, sender → receiver, message), the newest fading in over 220ms; a line seeks back to its step | "what has happened so far" | lines appear | R-08 |
 | M19 | Standards map | Hovering or focusing a node fades the documents and lines outside its neighbourhood to 22% over 220ms, and its own lines to full colour. The highlight holds for 280ms while the pointer crosses the gap to the next node, so moving across the map changes the highlight once per node instead of flashing back to full strength in every gap | "these are its relations" | applied and lifted at once | R-12 |
-| M20 | Home print (`MatrixThumb.astro`, `index.astro`) | Once on load a 1.5px `--signal` scan line passes over the one-ink print of the matrix (`translateX` to `100cqw`, 900ms, `--ease-draw`); each ringed cell (status changed since the oldest day in the feed) lights in `--signal` as the line reaches its column and settles to `--ink-2` over 1200ms | "this is what the latest runs changed" | no line; rings shown in `--ink-2` | 019 |
-| M21 | Home, "Since the last run" | After the line has passed, the new status of each change rises 4px into place (220ms), 40ms apart, at most 400ms in all | "this cell changed to this" | statuses shown at once | 019 |
 
 Removed from the site by the redesign: the pulsing dot in the work-in-progress banner (it loops),
 the hover lifts on cards, buttons and the hero thumbnail, the rotating theme toggle, the ambient

@@ -327,7 +327,8 @@
 
   .facts dd {
     margin: 0;
-    font-weight: 500;
+    font-family: var(--font-serif);
+    font-weight: 400;
     font-size: clamp(1.6rem, 1.35rem + 1vw, 2.25rem);
     letter-spacing: var(--tracking-tight);
     line-height: 1.1;
@@ -335,6 +336,7 @@
   }
 
   .facts dd.muted {
+    font-family: var(--font-body);
     font-size: 1rem;
     font-weight: 500;
     letter-spacing: 0;
@@ -342,6 +344,7 @@
 
   /* a lesser figure next to the main one, like "/ 897" */
   .facts .of {
+    font-family: var(--font-body);
     font-weight: 400;
     font-size: var(--small);
     letter-spacing: 0;
@@ -350,6 +353,7 @@
 
   /* words instead of a figure, like a list of classes */
   .facts .words {
+    font-family: var(--font-body);
     font-weight: 500;
     font-size: var(--small);
     letter-spacing: 0;
@@ -364,11 +368,78 @@
    * the full width of the column: the title and lede are not held to a narrower measure.
    */
   .page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 8fr) minmax(0, 3fr);
+    column-gap: var(--space-8);
     margin-bottom: var(--space-7);
+  }
+
+  /* everything in the head shares the first column, so title, lede and facts have one width */
+  .page-head > * {
+    grid-column: 1;
   }
 
   .page-head h1,
   .page-head .lede {
+    max-width: none;
+  }
+
+  /* the second column: the matrix in small with this page's place lit, and a line under it */
+  .page-head > .page-head__aside {
+    grid-column: 2;
+    grid-row: 1 / span 12;
+    align-self: end;
+    justify-self: end;
+    display: grid;
+    gap: var(--space-3);
+    width: 9rem;
+    color: var(--ink-2);
+    font-size: var(--tiny);
+    line-height: var(--leading-snug);
+    text-decoration: none;
+  }
+
+  .page-head > a.page-head__aside:hover {
+    color: var(--signal);
+  }
+
+  @media (max-width: 56rem) {
+    .page-head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-head > .page-head__aside {
+      grid-column: 1;
+      grid-row: auto;
+      justify-self: start;
+      margin-top: var(--space-5);
+      width: 7rem;
+    }
+  }
+
+  /* a section opens under a full rule in the ink, its title at the left and a note at the right */
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-5);
+    margin-top: var(--space-8);
+    padding-block: var(--space-4);
+    border-top: 2px solid var(--ink);
+    color: var(--ink-2);
+    font-size: var(--small);
+  }
+
+  .section-head h2 {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .section-more {
+    margin: 0;
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--rule);
     max-width: none;
   }
 

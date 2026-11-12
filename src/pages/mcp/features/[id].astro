@@ -1,6 +1,8 @@
 ---
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
+import Ledger from "@/components/Ledger.astro";
+import MatrixThumb from "@/components/MatrixThumb.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
 import {
@@ -11,6 +13,7 @@ import {
   matrixRows,
   revisionsNewestFirst,
 } from "@/lib/atlas";
+import { statusChanges } from "@/lib/changes";
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, PARTY_LABEL, STATUS_ORDER } from "@/lib/labels";
 import type { Feature, ObservationStatus, Server } from "@/schema";
@@ -35,6 +38,12 @@ if (inMatrix) {
     byStatus.get(currentCell(data, server, feature, revision.id).status)?.push(server);
   }
 }
+// this requirement's column of the ledger: its status changes among the listed servers
+const listed = new Set(inMatrix ? matrixRows(data).map((s) => s.id) : []);
+const changes = inMatrix
+  ? statusChanges(data, revision.id).filter((c) => c.feature === feature.id && listed.has(c.server))
+  : [];
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const known = share ? share.supported + share.partial + share.unsupported : 0;
 const pct = (n: number) => (known === 0 ? 0 : Math.round((n / known) * 1000) / 10);
 const OBSERVABLE_LABEL = {
@@ -53,7 +62,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
 >
   <div class="wrap">
     <Crumbs
-      trail={[{ href: "/mcp/", label: "Servers" }]}
+      trail={[{ href: "/", label: "Matrix" }]}
       current={feature.name}
       note={`${PARTY_LABEL[feature.party]} / ${CATEGORY_LABEL[feature.category]}`}
     />
@@ -75,6 +84,14 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
           </>
         )}
       </p>
+      {
+        inMatrix && (
+          <a class="page-head__aside" href="/">
+            <MatrixThumb revisionId={revision.id} feature={feature.id} label={`the column of ${feature.name}`} />
+            <span>Lit: this requirement's column in the matrix</span>
+          </a>
+        )
+      }
     </header>
 
     <div class="split">
@@ -131,7 +148,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
                 return (
                   <tr>
                     <th scope="row">
-                      <a href={r.id === revision.id ? "/mcp/" : `/mcp/revisions/${r.id}/`}>{r.id}</a>
+                      <a href={r.id === revision.id ? "/" : `/mcp/revisions/${r.id}/`}>{r.id}</a>
                       {r.status === "current" && <span class="chip signal">current</span>}
                     </th>
                     <td>
@@ -204,6 +221,26 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
               );
             })}
           </div>
+        </section>
+      )
+    }
+    {
+      inMatrix && (
+        <section aria-labelledby="ledger">
+          <div class="section-head">
+            <h2 id="ledger">This requirement's ledger</h2>
+            <span>
+              {changes.length === 0 ? "No status change on record" : `${plural(changes.length, "status change")} on record`}
+            </span>
+          </div>
+          {changes.length > 0 ? (
+            <Ledger changes={changes} subject="server" />
+          ) : (
+            <p class="section-more">No server has changed status on this requirement yet.</p>
+          )}
+          <p class="section-more">
+            <a href="/ledger/">The whole ledger</a>
+          </p>
         </section>
       )
     }

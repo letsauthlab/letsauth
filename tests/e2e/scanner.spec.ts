@@ -32,9 +32,9 @@ test.describe("scanner index (US2)", () => {
     await expect(page.locator("#scanner-index")).toHaveCount(0);
     await expect(page.locator("table tr[data-server]")).toHaveCount(0);
     const where = page.locator("[aria-labelledby='where-title']");
-    const link = where.getByRole("link", { name: "MCP auth atlas", exact: true });
+    const link = where.getByRole("link", { name: "matrix", exact: true });
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute("href", "/mcp/");
+    await expect(link).toHaveAttribute("href", "/");
     await expect(page.locator("[data-nightly]")).toHaveCount(2);
   });
 
@@ -53,7 +53,7 @@ test.describe("scanner index (US2)", () => {
     const page = await context.newPage();
     await page.goto("/mcp/scanner/");
     await expect(page.locator("[data-enhanced]")).toHaveCount(0);
-    await expect(page.locator("a[href='/mcp/']").first()).toBeVisible();
+    await expect(page.locator("a[href='/']").first()).toBeVisible();
     await expect(page.locator("#summary-rule li")).toHaveCount(SUMMARY_RULE.length);
     await context.close();
   });

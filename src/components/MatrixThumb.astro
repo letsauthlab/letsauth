@@ -1,14 +1,13 @@
 ---
 /*
- * The whole matrix as a print in one ink (spec 019): one mark per cell, servers across,
- * requirements down. Without colour, the shape carries the status and keeps StatusCell's
- * distinction: supported is a filled square, partial a half-filled one, unsupported a cross, a
- * recorded unknown a dashed ring, a derived unknown (no observation) a faint dot, not applicable
- * a dash. Cells whose status changed recently carry a ring; on load a scan line passes over the
- * print once and the rings light as it reaches them (M20). The rings sit in their own unfiltered
- * layer above the print: animating them inside the filtered drawing re-rasterised the whole print
- * on every frame and cost the home page its Lighthouse budget. The print carries
- * `view-transition-name: matrix`, so the plate morphs into the matrix on /mcp/ (plan 016, M2).
+ * The matrix in small (spec 019): the picture in the head of every page below the matrix that
+ * shows where the page sits in it. Servers run down and requirements across, as in the matrix
+ * itself, and the marks keep StatusCell's colours and its distinctions: an observed status is a
+ * filled square, a recorded unknown a hollow one, a derived unknown (no observation) a faint dot,
+ * not applicable a dash. A page lights its own row (`server`), its own column (`feature`) or a
+ * set of cells (`cells`); the rest is drawn faint. Each status is one path, so the drawing costs
+ * a few kilobytes however many servers are listed. Carries `view-transition-name: matrix`, so it
+ * morphs into the matrix when the visitor opens it (plan 016, M2).
  */
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
@@ -16,167 +15,114 @@ import { getDataset } from "@/lib/data";
 interface Props {
   /** The revision whose matrix to draw; the current one by default. */
   revisionId?: string;
-  /** Cells to ring, as `cellKey(server, feature)`: those whose status changed recently. */
-  ringed?: Set<string>;
+  /** Light this server's row. */
+  server?: string;
+  /** Light this requirement's column. */
+  feature?: string;
+  /** Light these cells, as `cellKey(server, feature)`. */
+  cells?: Set<string>;
+  /** What is lit, in words, for the accessible name. */
+  label?: string;
 }
 
 const data = getDataset();
 const revisionId = Astro.props.revisionId ?? currentRevision(data).id;
-const ringed = Astro.props.ringed ?? new Set<string>();
+const { server, feature, cells, label } = Astro.props;
 const matrix = matrixFor(data, revisionId);
+const focused = Boolean(server || feature || cells);
 
-// a wide band: servers spaced out across, requirements packed down, so the print reads as one
-// strip under the head rather than a square block
-const CELL = 10;
-const STEP_X = 30;
-const STEP_Y = 16;
-const PAD = 3;
-const width = (matrix.rows.length - 1) * STEP_X + CELL + PAD * 2;
-const height = (matrix.columns.length - 1) * STEP_Y + CELL + PAD * 2;
-let observed = 0;
-for (const cell of matrix.cells.values()) if (cell.observation) observed += 1;
-const rings = [...ringed].filter((k) => matrix.cells.has(k)).length;
-// where the scan line is when it reaches a column, as a share of its pass (0 to 1)
-const at = (x: number) => (x / Math.max(1, matrix.rows.length - 1)).toFixed(3);
+const CELL = 5;
+const STEP = 6;
+const width = matrix.columns.length * STEP - 1;
+const height = matrix.rows.length * STEP - 1;
+
+type Mark = "s" | "p" | "x" | "u" | "d" | "n";
+const marks: Mark[] = ["s", "p", "x", "u", "d", "n"];
+const faint: Record<Mark, string> = { s: "", p: "", x: "", u: "", d: "", n: "" };
+const lit: Record<Mark, string> = { s: "", p: "", x: "", u: "", d: "", n: "" };
+const square = (x: number, y: number) => `M${x} ${y}h${CELL}v${CELL}h-${CELL}z`;
+const shape: Record<Mark, (x: number, y: number) => string> = {
+  s: square,
+  p: square,
+  x: square,
+  u: (x, y) => `M${x + 0.5} ${y + 0.5}h${CELL - 1}v${CELL - 1}h-${CELL - 1}z`,
+  d: (x, y) => `M${x + 1.75} ${y + 1.75}h1.5v1.5h-1.5z`,
+  n: (x, y) => `M${x + 0.5} ${y + 2}h${CELL - 1}v1h-${CELL - 1}z`,
+};
+matrix.rows.forEach((s, y) => {
+  matrix.columns.forEach((f, x) => {
+    const key = cellKey(s.id, f.id);
+    const cell = matrix.cells.get(key);
+    const status = cell?.status ?? "unknown";
+    const mark: Mark =
+      status === "supported"
+        ? "s"
+        : status === "partial"
+          ? "p"
+          : status === "unsupported"
+            ? "x"
+            : status === "not-applicable"
+              ? "n"
+              : (cell?.derived ?? true)
+                ? "d"
+                : "u";
+    const on = !focused || s.id === server || f.id === feature || (cells?.has(key) ?? false);
+    (on ? lit : faint)[mark] += shape[mark](x * STEP, y * STEP);
+  });
+});
 ---
 
-<span class="matrix-print">
-  <svg
-    class="matrix-thumb"
-    viewBox={`0 0 ${width} ${height}`}
-    width={width}
-    height={height}
-    role="img"
-    aria-label={`The matrix as a print: ${matrix.rows.length} servers across, ${matrix.columns.length} requirements down, ${observed} cells observed${rings ? `, ${rings} ringed because their status changed recently` : ""}.`}
-  >
-    <defs>
-      <linearGradient id="thumb-half" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0.5" stop-color="currentColor"></stop>
-        <stop offset="0.5" stop-color="currentColor" stop-opacity="0"></stop>
-      </linearGradient>
-    </defs>
-    {
-      matrix.columns.map((feature, y) =>
-        matrix.rows.map((server, x) => {
-          const cell = matrix.cells.get(cellKey(server.id, feature.id));
-          const status = cell?.status ?? "unknown";
-          const cx = PAD + x * STEP_X;
-          const cy = PAD + y * STEP_Y;
-          if (status === "unknown" && (cell?.derived ?? true))
-            return <circle class="d" cx={cx + 5} cy={cy + 5} r="1.5" />;
-          if (status === "unknown")
-            return <rect class="u" x={cx + 0.75} y={cy + 0.75} width="8.5" height="8.5" rx="4.25" />;
-          if (status === "not-applicable")
-            return <rect class="n" x={cx + 2} y={cy + 4.25} width="6" height="1.5" />;
-          if (status === "unsupported")
-            return <path class="x" d={`M${cx + 1.5} ${cy + 1.5}l7 7m0-7-7 7`} />;
-          if (status === "partial")
-            return <rect class="p" x={cx + 0.75} y={cy + 0.75} width="8.5" height="8.5" rx="1.5" />;
-          return <rect class="s" x={cx} y={cy} width={CELL} height={CELL} rx="1.5" />;
-        }),
-      )
-    }
-  </svg>
+<svg
+  class="matrix-thumb"
+  viewBox={`0 0 ${width} ${height}`}
+  width={width}
+  height={height}
+  role="img"
+  aria-label={`The matrix in small: ${matrix.rows.length} servers down, ${matrix.columns.length} requirements across${label ? `, with ${label} lit` : ""}.`}
+>
   {
-    rings > 0 && (
-      <svg class="matrix-rings" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-        {matrix.columns.map((feature, y) =>
-          matrix.rows.map(
-            (server, x) =>
-              ringed.has(cellKey(server.id, feature.id)) && (
-                <rect
-                  class="ring"
-                  x={PAD + x * STEP_X - 3}
-                  y={PAD + y * STEP_Y - 3}
-                  width={CELL + 6}
-                  height={CELL + 6}
-                  rx="8"
-                  style={`--at:${at(x)}`}
-                />
-              ),
-          ),
-        )}
-      </svg>
+    focused && (
+      <g class="faint">
+        {marks.map((m) => faint[m] && <path class={m} d={faint[m]} />)}
+      </g>
     )
   }
-</span>
+  {marks.map((m) => lit[m] && <path class={m} d={lit[m]} />)}
+</svg>
 
-<style is:global>
-  /* global so the hundreds of marks carry no scoping attribute; every selector is namespaced */
-  .matrix-print {
-    position: relative;
-    display: block;
-  }
-  .matrix-rings {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    pointer-events: none;
-    /* its own layer, so a lit ring repaints only the rings */
-    will-change: transform;
-  }
+<style>
   .matrix-thumb {
     display: block;
     width: 100%;
     height: auto;
-    color: var(--signal);
     view-transition-name: matrix;
-    /* the print: a second pass of the same ink, slightly out of register */
-    filter: drop-shadow(1px 0.75px 0 color-mix(in oklch, var(--signal) 26%, transparent));
   }
-  .matrix-thumb .s {
-    fill: currentColor;
+  .faint {
+    opacity: 0.2;
   }
-  .matrix-thumb .p {
-    fill: url(#thumb-half);
-    stroke: currentColor;
-    stroke-width: 1.5;
+  .s {
+    fill: var(--ok);
   }
-  .matrix-thumb .x {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
+  .p {
+    fill: var(--caution);
   }
-  .matrix-thumb .u {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-dasharray: 2.5 2;
+  .x {
+    fill: var(--threat);
   }
-  .matrix-thumb .d {
-    fill: var(--ink-2);
-    opacity: 0.45;
-  }
-  .matrix-thumb .n {
-    fill: var(--rule-strong);
-  }
-  .matrix-rings .ring {
+  .u {
     fill: none;
     stroke: var(--ink-2);
     stroke-width: 1;
+    stroke-dasharray: 1.5 1;
   }
-  /* M20: each ring lights as the scan line passes its column, then settles to the ink */
-  @media (prefers-reduced-motion: no-preference) {
-    .matrix-rings .ring {
-      animation: thumb-ring var(--dur-ring) var(--ease) both;
-      animation-delay: calc(var(--dur-fast) + var(--at) * var(--dur-sweep));
-    }
+  .d {
+    fill: var(--ink-2);
+    opacity: 0.5;
   }
-  @keyframes thumb-ring {
-    from {
-      stroke: transparent;
-    }
-    15% {
-      stroke: var(--signal);
-    }
-    to {
-      stroke: var(--ink-2);
-    }
+  .n {
+    fill: var(--rule-strong);
   }
-  ::view-transition-group(matrix) {
+  :global(::view-transition-group(matrix)) {
     animation-duration: var(--dur-slow);
     animation-timing-function: var(--ease);
   }

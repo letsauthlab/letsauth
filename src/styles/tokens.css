@@ -64,7 +64,6 @@
   --small: 0.875rem;
   /* the floor: no text on the site is smaller than 13px */
   --tiny: 0.8125rem;
-  --h1-home: clamp(2.5rem, 1.4rem + 4.4vw, 5.25rem);
   --h1: clamp(2rem, 1.5rem + 2vw, 3.1rem);
   --h2: clamp(1.55rem, 1.35rem + 0.8vw, 2rem);
   --h3: 1.2rem;
@@ -111,8 +110,6 @@
   --stagger: 40ms;
   --dur-step: 2500ms;
   /* the home plate (spec 019): the scan line's one pass, and a ring lighting and settling */
-  --dur-sweep: 900ms;
-  --dur-ring: 1200ms;
 
   /*
    * Legacy names (specs/016-visual-redesign plan 3.2). They alias the tokens above so that
@@ -182,7 +179,5 @@
     --dur-draw: 0ms;
     --dur-message: 0ms;
     --stagger: 0ms;
-    --dur-sweep: 0ms;
-    --dur-ring: 0ms;
   }
 }

@@ -7,6 +7,8 @@ import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wgh
 import fontSerif from "@/assets/fonts/newsreader-400-latin.woff2?url";
 import BrandLogo from "@/components/BrandLogo.astro";
 import Reach from "@/components/Reach.astro";
+import { currentRevision } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
 import { LAB, LEGAL_LINKS, OPERATOR, REPO } from "@/lib/site";
 
 interface Props {
@@ -27,6 +29,12 @@ const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | unde
 const fullTitle =
   title === "letsauth" ? "letsauth · the lab for agent authorization" : `${title} · letsauth`;
 const here = path ?? Astro.url.pathname;
+// The record line under the header (spec 019): every page says which state of the record it
+// shows, by the newest observation and the revision the matrix is read against.
+const dataset = getDataset();
+const recordRevision = currentRevision(dataset);
+let recordAt = "";
+for (const o of dataset.observations) if (o.observedAt > recordAt) recordAt = o.observedAt;
 // Who publishes the site, for search engines: the lab, founded and run by one person.
 const author = {
   "@type": "Person",
@@ -52,11 +60,11 @@ const footerGroups = [
   {
     title: "Explore",
     links: [
-      { href: "/mcp/", label: "Servers" },
+      { href: "/", label: "Matrix" },
+      { href: "/ledger/", label: "Ledger" },
       { href: "/mcp/scanner/", label: "Scanner" },
       { href: "/standards/", label: "Standards" },
-      { href: "/explorer/", label: "Explorer" },
-      { href: "/breaches/", label: "Breaches" },
+      { href: "/explorer/", label: "Chains" },
     ],
   },
   {
@@ -65,7 +73,6 @@ const footerGroups = [
       { href: "/mcp/data.json", label: "MCP atlas (JSON)" },
       { href: "/standards/data.json", label: "Standards (JSON)" },
       { href: "/explorer/data.json", label: "Scenarios (JSON)" },
-      { href: "/breaches/data.json", label: "Breaches (JSON)" },
       { href: "/contribute/", label: "Contribute" },
       { href: REPO, label: "Source on GitHub", external: true },
     ],
@@ -83,9 +90,14 @@ const footerGroups = [
 // Pages outside these subtrees (about, the legal pages) light up nothing.
 const nav = [
   {
-    href: "/mcp/",
-    label: "Servers",
-    match: (p: string) => p.startsWith("/mcp/"),
+    href: "/",
+    label: "Matrix",
+    match: (p: string) => p === "/" || p.startsWith("/mcp/"),
+  },
+  {
+    href: "/ledger/",
+    label: "Ledger",
+    match: (p: string) => p.startsWith("/ledger/"),
   },
   {
     href: "/standards/",
@@ -94,13 +106,8 @@ const nav = [
   },
   {
     href: "/explorer/",
-    label: "Explorer",
+    label: "Chains",
     match: (p: string) => p.startsWith("/explorer/"),
-  },
-  {
-    href: "/breaches/",
-    label: "Breaches",
-    match: (p: string) => p.startsWith("/breaches/"),
   },
   {
     href: "/contribute/",
@@ -203,6 +210,23 @@ const nav = [
         </button>
       </div>
     </header>
+    <div class="record">
+      <p class="wrap record__line">
+        <span>{nav.find((item) => item.match(here))?.label ?? "letsauth"}</span>
+        <span>
+          {recordAt && (
+            <>
+              Record of{" "}
+              <time datetime={recordAt} data-record>
+                {recordAt.slice(0, 10)} {recordAt.slice(11, 16)} UTC
+              </time>
+              {" · "}
+            </>
+          )}
+          <a href="/standards/mcp-authorization/">MCP Authorization {recordRevision.id}</a>
+        </span>
+      </p>
+    </div>
     <main id="main" class="site-main">
       <slot />
     </main>
@@ -326,6 +350,29 @@ const nav = [
   .site-header {
     background: var(--ground);
     border-bottom: 1px solid var(--rule);
+  }
+  /* the record line: which state of the record this page shows, on every page */
+  .record {
+    border-bottom: 1px solid var(--rule);
+  }
+  .record__line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 var(--space-5);
+    margin-block: 0;
+    padding-block: var(--space-2);
+    max-width: none;
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .record__line a {
+    color: inherit;
+  }
+  .record__line a:hover {
+    color: var(--signal);
   }
   .site-header__row {
     display: flex;

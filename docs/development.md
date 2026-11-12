@@ -83,6 +83,8 @@ green run. Update baselines only for intended changes.
 
 Scanner pull requests must not need new baselines: the scanner pages mark text the nightly run
 changes with `data-nightly`, and the screenshot tests fix those values and mask the report links.
+The record line under the header shows the newest observation's time on every page; it carries
+`data-record`, and `tests/e2e/screenshot.css` hides it while a screenshot is taken.
 
 ## Working on the scanner
 

@@ -1,6 +1,8 @@
 ---
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
+import Ledger from "@/components/Ledger.astro";
+import MatrixThumb from "@/components/MatrixThumb.astro";
 import ScanTranscript from "@/components/ScanTranscript.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
@@ -12,6 +14,7 @@ import {
   matrixColumns,
   revisionsNewestFirst,
 } from "@/lib/atlas";
+import { statusChanges } from "@/lib/changes";
 import {
   ACCESS_DESCRIPTION,
   ACCESS_LABEL,
@@ -35,6 +38,19 @@ const data = getDataset();
 const revision = currentRevision(data);
 const revisions = revisionsNewestFirst(data);
 const columns = matrixColumns(data, revision.id);
+// this server's row of the ledger: its status changes among the requirements the matrix shows
+const shownFeatures = new Set(columns.map((f) => f.id));
+const changes = statusChanges(data, revision.id).filter(
+  (c) => c.server === server.id && shownFeatures.has(c.feature),
+);
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+// the head's facts: this server's row of the matrix, counted by status
+const tally = { supported: 0, partial: 0, unsupported: 0, unknown: 0, unobserved: 0 };
+for (const f of columns) {
+  const cell = currentCell(data, server, f, revision.id);
+  if (cell.status === "unknown") tally[cell.derived ? "unobserved" : "unknown"] += 1;
+  else if (cell.status !== "not-applicable") tally[cell.status] += 1;
+}
 const parties = ["mcp-server", "authorization-server"] as const;
 
 const LISTED_LABEL: Record<Server["listed"], string> = {
@@ -86,10 +102,50 @@ const classes = [
   noindex={Boolean(server.withdrawn)}
 >
   <div class="wrap">
-    <Crumbs trail={[{ href: "/mcp/", label: "Servers" }]} current={server.name} />
+    <Crumbs trail={[{ href: "/", label: "Matrix" }]} current={server.name} />
     <header class="page-head">
       <h1>{server.name}</h1>
-      {server.vendor && server.vendor !== server.name && <p class="lede">by {server.vendor}</p>}
+      <p class="lede">
+        {server.vendor && server.vendor !== server.name && <>By {server.vendor}. </>}
+        One row of the matrix: what this server does of the {columns.length} requirements of MCP
+        Authorization {revision.id}, each with the observation behind it.
+      </p>
+      {
+        !server.withdrawn && (
+          <dl class="facts" aria-label="This server's row at a glance">
+            <div>
+              <dt>Supported</dt>
+              <dd>{tally.supported}</dd>
+            </div>
+            {tally.partial > 0 && (
+              <div>
+                <dt>Partial</dt>
+                <dd>{tally.partial}</dd>
+              </div>
+            )}
+            <div>
+              <dt>Unsupported</dt>
+              <dd>{tally.unsupported}</dd>
+            </div>
+            <div>
+              <dt>Unknown, recorded</dt>
+              <dd>{tally.unknown}</dd>
+            </div>
+            <div>
+              <dt>Not observed yet</dt>
+              <dd>{tally.unobserved}</dd>
+            </div>
+          </dl>
+        )
+      }
+      {
+        !server.withdrawn && (
+          <a class="page-head__aside" href="/">
+            <MatrixThumb revisionId={revision.id} server={server.id} label={`the row of ${server.name}`} />
+            <span>Lit: this server's row in the matrix</span>
+          </a>
+        )
+      }
     </header>
 
     {
@@ -349,6 +405,25 @@ const classes = [
               </section>
             );
           })}
+
+          <section aria-labelledby="ledger">
+            <div class="section-head">
+              <h2 id="ledger">This server's ledger</h2>
+              <span>
+                {changes.length === 0 ? "No status change on record" : `${plural(changes.length, "status change")} on record`}
+              </span>
+            </div>
+            {changes.length > 0 ? (
+              <Ledger changes={changes} subject="feature" />
+            ) : (
+              <p class="section-more">
+                Every cell of this server still shows the status of its first observation.
+              </p>
+            )}
+            <p class="section-more">
+              <a href="/ledger/">The whole ledger</a>
+            </p>
+          </section>
 
           <ScanTranscript view={scanView} ladder={ladder} />
         </>

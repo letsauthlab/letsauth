@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { expectEndStateUnderReducedMotion, expectNoSeriousA11yViolations } from "./helpers";
 
-// The decorative plate (plan WP8): in the head of the explorer and breach indexes and every spec
+// The decorative plate (plan WP8): in the head of the explorer index and every spec
 // page, never on a page with a data view above the fold, hidden from assistive technology and on
 // narrow screens.
-const withPlate = ["/explorer/", "/breaches/", "/standards/rfc8693/"];
-const withoutPlate = ["/", "/mcp/", "/standards/", "/explorer/mcp-authorization/"];
+const withPlate = ["/explorer/", "/standards/rfc8693/"];
+const withoutPlate = ["/", "/ledger/", "/standards/", "/explorer/mcp-authorization/"];
 
 test.describe("decorative plate (WP8)", () => {
   for (const path of withPlate) {
@@ -34,7 +34,7 @@ test.describe("decorative plate (WP8)", () => {
   });
 
   test("gives the section roots their own social card", async ({ page }) => {
-    for (const id of ["explorer", "breaches"]) {
+    for (const id of ["explorer"]) {
       await page.goto(`/${id}/`);
       await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
         "content",
@@ -59,7 +59,7 @@ test.describe("decorative plate (WP8)", () => {
 
   test("draws in once and passes axe", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto("/breaches/");
+    await page.goto("/explorer/");
     const names = await page
       .locator(".decor .pp")
       .evaluate((el) => el.getAnimations().map((a) => (a as CSSAnimation).animationName));
