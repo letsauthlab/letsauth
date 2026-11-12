@@ -34,6 +34,26 @@ const columns = matrix.rows.map((server) =>
   }),
 );
 const fieldW = servers * STEP;
+
+// the three figures, each with a short note on what it counts (shown on hover, focus or tap)
+const facts = [
+  {
+    label: "Public MCP servers",
+    value: fmt(servers),
+    tip: "Remote MCP servers that anyone can sign in to, taken from public directories. Each one is a row of the matrix.",
+  },
+  {
+    label: "Spec requirements",
+    value: fmt(requirements),
+    tip: `The rules the MCP Authorization spec (${matrix.revision.id}) sets, such as PKCE or HTTPS on every endpoint. Each one is a column of the matrix.`,
+  },
+  {
+    label: "Checks done",
+    value: fmt(observed),
+    of: fmt(total),
+    tip: `Every server is checked against every requirement: ${fmt(servers)} × ${fmt(requirements)} = ${fmt(total)} checks. ${fmt(observed)} are done; the rest are still to do.`,
+  },
+];
 const fieldH = requirements * STEP;
 ---
 
@@ -65,23 +85,27 @@ const fieldH = requirements * STEP;
     <p class="eyebrow">An independent lab for agent authorization</p>
     <h1 id="hero-title">How MCP servers authorize AI agents</h1>
     <dl class="facts hero__facts">
-      <div>
-        <dt>Public MCP servers</dt>
-        <dd>{fmt(servers)}</dd>
-        <dd class="hero__note">listed from public directories</dd>
-      </div>
-      <div>
-        <dt>Requirements</dt>
-        <dd>{fmt(requirements)}</dd>
-        <dd class="hero__note">in MCP Authorization <span class="hero__nowrap">{matrix.revision.id}</span></dd>
-      </div>
-      <div>
-        <dt>Checks with a result</dt>
-        <dd>
-          {fmt(observed)} <span class="of">/ {fmt(total)}</span>
-        </dd>
-        <dd class="hero__note">of {fmt(servers)} × {fmt(requirements)}; the rest are not yet observed</dd>
-      </div>
+      {
+        facts.map((f, i) => (
+          <div>
+            <dt>
+              {f.label}
+              <span class="info">
+                <button class="info__button" type="button" aria-describedby={`hero-info-${i}`}>
+                  <span class="visually-hidden">About {f.label.toLowerCase()}</span>
+                </button>
+                <span class="info__tip" role="tooltip" id={`hero-info-${i}`}>
+                  {f.tip}
+                </span>
+              </span>
+            </dt>
+            <dd>
+              {f.value}
+              {f.of && <span class="of"> of {f.of}</span>}
+            </dd>
+          </div>
+        ))
+      }
     </dl>
     <p class="hero__actions">
       <a class="button" href="#matrix">Explore the matrix</a>
@@ -121,17 +145,66 @@ const fieldH = requirements * STEP;
     column-gap: var(--space-6);
     margin-bottom: var(--space-6);
   }
-  .hero__nowrap {
-    white-space: nowrap;
+  /* the "i" after each label: hover, focus or tap shows what the figure counts */
+  .info {
+    position: relative;
+    display: inline-block;
+    margin-left: var(--space-1);
+    vertical-align: -0.15em;
   }
-  /* what a figure counts, said under it, so it reads on a phone and without a pointer */
-  .hero__facts .hero__note {
-    max-width: 11rem;
-    font-family: var(--font-body);
-    font-size: var(--tiny);
-    letter-spacing: 0;
-    line-height: var(--leading-snug);
+  .info__button {
+    display: grid;
+    place-items: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    padding: 0;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-pill);
+    background: none;
     color: var(--ink-2);
+    font: italic 600 0.6875rem/1 var(--font-serif);
+    cursor: help;
+  }
+  .info__button::before {
+    content: "i";
+  }
+  /* the target is larger than the ring, for touch */
+  .info__button::after {
+    content: "";
+    position: absolute;
+    inset: -0.375rem;
+  }
+  .info__tip {
+    position: absolute;
+    z-index: 2;
+    top: calc(100% + var(--space-2));
+    left: -0.5rem;
+    width: max-content;
+    max-width: min(17rem, calc(100vw - 2rem));
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--small);
+    font-weight: 400;
+    line-height: var(--leading-snug);
+    white-space: normal;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 120ms var(--ease), visibility 0s 120ms;
+  }
+  .info:hover .info__tip,
+  .info:focus-within .info__tip {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+  }
+  .info:hover .info__button,
+  .info__button:focus-visible {
+    border-color: var(--signal);
+    color: var(--signal);
   }
   .hero__actions {
     display: flex;
@@ -203,3 +276,11 @@ const fieldH = requirements * STEP;
     }
   }
 </style>
+
+<script>
+  // Escape closes an open note: the button loses focus, so only hover can keep it open
+  document.addEventListener("keydown", (event) => {
+    const active = document.activeElement;
+    if (event.key === "Escape" && active instanceof HTMLElement && active.matches(".info__button")) active.blur();
+  });
+</script>
