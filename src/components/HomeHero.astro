@@ -1,6 +1,6 @@
 ---
 /*
- * The home page's head (spec 019): a band across the full width of the page, the title, three
+ * The home page's head (spec 019): a band across the full width of the page, the title, two
  * figures and the two ways in, set over a drawing of the matrix itself. The drawing is every
  * cell of the current matrix, servers across and requirements down, in the status colours,
  * fading out under the text; a slow wave of light crosses it column by column, like a scan.
@@ -13,9 +13,6 @@ const data = getDataset();
 const matrix = matrixFor(data, currentRevision(data).id);
 const servers = matrix.rows.length;
 const requirements = matrix.columns.length;
-let observed = 0;
-for (const cell of matrix.cells.values()) if (cell.observation) observed += 1;
-const total = servers * requirements;
 const fmt = (n: number) => n.toLocaleString("en-GB");
 
 // the matrix, turned so the servers run across the band
@@ -35,25 +32,6 @@ const columns = matrix.rows.map((server) =>
 );
 const fieldW = servers * STEP;
 
-// the three figures, each with a short note on what it counts (shown on hover, focus or tap)
-const facts = [
-  {
-    label: "Public MCP servers",
-    value: fmt(servers),
-    tip: "Remote MCP servers that anyone can sign in to, taken from public directories. Each one is a row of the matrix.",
-  },
-  {
-    label: "Spec requirements",
-    value: fmt(requirements),
-    tip: `The rules the MCP Authorization spec (${matrix.revision.id}) sets, such as PKCE or HTTPS on every endpoint. Each one is a column of the matrix.`,
-  },
-  {
-    label: "Checks done",
-    value: fmt(observed),
-    of: fmt(total),
-    tip: `Every server is checked against every requirement: ${fmt(servers)} × ${fmt(requirements)} = ${fmt(total)} checks. ${fmt(observed)} are done; the rest are still to do.`,
-  },
-];
 const fieldH = requirements * STEP;
 ---
 
@@ -85,27 +63,14 @@ const fieldH = requirements * STEP;
     <p class="eyebrow">An independent lab for agent authorization</p>
     <h1 id="hero-title">How MCP servers authorize AI agents</h1>
     <dl class="facts hero__facts">
-      {
-        facts.map((f, i) => (
-          <div>
-            <dt>
-              {f.label}
-              <span class="info">
-                <button class="info__button" type="button" aria-describedby={`hero-info-${i}`}>
-                  <span class="visually-hidden">About {f.label.toLowerCase()}</span>
-                </button>
-                <span class="info__tip" role="tooltip" id={`hero-info-${i}`}>
-                  {f.tip}
-                </span>
-              </span>
-            </dt>
-            <dd>
-              {f.value}
-              {f.of && <span class="of"> of {f.of}</span>}
-            </dd>
-          </div>
-        ))
-      }
+      <div>
+        <dt>Public MCP servers</dt>
+        <dd>{fmt(servers)}</dd>
+      </div>
+      <div>
+        <dt>Spec requirements</dt>
+        <dd>{fmt(requirements)}</dd>
+      </div>
     </dl>
     <p class="hero__actions">
       <a class="button" href="#matrix">Explore the matrix</a>
@@ -144,67 +109,6 @@ const fieldH = requirements * STEP;
     max-width: 38rem;
     column-gap: var(--space-6);
     margin-bottom: var(--space-6);
-  }
-  /* the "i" after each label: hover, focus or tap shows what the figure counts */
-  .info {
-    position: relative;
-    display: inline-block;
-    margin-left: var(--space-1);
-    vertical-align: -0.15em;
-  }
-  .info__button {
-    display: grid;
-    place-items: center;
-    width: 1.125rem;
-    height: 1.125rem;
-    padding: 0;
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--radius-pill);
-    background: none;
-    color: var(--ink-2);
-    font: italic 600 0.6875rem/1 var(--font-serif);
-    cursor: help;
-  }
-  .info__button::before {
-    content: "i";
-  }
-  /* the target is larger than the ring, for touch */
-  .info__button::after {
-    content: "";
-    position: absolute;
-    inset: -0.375rem;
-  }
-  .info__tip {
-    position: absolute;
-    z-index: 2;
-    top: calc(100% + var(--space-2));
-    left: -0.5rem;
-    width: max-content;
-    max-width: min(17rem, calc(100vw - 2rem));
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--radius-sm);
-    background: var(--bg-elevated);
-    color: var(--ink);
-    font-family: var(--font-body);
-    font-size: var(--small);
-    font-weight: 400;
-    line-height: var(--leading-snug);
-    white-space: normal;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 120ms var(--ease), visibility 0s 120ms;
-  }
-  .info:hover .info__tip,
-  .info:focus-within .info__tip {
-    visibility: visible;
-    opacity: 1;
-    transition-delay: 0s;
-  }
-  .info:hover .info__button,
-  .info__button:focus-visible {
-    border-color: var(--signal);
-    color: var(--signal);
   }
   .hero__actions {
     display: flex;
@@ -277,10 +181,3 @@ const fieldH = requirements * STEP;
   }
 </style>
 
-<script>
-  // Escape closes an open note: the button loses focus, so only hover can keep it open
-  document.addEventListener("keydown", (event) => {
-    const active = document.activeElement;
-    if (event.key === "Escape" && active instanceof HTMLElement && active.matches(".info__button")) active.blur();
-  });
-</script>
