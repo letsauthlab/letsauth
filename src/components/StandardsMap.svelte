@@ -1,11 +1,11 @@
 <script lang="ts">
 /**
  * Progressive enhancement over the server-rendered standards map. The drawing, the rail of
- * toggles and the outline in the DOM are the source of truth, and the toggles filter through
+ * toggles and the publisher list in the DOM are the source of truth, and the toggles filter through
  * stylesheet rules on their own. This island only: keeps the count, mirrors the toggles in the
  * URL so a view can be shared, lets a lane label in the drawing toggle its body, shows the card
  * of the node under the pointer or in focus beside it, highlights that node's neighbourhood,
- * and hands the followed node or outline entry to the cross-document view transition so it
+ * and hands the followed node or list entry to the cross-document view transition so it
  * grows into the spec page's title (plan 016, M2). Without JS the page is complete.
  */
 import { onMount } from "svelte";

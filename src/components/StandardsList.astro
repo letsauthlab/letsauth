@@ -1,0 +1,169 @@
+---
+import { BODY_LABEL } from "@/lib/labels";
+import { currentRevisionOf, specsByBody } from "@/lib/standards";
+import type { Spec } from "@/schema";
+import MaturityTag from "./MaturityTag.astro";
+
+interface Props {
+  /** the specifications on the map */
+  specs: Spec[];
+  withdrawn: Spec[];
+  recent: Set<string>;
+}
+
+const { specs, withdrawn, recent } = Astro.props;
+// within a publisher the names run A to Z, a leading "The" ignored, so a name is found by eye
+const sortKey = (s: Spec) => s.name.replace(/^The /, "").toLowerCase();
+// a publisher with many documents takes the full width, its list in columns of its own
+const WIDE = 8;
+const groups = specsByBody(specs)
+  .map((g) => ({ ...g, specs: [...g.specs].sort((a, b) => sortKey(a).localeCompare(sortKey(b))) }))
+  .sort((a, b) => Number(b.specs.length >= WIDE) - Number(a.specs.length >= WIDE));
+---
+
+<section id="spec-list" class="specs" aria-labelledby="list-title">
+  <h2 id="list-title">Every specification, by publisher</h2>
+  <p class="note">
+    The {specs.length} documents on the map. A document without a tag is published; its page
+    has its relations and every revision.
+  </p>
+  <div class="pubs">
+    {
+      groups.map((g) => (
+        <section
+          class:list={["card", "pub", { "pub--wide": g.specs.length >= WIDE }]}
+          data-body={g.body} aria-labelledby={`pub-${g.body}`}>
+          <h3 class="pub__head" id={`pub-${g.body}`}>
+            {BODY_LABEL[g.body]} <span class="n">{g.specs.length}</span>
+          </h3>
+          <ul class="pub__list" role="list">
+            {g.specs.map((spec) => {
+              const current = currentRevisionOf(spec);
+              return (
+                <li
+                  data-spec={spec.id}
+                  data-body={spec.body}
+                  data-maturity={spec.maturity}
+                  data-recent={recent.has(spec.id) ? "" : undefined}
+                >
+                  <span class="pub__name">
+                    <a href={`/standards/${spec.id}/`}>{spec.name}</a>
+                    <MaturityTag maturity={spec.maturity} note={spec.maturityNote} quietPublished />
+                  </span>
+                  <time datetime={current.date} title={`Current revision: ${current.id}`}>
+                    {current.date}
+                  </time>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+  {
+    withdrawn.length > 0 && (
+      <p class="note specs__withdrawn">
+        Withdrawn, off the map but with their pages kept:{" "}
+        {withdrawn.map((spec, i) => (
+          <>
+            {i > 0 && ", "}
+            <a href={`/standards/${spec.id}/`} data-withdrawn={spec.id}>
+              {spec.name}
+            </a>
+          </>
+        ))}
+        .
+      </p>
+    )
+  }
+</section>
+
+<style>
+  /*
+   * The list under the map: one card per publishing body, packed in columns so the long IETF
+   * OAuth card and the one-line ones fill the width without gaps. Each line is a name and the
+   * date of its current revision; a tag only where the document is not published. The
+   * relations and revisions live on each spec's page, the shape of them on the map above.
+   */
+  .specs h2 {
+    font-size: var(--h2);
+    margin-bottom: var(--space-2);
+  }
+  .specs > .note {
+    max-width: var(--measure);
+    margin: 0 0 var(--space-5);
+    color: var(--ink-2);
+  }
+  .pubs {
+    columns: 20rem 3;
+    column-gap: var(--space-4);
+  }
+  .pub {
+    break-inside: avoid;
+    margin: 0 0 var(--space-4);
+    padding: var(--space-4) var(--space-5);
+  }
+  .pub--wide {
+    column-span: all;
+  }
+  .pub--wide .pub__list {
+    columns: 20rem 3;
+    column-gap: var(--space-6);
+  }
+  .pub--wide .pub__list li {
+    break-inside: avoid;
+  }
+  .pub__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-body);
+    font-size: var(--small);
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .pub__head .n {
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+  .pub__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .pub__list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--rule);
+    font-size: var(--small);
+  }
+  .pub__name {
+    min-width: 0;
+  }
+  .pub__name a {
+    color: var(--ink);
+    text-decoration: none;
+    margin-right: var(--space-1);
+  }
+  .pub__name a:hover {
+    color: var(--signal);
+    text-decoration: underline;
+  }
+  .pub__list time {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+  .specs__withdrawn {
+    margin-top: var(--space-2);
+    font-size: var(--small);
+  }
+</style>

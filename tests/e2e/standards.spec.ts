@@ -52,17 +52,13 @@ test.describe("standards map (US1)", () => {
     page,
   }) => {
     await page.goto("/standards/");
-    await expect(page.locator("#spec-list .family")).not.toHaveCount(0);
+    await expect(page.locator("#spec-list .pub")).toHaveCount(bodies.length);
     await expect(page.locator("#spec-list li[data-spec]")).toHaveCount(nodes.length);
-    // a spec that builds on another sits nested under it (follow-up 4)
-    const dep = relations.find((r) => r.type === "builds-on");
-    if (dep) {
-      await expect(
-        page.locator(`#spec-list li[data-spec="${dep.to}"] li[data-spec="${dep.from}"]`),
-      ).toHaveCount(1);
-    }
-    const entry = page.locator(`#spec-list li[data-spec="${first.id}"]`);
-    const row = entry.locator("> .row");
+    // each spec sits in its publisher's card
+    await expect(
+      page.locator(`#spec-list .pub[data-body="${first.body}"] li[data-spec="${first.id}"]`),
+    ).toHaveCount(1);
+    const row = page.locator(`#spec-list li[data-spec="${first.id}"]`);
     await expect(row.locator("a").first()).toHaveAttribute("href", `/standards/${first.id}/`);
     await expect(row.locator("[data-maturity]")).toHaveAttribute("data-maturity", first.maturity);
     await expect(row.locator("time")).toHaveCount(1);
@@ -89,7 +85,7 @@ test.describe("standards map (US1)", () => {
     const page = await context.newPage();
     await page.goto("/standards/");
     await page.locator(`#map-filters input[name='body'][value='${body}']`).uncheck();
-    await expect(page.locator("#spec-list li[data-spec] > .row:visible")).toHaveCount(
+    await expect(page.locator("#spec-list li[data-spec]:visible")).toHaveCount(
       nodes.length - own.length,
     );
     await context.close();
@@ -122,12 +118,6 @@ test.describe("standards map (US1)", () => {
       expect(await shownEdges(page, "#map path.edge-builds-on")).toBeGreaterThan(0);
       await page.locator("#map-filters input[value='references']").check();
       expect(await shownEdges(page, "#map path.edge-references")).toBe(refs.length);
-    } else {
-      await expect(page.locator("#spec-list .xl[data-type='references']:visible")).toHaveCount(0);
-      await page.locator("#map-filters input[value='references']").check();
-      await expect(page.locator("#spec-list .xl[data-type='references']:visible")).not.toHaveCount(
-        0,
-      );
     }
   });
 
@@ -329,10 +319,10 @@ test.describe("standards map (US1)", () => {
         ownEdges.filter((r) => r.type !== "references").length,
       );
     }
-    await expect(page.locator("#spec-list li[data-spec] > .row:visible")).toHaveCount(own.length);
+    await expect(page.locator("#spec-list li[data-spec]:visible")).toHaveCount(own.length);
     await expect(page).toHaveURL(new RegExp(`body=${body}`));
     await page.locator("#map-filters button[type='reset']").click();
-    await expect(page.locator("#spec-list li[data-spec] > .row:visible")).toHaveCount(nodes.length);
+    await expect(page.locator("#spec-list li[data-spec]:visible")).toHaveCount(nodes.length);
     await expect(page).not.toHaveURL(/body=/);
   });
 

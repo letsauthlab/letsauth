@@ -1,12 +1,11 @@
 ---
+import StandardsList from "@/components/StandardsList.astro";
 import StandardsMap from "@/components/StandardsMap.astro";
 import StandardsMapIsland from "@/components/StandardsMap.svelte";
-import StandardsOutline from "@/components/StandardsOutline.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
-import { buildForest, layoutGraph } from "@/lib/graph";
+import { layoutGraph } from "@/lib/graph";
 import {
-  buildsOnSpine,
   mapRelations,
   recentlyRevised,
   relationsOf,
@@ -19,8 +18,6 @@ const data = getDataset();
 const nodes = specNodes(data);
 const relations = mapRelations(data);
 const layout = await layoutGraph(nodes, relations);
-const forest = buildForest(nodes, relations);
-const spine = buildsOnSpine(nodes, relations);
 const withdrawn = withdrawnSpecs(data);
 const recent = new Map(recentlyRevised(data, 5).map((r) => [r.spec.id, r.revision.date]));
 const recentIds = new Set(recent.keys());
@@ -49,13 +46,7 @@ const repo = "https://github.com/letsauthlab/letsauth";
     <div id="standards">
       <StandardsMap layout={layout} bodies={bodies} groupsOf={groupsOf} recent={recent} />
       <StandardsMapIsland client:idle />
-      <StandardsOutline
-        forest={forest}
-        groupsOf={groupsOf}
-        spine={spine}
-        withdrawn={withdrawn}
-        recent={recentIds}
-      />
+      <StandardsList specs={nodes} withdrawn={withdrawn} recent={recentIds} />
     </div>
 
     <footer class="page-foot prose">
