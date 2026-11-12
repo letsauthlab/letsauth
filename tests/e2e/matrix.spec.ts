@@ -36,7 +36,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(page.locator("[data-revision]")).toHaveText(revision.id);
+    await expect(page.locator("#matrix")).toHaveAttribute("data-matrix-revision", revision.id);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix thead th[data-feature]")).toHaveCount(matrix.columns.length);
     const cells = page.locator("#matrix tbody td[data-feature]");

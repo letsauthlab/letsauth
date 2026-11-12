@@ -197,22 +197,6 @@ const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
         {matrix.rows.length} of {matrix.rows.length} servers, {matrix.columns.length} of{" "}
         {matrix.columns.length} features
       </span>
-      {home && (
-        <span class="matrix-key__revision">
-          Revision <strong class="revision-id" data-revision>{matrix.revision.id}</strong>{" "}
-          <span class:list={["chip", { signal: isCurrent }]}>
-            {isCurrent ? "current" : matrix.revision.status}
-          </span>
-          {otherRevisions.map((r, i) => (
-            <>
-              {i === 0 ? " · earlier: " : ", "}
-              <a class="revision-other" href={hrefFor(r.id)}>
-                {r.id}
-              </a>
-            </>
-          ))}
-        </span>
-      )}
     </p>
   </div>
 
