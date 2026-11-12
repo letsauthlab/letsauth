@@ -3,6 +3,7 @@ import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
 import Facts from "@/components/Facts.astro";
 import MaturityTag from "@/components/MaturityTag.astro";
+import PageBand from "@/components/PageBand.astro";
 import Plate from "@/components/Plate.astro";
 import RelationList from "@/components/RelationList.astro";
 import Base from "@/layouts/Base.astro";
@@ -56,14 +57,14 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
   path={`/standards/${spec.id}/`}
   noindex={spec.maturity === "withdrawn"}
 >
-  <div class="wrap">
+  <PageBand>
+    <Plate slot="field" id={spec.id} title={spec.name} field />
     <Crumbs
       trail={[{ href: "/standards/", label: "Standards" }]}
       current={spec.name}
       note={`${BODY_LABEL[spec.body]} / ${FAMILY_LABEL[spec.family]}`}
     />
     <header class="page-head">
-      <Plate id={spec.id} title={spec.name} />
       <h1>{spec.name}</h1>
       <p class="lede">{spec.summary}</p>
       <p class="page-head__meta">
@@ -71,10 +72,11 @@ const repoFile = `https://github.com/letsauthlab/letsauth/blob/main/data/specs/$
         {spec.maturityNote && <span class="note">{spec.maturityNote}</span>}
         <span aria-hidden="true">/</span>
         <a href={spec.url} rel="noopener">Canonical document</a>
-        <span aria-hidden="true">/</span>
-        <code>{spec.id}</code>
       </p>
     </header>
+  </PageBand>
+
+  <div class="wrap">
 
     <div class="entry">
       <div class="entry__main">

@@ -7,16 +7,19 @@ import { plate, plateSvg } from "@/lib/plate";
 // between builds. Hidden from assistive technology and on narrow screens. The highlighted path
 // draws in once on load (M4), with no halo or glow under it; under reduced motion it is drawn
 // complete. A page that shows data
-// above the fold does not place it. Place it as the first child of `header.page-head`.
+// above the fold does not place it. Place it as the first child of `header.page-head`, or, with
+// `field`, as the field of a `PageBand`, where it is drawn large at the band's right.
 interface Props {
   id: string;
   title: string;
+  /** Draw it as the field of a page band instead of beside the title. */
+  field?: boolean;
 }
 
-const { id, title } = Astro.props;
+const { id, title, field = false } = Astro.props;
 ---
 
-<div class="decor" set:html={plateSvg(plate(id, title))} />
+<div class:list={["decor", { "decor--field": field }]} set:html={plateSvg(plate(id, title))} />
 
 <style>
   .decor {
@@ -31,6 +34,31 @@ const { id, title } = Astro.props;
       float: right;
       width: 18rem;
       margin: 0 0 var(--space-4) var(--space-8);
+    }
+  }
+  /* in a band: as tall as the band allows, at its right edge, lines kept at their own weight */
+  @media (min-width: 64rem) {
+    .decor--field {
+      position: relative;
+      float: none;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+    .decor--field :global(svg) {
+      position: absolute;
+      /* from just under the header down past the band's foot, where the lifelines run out */
+      top: var(--space-6);
+      right: max(var(--gutter), calc((100% - var(--page-max)) / 2));
+      width: auto !important;
+      height: calc(100% + var(--space-7)) !important;
+      max-width: 48%;
+    }
+    .decor--field :global(svg *) {
+      vector-effect: non-scaling-stroke;
+    }
+    .decor--field :global(.pp) {
+      stroke-width: 2.5;
     }
   }
   .decor :global(svg) {

@@ -117,7 +117,7 @@ network request. Both need Playwright's Chromium (`pnpm exec playwright install 
   how-it-works pictures under `docs/assets/readme/`, one light and one dark SVG each. GitHub
   renders a README image without the site's CSS, so the script resolves every token to a plain
   colour per scheme and draws the matrix thumbnail from the real data, with the marks of
-  `MatrixThumb`.
+  `MatrixField`.
 
 ## Working with coding agents
 
