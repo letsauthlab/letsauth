@@ -16,6 +16,8 @@ const { node, groupsOf, spine, recent } = Astro.props;
 const { spec } = node;
 const current = currentRevisionOf(spec);
 const groups = groupsOf(spec.id);
+// a revision named by its date ("2025-06") says nothing the date beside it does not
+const revisionLabel = current.date.startsWith(current.id) ? undefined : current.id;
 
 // the cross links as chips: one per type and direction, dependency types excluded because the
 // indentation already says them; a second parent gets its own chip
@@ -62,39 +64,34 @@ if (node.alsoParents.length > 0) {
   data-recent={recent.has(spec.id) ? "" : undefined}
 >
   <div class="row">
-    {/* the indent says "builds on"; only the other two dependency words need spelling */}
-    {node.parentType && node.parentType !== "builds-on" && (
-      <span class="rel">{RELATION_LABEL[node.parentType].forward}</span>
-    )}
     <span class="who">
+      {/* the indent says "builds on"; only the other two dependency words need spelling */}
+      {node.parentType && node.parentType !== "builds-on" && (
+        <span class="rel">{RELATION_LABEL[node.parentType].forward}</span>
+      )}
       <a href={`/standards/${spec.id}/`}>{spec.name}</a>
       <MaturityTag maturity={spec.maturity} note={spec.maturityNote} quietPublished />
+      {chips.map((chip) => (
+        <details class="xl" data-type={chip.type}>
+          <summary class="chip">
+            {chip.label} <span class="n">{chip.targets.length}</span>
+          </summary>
+          <ul>
+            {chip.targets.map((t) => (
+              <li>
+                <a href={`/standards/${t.id}/`}>{t.name}</a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))}
     </span>
-    <span class="meta">
-      {BODY_LABEL[spec.body]} / {FAMILY_LABEL[spec.family]} / <code>{current.id}</code>{" "}
-      <time datetime={current.date}>{current.date}</time> /{" "}
-      <a href={spec.url} rel="noopener">Document</a>
-    </span>
-    {
-      chips.length > 0 && (
-        <span class="links">
-          {chips.map((chip) => (
-            <details class="xl" data-type={chip.type}>
-              <summary class="chip">
-                {chip.label} <span class="n">{chip.targets.length}</span>
-              </summary>
-              <ul>
-                {chip.targets.map((t) => (
-                  <li>
-                    <a href={`/standards/${t.id}/`}>{t.name}</a>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ))}
-        </span>
-      )
-    }
+    <span class="col body">{BODY_LABEL[spec.body]}</span>
+    <span class="col kind">{FAMILY_LABEL[spec.family]}</span>
+    <a class="col rev" href={spec.url} rel="noopener" title={`Open ${spec.name}`}>
+      {revisionLabel && <code>{revisionLabel}</code>}
+      <time datetime={current.date}>{current.date}</time>
+    </a>
   </div>
   {
     node.children.length > 0 && (

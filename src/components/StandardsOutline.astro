@@ -28,6 +28,12 @@ const count = (nodes: TreeNode[]): number =>
     relations are the chips on its row. Open one to see the documents it names. A document
     without a maturity tag is published.
   </p>
+  <p class="outline__cols" aria-hidden="true">
+    <span>Specification</span>
+    <span class="col body">Publisher</span>
+    <span class="col kind">Kind</span>
+    <span class="col rev">Current revision</span>
+  </p>
   {
     forest.trees.map((tree) => (
       <section class="family" data-tree={tree.spec.id} aria-label={`${tree.spec.name} and what builds on it`}>
@@ -74,7 +80,7 @@ const count = (nodes: TreeNode[]): number =>
                   <a href={`/standards/${spec.id}/`}>{spec.name}</a>
                   <MaturityTag maturity={spec.maturity} note={spec.maturityNote} />
                 </span>
-                <span class="meta">{BODY_LABEL[spec.body]}</span>
+                <span class="col body">{BODY_LABEL[spec.body]}</span>
               </div>
             </li>
           ))}
@@ -130,56 +136,87 @@ const count = (nodes: TreeNode[]): number =>
     margin-left: -2px;
     padding-left: 2px;
   }
-  .outline .row {
-    display: flex;
-    flex-wrap: wrap;
+  /*
+   * A row is one line of a table: the name, with its tags and relation chips beside it, takes
+   * the free width and the three facts sit in fixed columns at the right edge, so they line up
+   * down the whole outline at every depth of the tree. The column heads sit once above it.
+   */
+  .outline .row,
+  .outline__cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 9.5rem 7.5rem 11rem;
     align-items: baseline;
-    gap: var(--space-1) var(--space-3);
-    padding: var(--space-3) 0;
+    column-gap: var(--space-4);
+  }
+  .outline .row {
+    padding: var(--space-2) 0;
     border-bottom: 1px solid var(--rule);
   }
-  .outline .rel {
-    flex-basis: 100%;
+  .outline__cols {
+    margin: 0;
+    max-width: none;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--rule-strong);
     font-size: var(--tiny);
+    font-weight: 500;
     color: var(--ink-2);
-    margin-bottom: calc(-1 * var(--space-1));
+  }
+  .outline__cols + .family {
+    margin-top: var(--space-4);
   }
   .outline .who {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-1) var(--space-3);
+    align-items: baseline;
+    gap: var(--space-1) var(--space-2);
     min-width: 0;
   }
-  .outline .who a {
+  .outline .who > a {
     font-weight: 500;
     color: var(--ink);
     text-decoration: none;
+    margin-right: var(--space-1);
   }
-  .outline .who a:hover {
+  .outline .who > a:hover {
     color: var(--signal);
   }
-  .outline .meta {
+  .outline .rel {
+    font-size: var(--tiny);
+    color: var(--ink-2);
+  }
+  .outline .col {
     color: var(--ink-2);
     font-size: var(--tiny);
     font-variant-numeric: tabular-nums;
-    margin-left: auto;
   }
-  .outline .meta code,
-  .outline .meta time {
+  .outline .rev {
+    justify-self: end;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0 var(--space-2);
+    text-decoration: none;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .outline__cols .rev {
+    justify-self: end;
+  }
+  .outline a.rev:hover {
+    color: var(--signal);
+    text-decoration: underline;
+  }
+  .outline .rev code,
+  .outline .rev time {
     font-family: var(--font-mono);
     font-size: var(--tiny);
     background: none;
     padding: 0;
+    color: inherit;
   }
-  .outline .meta a {
-    color: var(--ink-2);
-  }
-  .outline .links {
+  /* an open chip takes the rest of the line, so its list reads under the name */
+  .outline .xl[open] {
     flex-basis: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
   }
   .outline .xl > summary {
     list-style: none;
@@ -205,9 +242,44 @@ const count = (nodes: TreeNode[]): number =>
   .outline .xl > ul li {
     padding: var(--space-1) 0;
   }
-  @media (max-width: 40rem) {
-    .outline .meta {
-      margin-left: 0;
+  /* a tablet keeps the table but lets the kind go, so the names keep their width */
+  @media (max-width: 64rem) {
+    .outline .row,
+    .outline__cols {
+      grid-template-columns: minmax(0, 1fr) 8.5rem 11rem;
+    }
+    .outline .kind {
+      display: none;
+    }
+  }
+  /* narrower: the facts fold under the name as one line, and the column heads go */
+  @media (max-width: 48rem) {
+    .outline__cols {
+      display: none;
+    }
+    .outline .row {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: var(--space-1);
+      row-gap: var(--space-1);
+    }
+    .outline .who {
+      flex-basis: 100%;
+      margin-bottom: var(--space-1);
+    }
+    .outline .kind {
+      display: inline;
+    }
+    .outline .col + .col::before {
+      content: "/ ";
+    }
+    .outline .rev {
+      justify-self: auto;
+      justify-content: flex-start;
+    }
+    .outline .rev code {
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
   }
 </style>
