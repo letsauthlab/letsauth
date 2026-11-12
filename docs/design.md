@@ -210,15 +210,20 @@ Deprecated until WP10: `.card` and `.cards` (now flat `--ground-2` panels; move 
 The page head of `/explorer/` and every spec page carries a decorative drawing
 (`Plate.astro`, WP8): a small delegation chain drawn from the page id and title by
 `src/lib/plate.ts`, so a page always gets the same one. It is the first child of
-`header.page-head`, floats beside the title from 64rem up and is left out below that. It has no
+`header.page-head`, floats beside the title from 64rem up and is left out below that; with
+`field` it is the picture of a `PageBand` instead (standard pages, the chains index), drawn large
+at the band's right with its lines at their own weight. It has no
 frame and uses the existing inks only: `--signal` for the path, `--boundary` for the trust
 boundary dash, hairlines for the rest. It never goes on a page with a data view above the fold.
 
 The shared frame (spec 019): under the header every page carries the record line (`.record` in
-`Base.astro`: the section, the newest observation's time, the current revision). The page head is
-an 8/3 grid; pages that are a cut of the matrix put `MatrixThumb` (the matrix in small, in the
-status colours, with the page's row, column or cells lit) in the narrow column as
-`a.page-head__aside`. A section below the head opens with `.section-head` (a 2px ink rule, the
+`Base.astro`: the section, the newest observation's time, the current revision). Data pages set
+the page head in `PageBand.astro`: a band across the full width, right under the header, with
+the head in the page column and the page's picture behind it on the right, fading out under the
+text. The home page draws every cell of the matrix there (`MatrixField.astro`); the ledger, a
+server and a requirement draw the same field with their own cells, column or row lit and the rest
+faint; a standard and the chains index draw their plate. The picture is decoration and is still
+under reduced motion. A section below the head opens with `.section-head` (a 2px ink rule, the
 h2 and a note) and may close with `.section-more`. Status changes are always `Ledger.astro`.
 
 The header scrolls away with the page, so `--header-h` (what sticky content must clear) is 0.
@@ -257,7 +262,7 @@ package of the redesign that builds it. Anything not in this table does not anim
 | # | Where | What | Means | Reduced motion | WP |
 | --- | --- | --- | --- | --- | --- |
 | M1 | Every page | Cross-document view transition, root crossfade 220ms | continuity | none (as today) | WP2 |
-| M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (matrix plate from `MatrixThumb.astro` as `matrix`, map; on the explorer, the scenario title into the page h1) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
+| M2 | Home → `/mcp/`, `/standards/` → spec, `/explorer/` → scenario | Shared `view-transition-name` on the data view (map; on the explorer, the scenario title into the page h1) so it morphs instead of crossfading | "this is the same object, larger" | none | WP3, WP5, WP6 |
 | M3 | Home facts, server page facts, spec page facts (`Facts.astro`) | Removed in the unslop pass (October 2026): a figure counting up from zero is decoration, and until it has counted it shows the wrong number. The figures stand, tabular, from the first paint | n/a | n/a | WP3 |
 | M4 | Decorative plate | Highlighted path draws in (`stroke-dashoffset`), 1200ms, once on load, with no halo under it (the halo was a glow and went in the unslop pass). The standards map dropped it in R-12: its spine is two or three short edges, so the draw read as a glitch, not a path; the spine is drawn complete at full strength | "follow this path" | path shown complete | WP8 |
 | M5 | Explorer chain | Per step: the sender and receiver light up in the actor head, the current arrow draws in (300ms, ease-out), the body fades up 8px (220ms); earlier steps keep a quieter arrow and later ones a hairline, in colour, not opacity, so text keeps its contrast | "you are here" | arrow and body shown, highlight and dimming applied without transition | WP6, R-08 |

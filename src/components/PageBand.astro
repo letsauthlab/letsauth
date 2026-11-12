@@ -1,0 +1,93 @@
+---
+/*
+ * The page band (spec 019): the head of a page as a band across the full width, right under the
+ * header, with a picture of the page's own subject behind it on the right (slot `field`) and the
+ * head itself (`header.page-head`, in the default slot) in the page's column over it. The home
+ * page draws the whole matrix there; a server, a requirement and the ledger draw the matrix with
+ * their own cells lit; a standard draws its delegation plate. The field is decoration.
+ */
+interface Props {
+  /** The id of the heading that names the band, when it should be a named region. */
+  labelledby?: string;
+}
+const { labelledby } = Astro.props;
+---
+
+<section class="band" aria-labelledby={labelledby}>
+  <div class="band__field" aria-hidden="true"><slot name="field" /></div>
+  <div class="wrap band__inner"><slot /></div>
+</section>
+
+<style>
+  .band {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    /* the band starts right under the header: it takes back the page's top padding */
+    margin-top: calc(-1 * var(--space-7));
+    margin-bottom: var(--space-7);
+    border-bottom: 1px solid var(--rule);
+  }
+  .band__field {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    /* the drawing fades out under the text on the left */
+    mask-image: linear-gradient(90deg, transparent 0%, transparent 44%, rgb(0 0 0 / 0.5) 56%, #000 72%);
+  }
+  .band__field > :global(*) {
+    width: 100%;
+    height: 100%;
+  }
+  .band__inner {
+    padding-block: var(--space-8) var(--space-7);
+  }
+  /* the head in the band is the text column alone: the picture is the band's own */
+  .band__inner > :global(.page-head) {
+    display: block;
+    max-width: 38rem;
+    margin-bottom: 0;
+  }
+  .band__inner :global(.page-head .lede) {
+    margin-top: 0;
+  }
+  .band__inner :global(.page-head h1) {
+    margin-bottom: var(--space-5);
+  }
+  .band__inner :global(.page-head .facts) {
+    margin-top: var(--space-6);
+    padding-top: 0;
+    border-top: 0;
+    column-gap: var(--space-6);
+  }
+  /* buttons and a quiet link, the ways on from the head */
+  .band__inner :global(.band__actions) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin: var(--space-6) 0 0;
+    max-width: none;
+  }
+  .band__inner :global(.band__link) {
+    font-size: var(--small);
+    color: var(--ink-2);
+  }
+  .band__inner :global(.band__link:hover) {
+    color: var(--signal);
+  }
+
+  @media (max-width: 56rem) {
+    .band__field {
+      mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.08));
+    }
+    .band__inner {
+      padding-block: var(--space-7) var(--space-6);
+    }
+  }
+  @media (max-width: 40rem) {
+    .band {
+      margin-top: calc(-1 * var(--space-6));
+    }
+  }
+</style>

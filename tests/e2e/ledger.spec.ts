@@ -32,20 +32,23 @@ test.describe("ledger page (019)", () => {
     await expect(earlier.locator("li").first()).toBeVisible();
   });
 
-  test("draws the matrix in small with the changed cells lit", async ({ page }) => {
+  test("draws the matrix behind its head with the changed cells lit", async ({ page }) => {
     await page.goto("/ledger/");
-    const thumb = page.locator(".page-head__aside svg.matrix-thumb");
-    await expect(thumb).toHaveAttribute("aria-label", /the cells that have changed lit/);
-    await expect(thumb.locator("g.faint")).toHaveCount(1);
-    await expect(page.locator("a.page-head__aside")).toHaveAttribute("href", "/");
+    const field = page.locator(".band svg.matrix-field.focused");
+    await expect(field).toHaveAttribute("aria-hidden", "true");
+    const lit = field.locator("rect:not(.off)");
+    await expect(lit).toHaveCount(new Set(changes.map((c) => `${c.server} ${c.feature}`)).size);
   });
 
   test("a server's page lights its row and carries its own ledger", async ({ page }) => {
     const server = changes[0]?.server ?? "";
     await page.goto(`/mcp/servers/${server}/`);
-    await expect(page.locator(".page-head__aside svg.matrix-thumb")).toHaveAttribute(
-      "aria-label",
-      /the row of .+ lit/,
+    // its column of the field is lit: one cell per requirement
+    const columns = await page.locator(".band svg.matrix-field g").count();
+    expect(columns).toBeGreaterThan(0);
+    const lit = page.locator(".band svg.matrix-field rect:not(.off)");
+    expect(await lit.count()).toBe(
+      await page.locator(".band svg.matrix-field g").first().locator("rect").count(),
     );
     const mine = changes.filter((c) => c.server === server);
     const section = page.locator("section[aria-labelledby='ledger']");
@@ -57,10 +60,9 @@ test.describe("ledger page (019)", () => {
   test("a requirement's page lights its column and carries its own ledger", async ({ page }) => {
     const feature = changes[0]?.feature ?? "";
     await page.goto(`/mcp/features/${feature}/`);
-    await expect(page.locator(".page-head__aside svg.matrix-thumb")).toHaveAttribute(
-      "aria-label",
-      /the column of .+ lit/,
-    );
+    // its row of the field is lit: one cell per server
+    const lit = page.locator(".band svg.matrix-field rect:not(.off)");
+    expect(await lit.count()).toBe(await page.locator(".band svg.matrix-field g").count());
     const mine = changes.filter((c) => c.feature === feature);
     const section = page.locator("section[aria-labelledby='ledger']");
     await expect(section.locator("li.change")).toHaveCount(mine.length);

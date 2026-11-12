@@ -1,4 +1,5 @@
 ---
+import PageBand from "@/components/PageBand.astro";
 import Plate from "@/components/Plate.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
@@ -27,15 +28,14 @@ for (const { scenario } of scenarios) {
   path="/explorer/"
   image={sectionCard("explorer")}
 >
-  <div class="wrap">
+  <PageBand>
+    <Plate slot="field" id="explorer" title={SECTION_PLATES.explorer.title} field />
     <header class="page-head">
-      <Plate id="explorer" title={SECTION_PLATES.explorer.title} />
       <p class="eyebrow">Delegation chain explorer</p>
       <h1>Delegation chains</h1>
       <p class="lede">
-        Each scenario is a chain of requests between a user, agents, MCP servers and
-        authorization servers, written from the specification sections it cites. Every step
-        shows the token it carries, decoded, with the claims that changed since the previous hop.
+        Requests between a user, agents, MCP servers and authorization servers, each step with
+        the token it carries, decoded, and the specification section it follows.
       </p>
       <dl class="facts" aria-label="Explorer at a glance">
         <div>
@@ -56,6 +56,9 @@ for (const { scenario } of scenarios) {
         </div>
       </dl>
     </header>
+  </PageBand>
+
+  <div class="wrap">
 
     <ul id="scenario-list" class="rows scenarios" role="list">
       {

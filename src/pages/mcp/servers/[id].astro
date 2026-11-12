@@ -2,7 +2,8 @@
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
 import Ledger from "@/components/Ledger.astro";
-import MatrixThumb from "@/components/MatrixThumb.astro";
+import MatrixField from "@/components/MatrixField.astro";
+import PageBand from "@/components/PageBand.astro";
 import ScanTranscript from "@/components/ScanTranscript.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
@@ -101,14 +102,14 @@ const classes = [
   path={`/mcp/servers/${server.id}/`}
   noindex={Boolean(server.withdrawn)}
 >
-  <div class="wrap">
+  <PageBand>
+    {!server.withdrawn && <MatrixField slot="field" server={server.id} />}
     <Crumbs trail={[{ href: "/", label: "Matrix" }]} current={server.name} />
     <header class="page-head">
       <h1>{server.name}</h1>
       <p class="lede">
         {server.vendor && server.vendor !== server.name && <>By {server.vendor}. </>}
-        One row of the matrix: what this server does of the {columns.length} requirements of MCP
-        Authorization {revision.id}, each with the observation behind it.
+        How it meets the {columns.length} requirements of MCP Authorization.
       </p>
       {
         !server.withdrawn && (
@@ -138,15 +139,10 @@ const classes = [
           </dl>
         )
       }
-      {
-        !server.withdrawn && (
-          <a class="page-head__aside" href="/">
-            <MatrixThumb revisionId={revision.id} server={server.id} label={`the row of ${server.name}`} />
-            <span>Lit: this server's row in the matrix</span>
-          </a>
-        )
-      }
     </header>
+  </PageBand>
+
+  <div class="wrap">
 
     {
       server.withdrawn ? (

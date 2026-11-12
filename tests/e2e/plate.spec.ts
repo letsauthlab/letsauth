@@ -11,7 +11,7 @@ test.describe("decorative plate (WP8)", () => {
   for (const path of withPlate) {
     test(`sits in the head of ${path}, hidden and labelless`, async ({ page }) => {
       await page.goto(path);
-      const plate = page.locator("header.page-head > .decor");
+      const plate = page.locator(".band .decor--field");
       await expect(plate).toHaveCount(1);
       await expect(plate.locator("svg")).toHaveAttribute("aria-hidden", "true");
       await expect(plate.locator("text")).toHaveCount(0);
@@ -45,10 +45,10 @@ test.describe("decorative plate (WP8)", () => {
     }
   });
 
-  test("shows beside the title on wide screens only", async ({ page }) => {
+  test("shows right of the title on wide screens only", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/standards/rfc8693/");
-    const plate = page.locator(".decor");
+    const plate = page.locator(".decor svg");
     await expect(plate).toBeVisible();
     const box = await plate.boundingBox();
     const title = await page.locator(".page-head h1").boundingBox();
