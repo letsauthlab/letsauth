@@ -148,7 +148,6 @@ export function plateSvg(p: Plate): string {
  */
 export const SECTION_PLATES = {
   explorer: { title: "Delegation chains", eyebrow: "Delegation chain explorer" },
-  breaches: { title: "Agent auth failures", eyebrow: "Breach anatomy" },
 } as const;
 
 /** The social card of a section root, written by `pnpm generate:brand`. */
