@@ -70,11 +70,6 @@ const changed = newestDay ? changedSince(changes, newestDay) : new Set<string>()
 </Base>
 
 <style>
-  /* below the matrix and below the fold: laid out when it comes near the viewport */
-  section[aria-labelledby="since"] {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 44rem;
-  }
   .home-latest time {
     font-family: var(--font-mono);
   }
