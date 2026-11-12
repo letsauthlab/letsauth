@@ -1,0 +1,140 @@
+- server: google-bigquery
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://bigquery.googleapis.com/.well-known/oauth-protected-resource/mcp — HTTP 200; resource: https://bigquery.googleapis.com/mcp"
+- server: google-bigquery
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://bigquery.googleapis.com/.well-known/oauth-protected-resource/mcp — HTTP 200; authorization_servers: [https://accounts.google.com/]"
+- server: google-bigquery
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://bigquery.googleapis.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [https://www.googleapis.com/auth/bigquery]"
+- server: google-bigquery
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location
+- server: google-bigquery
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/mcp — HTTP 400; no 401 challenge to an unauthenticated request (GET HTTP 405, POST HTTP 400), nothing to judge
+- server: google-bigquery
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/mcp — HTTP 400; no 401 challenge to an unauthenticated request (GET HTTP 405, POST HTTP 400), nothing to judge
+- server: google-bigquery
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://bigquery.googleapis.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [https://www.googleapis.com/auth/bigquery]"
+- server: google-bigquery
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://accounts.google.com, PRM named https://accounts.google.com/"
+- server: google-bigquery
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://accounts.google.com"
+- server: google-bigquery
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: absent"
+- server: google-bigquery
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: absent"
+- server: google-bigquery
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: google-bigquery
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: "https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256, plain]"
+- server: google-bigquery
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-12T02:19:33Z
+  observedBy: scanner@0.4.0
+  evidence: https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; all 6 endpoints use https
