@@ -6,12 +6,19 @@
   `tests/unit/changes.test.ts`.
 - `src/components/Ledger.astro`: the one rendering of status changes (day rule, line, evidence in
   the margin, fold). Used by `/`, `/ledger/`, the server page and the requirement page.
-- `src/components/MatrixThumb.astro`: the matrix in small, servers down and requirements across,
-  one path per status in the status colours, with a lit row, column or set of cells.
+- `src/components/MatrixField.astro`: every cell of the matrix, servers across and requirements
+  down, in the status colours, with a slow wave of light; optionally a lit server (column),
+  requirement (row) or set of cells, the rest faint, the lit line turned to where the band shows
+  it. Replaces the earlier `MatrixThumb` (the matrix in small in a narrow head column), which read
+  as squeezed into a corner.
+- `src/components/PageBand.astro`: the head of a data page as a full-width band right under the
+  header, the page's picture behind it on the right. The home page, the ledger, server and
+  requirement pages draw `MatrixField`; standard pages and the chains index draw their `Plate`
+  large (`field`). The band's head keeps one text width and drops its rule over the facts.
 - `src/components/MatrixPage.astro`: a `home` flag (title and eyebrow of the home page), a
   `changed` set passed to `MatrixTable` (the corner dot), and two slots (`aside` in the head,
   `after` above the foot). `src/pages/index.astro` fills them; `src/pages/mcp/index.astro` is gone.
-- `src/components/HomeHero.astro`: the home page's head is a full-width band right under
+- `src/components/HomeHero.astro`: the home page's head is a `PageBand` right under
   the header, the title, two figures (servers, requirements) and two actions (the matrix, the ledger) plus
   the data link, over every cell of the current matrix drawn in the status colours with a slow
   wave of light crossing it column by column (still under reduced motion). The revisions move to
@@ -23,7 +30,7 @@
 - `src/layouts/Base.astro`: nav of Matrix, Ledger, Standards, Chains, Contribute; the record
   line. Its time carries `data-record`, which `tests/e2e/screenshot.css` hides in screenshots so
   a scan run does not need new baselines.
-- `src/styles/global.css`: `.page-head` as an 8/3 grid with `.page-head__aside`, `.section-head`,
+- `src/styles/global.css`: `.page-head` as an 8/3 grid, `.section-head`,
   `.section-more`, serif figures in `.facts`.
 - Redirects in `astro.config.mjs`: `/mcp`, `/atlas/mcp` and `/breaches` to `/`.
 - Type: `--font-serif` in `tokens.css`; h1 and h2 in `global.css`; local h2 overrides at `--h3` or

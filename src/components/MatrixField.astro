@@ -1,0 +1,165 @@
+---
+/*
+ * The matrix as a field (spec 019): every cell of the current matrix, servers across and
+ * requirements down, in the status colours, for the back of a page band. A slow wave of light
+ * crosses it column by column, like a scan; still under reduced motion. A page may light its own
+ * server (a column of the field), its own requirement (a row) or a set of cells; the rest then
+ * stays faint, and the lit line is turned round to where the band shows it. Decoration only: the band hides it from assistive technology.
+ */
+import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+
+interface Props {
+  /** Light this server's column. */
+  server?: string;
+  /** Light this requirement's row. */
+  feature?: string;
+  /** Light these cells, as `cellKey(server, feature)`. */
+  cells?: Set<string>;
+}
+
+const { server, feature, cells } = Astro.props;
+const data = getDataset();
+const matrix = matrixFor(data, currentRevision(data).id);
+const focused = Boolean(server || feature || cells);
+
+type Mark = "s" | "p" | "x" | "u" | "d" | "n";
+const STEP = 10;
+const CELL = 8;
+// a lit server or requirement is turned round to where the band shows it best: a column near the
+// right edge, a row near the top (the band fades the left and crops the foot)
+function turn<T>(list: T[], at: number, to: number): T[] {
+  if (at < 0) return list;
+  return list.map((_, i) => list[(i + at - to + list.length) % list.length] as T);
+}
+const rows = turn(
+  matrix.rows,
+  matrix.rows.findIndex((r) => r.id === server),
+  Math.max(0, matrix.rows.length - 5),
+);
+const features = turn(
+  matrix.columns,
+  matrix.columns.findIndex((c) => c.id === feature),
+  Math.min(4, matrix.columns.length - 1),
+);
+const columns = rows.map((s) =>
+  features.map((f) => {
+    const key = cellKey(s.id, f.id);
+    const cell = matrix.cells.get(key);
+    const status = cell?.status ?? "unknown";
+    const mark: Mark =
+      status === "supported"
+        ? "s"
+        : status === "partial"
+          ? "p"
+          : status === "unsupported"
+            ? "x"
+            : status === "not-applicable"
+              ? "n"
+              : (cell?.derived ?? true)
+                ? "d"
+                : "u";
+    const lit = !focused || s.id === server || f.id === feature || (cells?.has(key) ?? false);
+    return { mark, cls: focused && !lit ? `${mark} off` : mark };
+  }),
+);
+const width = matrix.rows.length * STEP;
+const height = matrix.columns.length * STEP;
+---
+
+<svg
+  class:list={["matrix-field", { focused }]}
+  viewBox={`0 0 ${width} ${height}`}
+  preserveAspectRatio="xMaxYMin slice"
+  aria-hidden="true"
+  focusable="false"
+>
+  {
+    columns.map((marks, x) => (
+      <g style={`--d:${x * -110}ms`}>
+        {marks.map(({ mark, cls }, y) =>
+          mark === "u" ? (
+            <rect class={cls} x={x * STEP + 0.5} y={y * STEP + 0.5} width={CELL - 1} height={CELL - 1} rx="1.5" />
+          ) : mark === "d" ? (
+            <rect class={cls} x={x * STEP + 3} y={y * STEP + 3} width="2" height="2" />
+          ) : (
+            <rect class={cls} x={x * STEP} y={y * STEP} width={CELL} height={CELL} rx="1.5" />
+          ),
+        )}
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .matrix-field {
+    display: block;
+  }
+  .matrix-field g {
+    opacity: 0.4;
+    animation: field-wave 8s var(--ease) infinite;
+    animation-delay: var(--d);
+  }
+  /* a lit field: the page's own cells carry the wave at full strength, the rest stay faint */
+  .focused g {
+    opacity: 0.7;
+    animation-name: field-wave-lit;
+  }
+  .s {
+    fill: var(--ok);
+  }
+  .p {
+    fill: var(--caution);
+  }
+  .x {
+    fill: var(--threat);
+  }
+  .n {
+    fill: var(--rule-strong);
+  }
+  .d {
+    fill: var(--ink-2);
+  }
+  .u {
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 0.8;
+    stroke-dasharray: 1.5 1;
+  }
+  .off {
+    opacity: 0.18;
+  }
+  @keyframes field-wave {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    12% {
+      opacity: 1;
+    }
+    30% {
+      opacity: 0.4;
+    }
+  }
+  @keyframes field-wave-lit {
+    0%,
+    100% {
+      opacity: 0.7;
+    }
+    12% {
+      opacity: 1;
+    }
+    30% {
+      opacity: 0.7;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .matrix-field g {
+      animation: none;
+      opacity: 0.7;
+    }
+    .focused g {
+      opacity: 0.9;
+    }
+  }
+</style>

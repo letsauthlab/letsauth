@@ -46,9 +46,10 @@ front page and advertises the lab; keep working notes out of it.
   `.eyebrow`) live in `src/styles/global.css`; reuse them before adding page-local styles.
 - One page skeleton: every page is a left-aligned `.wrap` column that opens with
   `header.page-head` (eyebrow, h1, `.lede`, optional `.page-head__meta` line, optional
-  `dl.facts` row) and closes a data page with `footer.page-foot`. The head is an 8/3 grid: text
-  in the wide column, and on pages that are a cut of the matrix (ledger, server, requirement) an
-  `a.page-head__aside` with `MatrixThumb`, the matrix in small with the page's cells lit. Pages below `/mcp/` and
+  `dl.facts` row) and closes a data page with `footer.page-foot`. Data pages (home, ledger,
+  server, requirement, standard, chains) set that head in a `PageBand`: a full-width band right
+  under the header with the page's own picture behind it on the right (`MatrixField` with the
+  page's cells lit, or the `Plate` as a field); the band sits outside `.wrap`. Pages below `/mcp/` and
   `/standards/` put `<Crumbs>` above the h1 in the eyebrow's place (one line, never both); long-form text pages use
   `src/layouts/Document.astro` (numbered sections, a rail of them on wide screens, no
   breadcrumb). New pages take these before inventing a head of their own.

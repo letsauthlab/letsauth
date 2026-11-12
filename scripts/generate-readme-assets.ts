@@ -105,7 +105,7 @@ const MONO = `'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace`
 /*
  * The home hero as a picture, on the site's surfaces: a flat ground, the wordmark, eyebrow,
  * headline and lede at the left, and the matrix on a plate at the right with the marks of
- * MatrixThumb (an observed status filled, a recorded unknown a dashed ring, a derived unknown
+ * MatrixField (an observed status filled, a recorded unknown a dashed ring, a derived unknown
  * a faint dot, not applicable a dash). No glow, shadow or texture.
  */
 function hero(t: Palette, mark: string): string {

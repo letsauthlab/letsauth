@@ -46,7 +46,7 @@ try {
   await page.screenshot({ path: "public/apple-touch-icon.png" });
 
   // The social card is the home hero at 1200 × 630: wordmark, eyebrow, headline, and the current
-  // matrix on a plate with the marks of MatrixThumb. Flat grounds and hairlines, as on the site.
+  // matrix on a plate with the marks of MatrixField. Flat grounds and hairlines, as on the site.
   const MARK = { supported: "s", partial: "p", unsupported: "x" } as const;
   const marks = matrix.columns
     .flatMap((feature) =>

@@ -2,7 +2,8 @@
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
 import Ledger from "@/components/Ledger.astro";
-import MatrixThumb from "@/components/MatrixThumb.astro";
+import MatrixField from "@/components/MatrixField.astro";
+import PageBand from "@/components/PageBand.astro";
 import StatusCell from "@/components/StatusCell.astro";
 import Base from "@/layouts/Base.astro";
 import {
@@ -60,7 +61,8 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
   description={`${feature.name} in the MCP Authorization specification: what it requires, which revision defines it, and which public MCP servers support it.`}
   path={`/mcp/features/${feature.id}/`}
 >
-  <div class="wrap">
+  <PageBand>
+    {inMatrix && <MatrixField slot="field" feature={feature.id} />}
     <Crumbs
       trail={[{ href: "/", label: "Matrix" }]}
       current={feature.name}
@@ -69,30 +71,27 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     <header class="page-head">
       <h1>{feature.name}</h1>
       <p class="lede">{feature.description}</p>
-      <p class="page-head__meta">
-        <code>{feature.id}</code>
-        {feature.supersedes && (
-          <>
-            {" · supersedes "}
-            <a href={`/mcp/features/${feature.supersedes}/`}>{feature.supersedes}</a>
-          </>
-        )}
-        {supersededBy && (
-          <>
-            {" · superseded by "}
-            <a href={`/mcp/features/${supersededBy.id}/`}>{supersededBy.id}</a>
-          </>
-        )}
-      </p>
       {
-        inMatrix && (
-          <a class="page-head__aside" href="/">
-            <MatrixThumb revisionId={revision.id} feature={feature.id} label={`the column of ${feature.name}`} />
-            <span>Lit: this requirement's column in the matrix</span>
-          </a>
+        (feature.supersedes || supersededBy) && (
+          <p class="page-head__meta">
+            {feature.supersedes && (
+              <>
+                Supersedes <a href={`/mcp/features/${feature.supersedes}/`}>{feature.supersedes}</a>
+              </>
+            )}
+            {feature.supersedes && supersededBy && <span aria-hidden="true">·</span>}
+            {supersededBy && (
+              <>
+                Superseded by <a href={`/mcp/features/${supersededBy.id}/`}>{supersededBy.id}</a>
+              </>
+            )}
+          </p>
         )
       }
     </header>
+  </PageBand>
+
+  <div class="wrap">
 
     <div class="split">
       <section aria-labelledby="definition">

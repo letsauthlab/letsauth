@@ -1,11 +1,12 @@
 ---
 /*
  * The ledger (spec 019): every change of status on record for the current revision, newest
- * first. The matrix is the state today; this page is how it got there. In the head, the matrix
- * in small lights the cells that have changed at least once.
+ * first. The matrix is the state today; this page is how it got there. Behind the head, the
+ * matrix lights the cells that have changed at least once.
  */
 import Ledger from "@/components/Ledger.astro";
-import MatrixThumb from "@/components/MatrixThumb.astro";
+import MatrixField from "@/components/MatrixField.astro";
+import PageBand from "@/components/PageBand.astro";
 import Base from "@/layouts/Base.astro";
 import { cellKey, currentRevision, matrixFor } from "@/lib/atlas";
 import { changesByDay, statusChanges } from "@/lib/changes";
@@ -18,7 +19,6 @@ const changes = statusChanges(data, revision.id).filter((c) =>
   matrix.cells.has(cellKey(c.server, c.feature)),
 );
 const cells = new Set(changes.map((c) => cellKey(c.server, c.feature)));
-const servers = new Set(changes.map((c) => c.server)).size;
 const days = changesByDay(changes).length;
 ---
 
@@ -27,15 +27,12 @@ const days = changesByDay(changes).length;
   description={`Every change of status on record in the letsauth matrix for MCP Authorization ${revision.id}, newest first, each with its evidence and the earlier observations of the cell.`}
   path="/ledger/"
 >
-  <div class="wrap">
+  <PageBand>
+    <MatrixField slot="field" cells={cells} />
     <header class="page-head">
       <p class="eyebrow">Ledger</p>
-      <h1>The ledger</h1>
-      <p class="lede">
-        Every change of status on record, newest first. The matrix shows where each server
-        stands today. The ledger shows how it got there, and nothing in it is ever edited or
-        removed.
-      </p>
+      <h1>Every status change on record</h1>
+      <p class="lede">Newest first. Nothing in it is ever edited or removed.</p>
       <dl class="facts" aria-label="The ledger at a glance">
         <div>
           <dt>Status changes</dt>
@@ -46,20 +43,14 @@ const days = changesByDay(changes).length;
           <dd>{cells.size}</dd>
         </div>
         <div>
-          <dt>Servers</dt>
-          <dd>{servers}</dd>
-        </div>
-        <div>
           <dt>Days with a change</dt>
           <dd>{days}</dd>
         </div>
       </dl>
-      <a class="page-head__aside" href="/">
-        <MatrixThumb revisionId={revision.id} cells={cells} label="the cells that have changed" />
-        <span>Lit: the cells that have changed at least once</span>
-      </a>
     </header>
+  </PageBand>
 
+  <div class="wrap">
     <Ledger changes={changes} />
 
     <footer class="page-foot prose">
