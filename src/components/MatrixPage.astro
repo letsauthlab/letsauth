@@ -50,6 +50,13 @@ const usedLevels = new Set(
   matrix.columns.map((f) => f.revisions.find((r) => r.revision === revisionId)?.level),
 );
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
+// the key links an earlier revision only once something was observed against it; a revision
+// with no observation would open a matrix of unknowns
+const observedEarlier = revisions.filter(
+  (r) =>
+    r.id !== revisionId &&
+    data.observations.some((o) => o.revision.spec === spec.id && o.revision.revision === r.id),
+);
 const hrefFor = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}/`);
 
 // the nightly scanner's view per server: its requests are linked next to the name, never sorted on
@@ -198,16 +205,14 @@ const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
           <span class:list={["chip", { signal: isCurrent }]}>
             {isCurrent ? "current" : matrix.revision.status}
           </span>
-          {revisions
-            .filter((r) => r.id !== revisionId)
-            .map((r) => (
-              <>
-                {" · "}
-                <a class="revision-other" href={hrefFor(r.id)} title="An earlier revision">
-                  {r.id}
-                </a>
-              </>
-            ))}
+          {observedEarlier.map((r, i) => (
+            <>
+              {i === 0 ? " · earlier: " : ", "}
+              <a class="revision-other" href={hrefFor(r.id)}>
+                {r.id}
+              </a>
+            </>
+          ))}
         </span>
       )}
     </p>
