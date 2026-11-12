@@ -1,7 +1,7 @@
 ---
+import StandardsList from "@/components/StandardsList.astro";
 import StandardsMap from "@/components/StandardsMap.astro";
 import StandardsMapIsland from "@/components/StandardsMap.svelte";
-import StandardsOutline from "@/components/StandardsOutline.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
 import { layoutGraph } from "@/lib/graph";
@@ -46,7 +46,7 @@ const repo = "https://github.com/letsauthlab/letsauth";
     <div id="standards">
       <StandardsMap layout={layout} bodies={bodies} groupsOf={groupsOf} recent={recent} />
       <StandardsMapIsland client:idle />
-      <StandardsOutline specs={nodes} withdrawn={withdrawn} recent={recentIds} />
+      <StandardsList specs={nodes} withdrawn={withdrawn} recent={recentIds} />
     </div>
 
     <footer class="page-foot prose">

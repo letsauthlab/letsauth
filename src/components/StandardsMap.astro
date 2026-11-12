@@ -56,7 +56,7 @@ const key = (e: (typeof edges)[number]) => `${e.relation.from}|${e.relation.type
 
 /*
  * The filter is the legend: each toggle is a checkbox, and these rules hide what an unchecked
- * one covers, in the drawing and in the outline. No script is needed for a filter to take
+ * one covers, in the drawing and in the publisher list. No script is needed for a filter to take
  * effect; the island only writes the state into the URL and keeps the count.
  */
 const scope = "#standards";
@@ -344,7 +344,7 @@ const filterCss = [
    * The plate: a bar of toggles above the drawing that is legend and filter in one, and the
    * drawing below it at the full width of the page, so its labels keep their size. The card of
    * the node in hover or focus floats beside that node. Below 60rem the bar's groups wrap;
-   * below 40rem the drawing goes and the outline under the plate is the map.
+   * below 40rem the drawing goes and the publisher list under the plate stands in for it.
    */
   .map-plate {
     display: grid;
