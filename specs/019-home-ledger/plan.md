@@ -11,6 +11,15 @@
 - `src/components/MatrixPage.astro`: a `home` flag (title and eyebrow of the home page), a
   `changed` set passed to `MatrixTable` (the corner dot), and two slots (`aside` in the head,
   `after` above the foot). `src/pages/index.astro` fills them; `src/pages/mcp/index.astro` is gone.
+- `src/components/HomeHero.astro`: the home page's head is a full-width band right under
+  the header, the title, two figures (servers, requirements) and two actions (the matrix, the ledger) plus
+  the data link, over every cell of the current matrix drawn in the status colours with a slow
+  wave of light crossing it column by column (still under reduced motion). The revisions move to
+  a quiet line under the matrix key; the record line already links the specification.
+- The matrix head ends on one revision line (the specification, the revision, earlier ones,
+  what changed). Right above the table, `.matrix-bar` holds a page's note about the matrix
+  (`slot="bar"`; the home page: the cells that changed last, with the ledger link) and the
+  folded filters, so both sit where they are used.
 - `src/layouts/Base.astro`: nav of Matrix, Ledger, Standards, Chains, Contribute; the record
   line. Its time carries `data-record`, which `tests/e2e/screenshot.css` hides in screenshots so
   a scan run does not need new baselines.

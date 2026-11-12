@@ -27,7 +27,7 @@ It covers where MCP, A2A and agent delegation meet OAuth, OpenID Connect and wor
 
 <br>
 
-[**Open the MCP auth atlas**](https://letsauth.eu/mcp/) ·
+[**Open the MCP auth atlas**](https://letsauth.eu/) ·
 [**See the standards map**](https://letsauth.eu/standards/) ·
 [**Step through a delegation chain**](https://letsauth.eu/explorer/) ·
 [**Read a scanner report**](https://letsauth.eu/mcp/scanner/) ·
