@@ -67,7 +67,7 @@ test.describe("revisions (US5)", () => {
   test("the current revision canonicalises to the home page", async ({ page }) => {
     await page.goto(`/mcp/revisions/${current.id}/`);
     await page.waitForURL((url) => url.pathname === "/");
-    await expect(page.locator("[data-revision]")).toHaveText(current.id);
+    await expect(page.locator("#matrix")).toHaveAttribute("data-matrix-revision", current.id);
   });
 
   test("the matrix header links to the changes page for changed columns", async ({ page }) => {
