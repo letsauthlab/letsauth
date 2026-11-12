@@ -83,6 +83,8 @@ test.describe("home page: the matrix, then the ledger (019)", () => {
   });
 
   test("has no serious accessibility violations", async ({ page }) => {
+    // axe walks every cell and its observation, which takes most of the default 30 s on a busy runner
+    test.slow();
     await page.goto("/");
     await expectNoSeriousA11yViolations(page);
   });
