@@ -65,6 +65,29 @@ export function lastObservationDate(data: Pick<Dataset, "observations">): string
   return newest?.slice(0, 10);
 }
 
+/**
+ * True when at least one observation was recorded against the revision. Only such a revision
+ * gets a matrix page: one without any would be a matrix of unknowns.
+ */
+export function revisionObserved(data: Dataset, revisionId: string, specId = ATLAS_SPEC): boolean {
+  return data.observations.some(
+    (o) => o.revision.spec === specId && o.revision.revision === revisionId,
+  );
+}
+
+/**
+ * The matrix page of a revision: the home page for the current one, its own page for an older
+ * one with observations, and undefined when there is no page to link.
+ */
+export function revisionHref(
+  data: Dataset,
+  revisionId: string,
+  specId = ATLAS_SPEC,
+): string | undefined {
+  if (revisionId === currentRevision(data, specId).id) return "/";
+  return revisionObserved(data, revisionId, specId) ? `/mcp/revisions/${revisionId}/` : undefined;
+}
+
 /** Revisions of the atlas spec, newest first. */
 export function revisionsNewestFirst(data: Dataset, specId = ATLAS_SPEC): Revision[] {
   return [...getSpec(data, specId).revisions].sort((a, b) => b.date.localeCompare(a.date));

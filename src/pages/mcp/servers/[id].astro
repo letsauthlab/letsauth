@@ -13,6 +13,7 @@ import {
   currentRevision,
   featureInRevision,
   matrixColumns,
+  revisionObserved,
   revisionsNewestFirst,
 } from "@/lib/atlas";
 import { statusChanges } from "@/lib/changes";
@@ -38,6 +39,8 @@ const { server } = Astro.props as { server: Server };
 const data = getDataset();
 const revision = currentRevision(data);
 const revisions = revisionsNewestFirst(data);
+// older revisions with a matrix page of their own (one with observations recorded against it)
+const olderMatrices = revisions.filter((r) => r.id !== revision.id && revisionObserved(data, r.id));
 const columns = matrixColumns(data, revision.id);
 // this server's row of the ledger: its status changes among the requirements the matrix shows
 const shownFeatures = new Set(columns.map((f) => f.id));
@@ -288,14 +291,12 @@ const classes = [
             </section>
           </div>
 
-          {revisions.length > 1 && (
+          {olderMatrices.length > 0 && (
             <p class="revision-note">
               Older revisions of the matrix:{" "}
-              {revisions
-                .filter((r) => r.id !== revision.id)
-                .map((r) => (
-                  <a href={`/mcp/revisions/${r.id}/`}>{r.id}</a>
-                ))}
+              {olderMatrices.map((r) => (
+                <a href={`/mcp/revisions/${r.id}/`}>{r.id}</a>
+              ))}
             </p>
           )}
 

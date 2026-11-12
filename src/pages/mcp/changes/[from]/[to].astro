@@ -2,7 +2,7 @@
 import Citation from "@/components/Citation.astro";
 import Crumbs from "@/components/Crumbs.astro";
 import Base from "@/layouts/Base.astro";
-import { currentRevision, featureInRevision, revisionDiff, revisionPairs } from "@/lib/atlas";
+import { featureInRevision, revisionDiff, revisionHref, revisionPairs } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
 import { PARTY_LABEL } from "@/lib/labels";
 import type { Feature } from "@/schema";
@@ -16,8 +16,8 @@ export function getStaticPaths() {
 const { from, to } = Astro.params;
 const data = getDataset();
 const diff = revisionDiff(data, from, to);
-const current = currentRevision(data);
-const href = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}/`);
+const fromHref = revisionHref(data, from);
+const toHref = revisionHref(data, to);
 const unchanged = data.features.filter(
   (f) =>
     featureInRevision(f, from) &&
@@ -36,7 +36,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
     <Crumbs trail={[{ href: "/", label: "Matrix" }]} current={`Changes ${from} to ${to}`} />
     <header class="page-head">
       <h1>
-        What changed from <a href={href(from)}>{from}</a> to <a href={href(to)}>{to}</a>
+        What changed from {fromHref ? <a href={fromHref}>{from}</a> : from} to {toHref ? <a href={toHref}>{to}</a> : to}
       </h1>
       <p class="lede">
         {diff.to.changes ?? "Differences in the requirement levels between the two revisions."}
@@ -52,13 +52,13 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
       <li>
         <time datetime={diff.from.date}>{diff.from.date}</time>
         <p class="changes__rev">
-          <a href={href(from)}>{from}</a> published, the baseline for this comparison.
+          {fromHref ? <a href={fromHref}>{from}</a> : from} published, the baseline for this comparison.
         </p>
       </li>
       <li>
         <time datetime={diff.to.date}>{diff.to.date}</time>
         <p class="changes__rev">
-          <a href={href(to)}>{to}</a> published, with these differences.
+          {toHref ? <a href={toHref}>{to}</a> : to} published, with these differences.
         </p>
 
         <section aria-labelledby="changed">

@@ -4,6 +4,7 @@ import {
   getSpec,
   matrixFor,
   revisionDiff,
+  revisionHref,
   revisionsNewestFirst,
 } from "@/lib/atlas";
 import {
@@ -50,14 +51,11 @@ const usedLevels = new Set(
   matrix.columns.map((f) => f.revisions.find((r) => r.revision === revisionId)?.level),
 );
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
-// the key links an earlier revision only once something was observed against it; a revision
-// with no observation would open a matrix of unknowns
-const observedEarlier = revisions.filter(
-  (r) =>
-    r.id !== revisionId &&
-    data.observations.some((o) => o.revision.spec === spec.id && o.revision.revision === r.id),
+// the revisions with a matrix page of their own: one without any observation has none
+const otherRevisions = revisions.filter(
+  (r) => r.id !== revisionId && revisionHref(data, r.id) !== undefined,
 );
-const hrefFor = (id: string) => (id === current.id ? "/" : `/mcp/revisions/${id}/`);
+const hrefFor = (id: string) => revisionHref(data, id) ?? "/";
 
 // the nightly scanner's view per server: its requests are linked next to the name, never sorted on
 const scans = new Map(matrix.rows.map((s) => [s.id, latestScan(data, s, revisionId)]));
@@ -92,11 +90,10 @@ const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
           {isCurrent ? "current" : matrix.revision.status}
         </span>
       </span>
+      {otherRevisions.length > 0 && (
       <span>
         {isCurrent ? "Earlier" : "Other revisions"}:{" "}
-        {revisions
-          .filter((r) => r.id !== revisionId)
-          .map((r, i) => (
+        {otherRevisions.map((r, i) => (
             <>
               {i > 0 && ", "}
               <a class="revision-other" href={hrefFor(r.id)}>
@@ -105,6 +102,7 @@ const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
             </>
           ))}
       </span>
+      )}
       {diff && <a href={`/mcp/changes/${diff.from.id}/${diff.to.id}/`}>What changed since {diff.from.id}</a>}
     </p>
     )}
@@ -205,7 +203,7 @@ const authCounts = countBy(matrix.rows, AUTH_ORDER, authOf);
           <span class:list={["chip", { signal: isCurrent }]}>
             {isCurrent ? "current" : matrix.revision.status}
           </span>
-          {observedEarlier.map((r, i) => (
+          {otherRevisions.map((r, i) => (
             <>
               {i === 0 ? " · earlier: " : ", "}
               <a class="revision-other" href={hrefFor(r.id)}>

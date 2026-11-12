@@ -165,7 +165,9 @@ are listed.
 - **FR-005**: Every feature MUST cite the revision and section that defines it, and the citation
   MUST resolve to the revision's document.
 - **FR-006**: The atlas MUST name the revision it is judged against and MUST allow switching to
-  any other revision that has features defined.
+  any other revision that has observations recorded against it. A revision without any gets no
+  matrix page, since every cell would be unknown; its changes page and the feature pages still
+  name it. (Amended 2026-11-12.)
 - **FR-007**: The atlas MUST list, for the selected revision, which features changed level from
   the previous revision.
 - **FR-008**: Visitors MUST be able to filter by feature category and level and search by server
