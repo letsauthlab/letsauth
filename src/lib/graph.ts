@@ -31,6 +31,17 @@ export const COL_GAP = 72;
 export const ROW_GAP = 24;
 export const PAD = 16;
 export const BAND_PAD = 6;
+/** a node's name wraps at this many characters, onto as many lines as it needs up to the cap */
+export const LABEL_CHARS = 24;
+export const LABEL_LINES = 3;
+/** the line height of a node's name; NODE_H fits two lines, a third adds one more */
+const LABEL_LINE_H = 16;
+
+/** The height of a node: its name is never cut short, so a long one makes the node taller. */
+export function nodeHeight(name: string): number {
+  const lines = wrapLabel(name, LABEL_CHARS, LABEL_LINES).length;
+  return NODE_H + LABEL_LINE_H * Math.max(0, lines - 2);
+}
 
 export interface PlacedNode {
   spec: Spec;
@@ -243,7 +254,7 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
     const graph: ElkNode = {
       id: "root",
       layoutOptions: ELK_OPTIONS,
-      children: part.map((s) => ({ id: s.id, width: NODE_W, height: NODE_H })),
+      children: part.map((s) => ({ id: s.id, width: NODE_W, height: nodeHeight(s.name) })),
       // the older document is the source, so the drawing reads left to right in time
       edges: deps.map((r, i) => ({ id: `d${i}`, sources: [r.to], targets: [r.from] })),
     };
@@ -278,7 +289,7 @@ export async function layoutGraph(specs: Spec[], relations: Relation[]): Promise
         x: round((child.x ?? 0) + dx),
         y: round((child.y ?? 0) + dy),
         w: NODE_W,
-        h: NODE_H,
+        h: nodeHeight(spec.name),
         depth: depth.get(spec.id) ?? 0,
       };
       placed.set(spec.id, node);

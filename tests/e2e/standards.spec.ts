@@ -261,6 +261,32 @@ test.describe("standards map (US1)", () => {
     await expect(map.locator(".is-far")).toHaveCount(0);
   });
 
+  test("a pointer sweeping across the map does not flicker the highlight", async ({ page }) => {
+    await page.goto("/standards/");
+    test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
+    await expect(page.locator("#map-frame[data-enhanced]")).toBeAttached();
+    const frame = await page.locator("#map-frame").boundingBox();
+    test.skip(!frame, "no map");
+    // count every time the dimmed state or the highlighted node changes during the sweep
+    await page.evaluate(() => {
+      const w = window as unknown as { __changes: number };
+      w.__changes = 0;
+      new MutationObserver(() => {
+        w.__changes += 1;
+      }).observe(document.getElementById("map-card") as HTMLElement, {
+        attributes: true,
+        childList: true,
+      });
+    });
+    const y = (frame?.y ?? 0) + 60;
+    await page.mouse.move((frame?.x ?? 0) + 4, y);
+    await page.mouse.move((frame?.x ?? 0) + (frame?.width ?? 0) - 4, y + 300, { steps: 40 });
+    expect(await page.evaluate(() => (window as unknown as { __changes: number }).__changes)).toBe(
+      0,
+    );
+    await expect(page.locator("#map .is-far")).toHaveCount(0);
+  });
+
   test("under reduced motion the map shows its end state", async ({ page }) => {
     await page.goto("/standards/");
     test.skip((page.viewportSize()?.width ?? 1280) < 640, "phones get the outline");
