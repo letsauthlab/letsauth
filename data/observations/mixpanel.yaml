@@ -138,3 +138,13 @@
   observedAt: 2026-11-12T02:19:33Z
   observedBy: scanner@0.4.0
   evidence: https://auth.mixpanel.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: mixpanel
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-13T02:20:20Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.mixpanel.com/mcp — HTTP 401; WWW-Authenticate scope: [projects, analysis, events, insights, segmentation, retention, data:read, funnels, flows, data_definitions]"
