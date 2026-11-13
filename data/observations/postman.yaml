@@ -138,3 +138,13 @@
   observedAt: 2026-11-12T02:19:33Z
   observedBy: scanner@0.4.0
   evidence: https://mcp.postman.com/.well-known/oauth-authorization-server — HTTP 200; all 4 endpoints use https
+- server: postman
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-13T02:20:20Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.postman.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: absent"
