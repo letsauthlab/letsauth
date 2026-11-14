@@ -138,3 +138,13 @@
   observedAt: 2026-11-12T02:19:33Z
   observedBy: scanner@0.4.0
   evidence: https://mcp-auth.granola.ai/.well-known/oauth-authorization-server — HTTP 200; all 6 endpoints use https
+- server: granola
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-14T02:19:54Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp-auth.granola.ai/.well-known/oauth-authorization-server — HTTP 200; all 7 endpoints use https
