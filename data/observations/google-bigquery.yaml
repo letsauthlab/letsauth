@@ -138,3 +138,143 @@
   observedAt: 2026-11-12T02:19:33Z
   observedBy: scanner@0.4.0
   evidence: https://accounts.google.com/.well-known/oauth-authorization-server — HTTP 200; all 6 endpoints use https
+- server: google-bigquery
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the well-known protected resource metadata
+- server: google-bigquery
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/mcp — connection; could not reach the endpoint (GET connection)
+- server: google-bigquery
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/mcp — connection; could not reach the endpoint (GET connection)
+- server: google-bigquery
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)
+- server: google-bigquery
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: https://bigquery.googleapis.com/.well-known/oauth-protected-resource — connection; could not fetch the protected resource metadata (well-known connection, connection; endpoint GET connection)

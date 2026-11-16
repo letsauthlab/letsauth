@@ -438,3 +438,33 @@
   observedAt: 2026-11-03T02:18:57Z
   observedBy: scanner@0.4.0
   evidence: "https://asset-management.mcp.cloudinary.com/.well-known/oauth-protected-resource/sse — HTTP 200; scopes_supported includes offline_access: [asset_management, email, media_generation, offline_access, openid, profile, upload]"
+- server: cloudinary
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://asset-management.mcp.cloudinary.com/.well-known/oauth-protected-resource/sse — HTTP 200; scopes_supported: [asset_management, email, media_generation, offline_access, openid, profile, upload, video]"
+- server: cloudinary
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://asset-management.mcp.cloudinary.com/sse — HTTP 401; WWW-Authenticate scope: [openid, profile, email, offline_access, asset_management, upload, media_generation, video]"
+- server: cloudinary
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-16T02:18:57Z
+  observedBy: scanner@0.4.0
+  evidence: "https://asset-management.mcp.cloudinary.com/.well-known/oauth-protected-resource/sse — HTTP 200; scopes_supported includes offline_access: [asset_management, email, media_generation, offline_access, openid, profile, upload, video]"
