@@ -508,3 +508,13 @@
   observedAt: 2026-11-05T02:18:50Z
   observedBy: scanner@0.4.0
   evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [accounting:read, accounting:write, agent_account_numbers:read, agent_wallet_policy:read, agent_wallet_policy:write, ai_spend:read, applications:read, applications:write, approvals:read, approval…"
+- server: ramp
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-17T02:20:13Z
+  observedBy: scanner@0.4.0
+  evidence: "https://ramp-mcp-remote.ramp.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: true"
