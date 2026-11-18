@@ -138,3 +138,23 @@
   observedAt: 2026-11-12T02:19:33Z
   observedBy: scanner@0.4.0
   evidence: https://auth.mixpanel.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: mixpanel
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.mixpanel.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported: [agent_flows, alerts, analysis, annotations, bookmarks, business_context, cohorts, context, custom_alerts, custom_events, custom_properties, dashboard_reports, data:read, data_definitions, events, experi…"
+- server: mixpanel
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.mixpanel.com/.well-known/oauth-protected-resource/mcp — HTTP 200; scopes_supported without offline_access: [agent_flows, alerts, analysis, annotations, bookmarks, business_context, cohorts, context, custom_alerts, custom_events, custom_properties, dashboard_reports, data:read, data_defi…"

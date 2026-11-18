@@ -498,3 +498,93 @@
   observedAt: 2026-11-03T02:18:57Z
   observedBy: scanner@0.4.0
   evidence: "https://mcp.asana.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256, plain]"
+- server: asana
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/sse — HTTP 410; no 401 challenge to an unauthenticated request (GET HTTP 410, POST HTTP 410), nothing to judge
+- server: asana
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/sse — HTTP 410; no 401 challenge to an unauthenticated request (GET HTTP 410, POST HTTP 410), nothing to judge
+- server: asana
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; no authorization server metadata at a well-known location (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
+- server: asana
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; not at any of the three well-known locations (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
+- server: asana
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; no authorization server metadata at a well-known location (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
+- server: asana
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; no authorization server metadata at a well-known location (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
+- server: asana
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; no authorization server metadata at a well-known location (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
+- server: asana
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; no authorization server metadata at a well-known location (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
+- server: asana
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-18T02:19:25Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/openid-configuration — HTTP 404; no authorization server metadata at a well-known location (HTTP 410, HTTP 200, HTTP 410, HTTP 404)
