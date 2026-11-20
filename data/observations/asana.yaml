@@ -498,3 +498,123 @@
   observedAt: 2026-11-03T02:18:57Z
   observedBy: scanner@0.4.0
   evidence: "https://mcp.asana.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256, plain]"
+- server: asana
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; resource: https://mcp.asana.com/v2/mcp; expected exactly https://mcp.asana.com"
+- server: asana
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; not at either well-known location (path-aware HTTP 404, root HTTP 200)
+- server: asana
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
+- server: asana
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-11-20T02:19:43Z
+  observedBy: scanner@0.4.0
+  evidence: https://mcp.asana.com/.well-known/oauth-protected-resource — HTTP 200; no protected resource metadata at a well-known location (HTTP 404, HTTP 200) and none reached through the challenge (endpoint GET HTTP 410, POST HTTP 410)
