@@ -428,3 +428,43 @@
   observedAt: 2026-11-03T02:18:57Z
   observedBy: scanner@0.4.0
   evidence: "https://mcp.wix.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256, plain]"
+- server: wix
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-24T02:19:30Z
+  observedBy: scanner@0.4.0
+  evidence: 'https://mcp.wix.com/sse — HTTP 401; WWW-Authenticate: Bearer realm="OAuth", resource_metadata="https://mcp.wix.com/.well-known/oauth-protected-resource", no scope parameter'
+- server: wix
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-11-24T02:19:30Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.wix.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: false"
+- server: wix
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-24T02:19:30Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.wix.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: wix
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-24T02:19:30Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.wix.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
