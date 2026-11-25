@@ -138,3 +138,23 @@
   observedAt: 2026-11-12T02:19:33Z
   observedBy: scanner@0.4.0
   evidence: https://console-backend.apify.com/.well-known/oauth-authorization-server — HTTP 200; all 6 endpoints use https
+- server: apify
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-25T02:19:51Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported: [email, full_api_access, openid, profile]"
+- server: apify
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-25T02:19:51Z
+  observedBy: scanner@0.4.0
+  evidence: "https://mcp.apify.com/.well-known/oauth-protected-resource — HTTP 200; scopes_supported without offline_access: [email, full_api_access, openid, profile]"
