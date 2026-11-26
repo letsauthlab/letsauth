@@ -448,3 +448,13 @@
   observedAt: 2026-10-24T01:18:28Z
   observedBy: scanner@0.4.0
   evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: true"
+- server: vercel
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-11-26T02:19:56Z
+  observedBy: scanner@0.4.0
+  evidence: "https://vercel.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
